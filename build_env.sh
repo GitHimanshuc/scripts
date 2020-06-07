@@ -9,9 +9,11 @@ mkdir software && cd software && \
 git clone https://github.com/spack/spack.git && \
 curl https://getmic.ro | bash && \
 wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && \
-wget $julia_link && \
-
+wget $julia_link && tar -xvzf julia* && \
 
 
 # After this things have to be done manually 
 sh -c "$(wget -O- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" && \
+bash Miniconda3-latest-Linux-x86_64.sh && rm Miniconda3-latest-Linux-x86_64.sh && source ~/.zshrc && \
+echo "alias julia=~/software/juli*/bin/julia" >> .zshrc && \
+echo "alias julia=~/software/" >> .zshrc && \
