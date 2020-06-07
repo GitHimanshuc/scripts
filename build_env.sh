@@ -6,7 +6,7 @@ cd ~
 apt get update -y && \
 apt install build-essential git wget curl nnn zsh vim nano -qq && \
 mkdir software && cd software && \
-git clone https://github.com/spack/spack.git && \
+git clone https://github.com/spack/spack.git && cd ./spack && . share/spack/setup-env.sh && cd .. && \
 curl https://getmic.ro | bash && \
 wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && \
 wget $julia_link && tar -xvzf julia* && \
