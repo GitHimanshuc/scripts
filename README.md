@@ -14,4 +14,16 @@ docker run -it -v $(pwd):/home/ dealii/dealii
 RUN rm -rf /var/lib/apt/lists/*
 
 
+# Git
+## Git hook magic
+Save the file pre_commit.sample as pre_commit and __make it executable__ in .git/hooks.
+
+Any code added to it will be executed while commiting.
+Also, get out of the .git directory before using any git commands.
+```bash
+conda activate working
+cd /home/himanshu/Desktop/master_project/thesis/codes
+jupyter nbconvert ./*.ipynb --to="python"
+git add ./*
+```
 
