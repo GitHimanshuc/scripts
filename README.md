@@ -27,3 +27,15 @@ jupyter nbconvert ./*.ipynb --to="python"
 git add ./*
 ```
 
+# GCP
+## File transfer
+### Copy to local system from compute instance 
+```bash
+gcloud compute scp --recurse [instance_name]:[folder_path_in_gcp] [local_dir]
+```
+### Copy to a bucket from a compute instance 
+```bash
+gsutil cp -r gauss gs://[bucket_name]
+```
+
+
