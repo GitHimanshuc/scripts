@@ -39,3 +39,13 @@ gsutil cp -r gauss gs://[bucket_name]
 ```
 
 
+# Bash
+#### List all files in the subfolder
+```bash
+find . -name "*.bak" -type f
+```
+
+#### Delete all files in the subfolder
+```bash
+find . -name "*.bak" -type f -delete
+```
