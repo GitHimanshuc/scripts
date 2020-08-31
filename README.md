@@ -72,3 +72,17 @@ find . -name "*.bak" -type f
 ```bash
 find . -name "*.bak" -type f -delete
 ```
+
+# Paraview
+
+### vtk U(x,y); U as a surface on xy plane
+extract surface1
+
+wrap by scalar then select U
+
+### csv (x,y,U); U as a surface on xy plane
+table to points
+
+Delaunay2d
+
+
