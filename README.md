@@ -13,6 +13,8 @@ $ sudo apt-get install gcc g++ gcc-5 g++-5 gcc-6 g++-6 gcc-10 g++-7 gfortran-10
 ```
 docker run -it --name dealii_dev -v $(pwd):/home/ dealii/dealii
 ```
+
+### Dealii
 (Usually the version of dealii in the docker and in the master branch is different so do a git checkout <docker branch> to run the examples)
 
 #### Remove apt cache to make the image smaller
@@ -20,6 +22,14 @@ RUN rm -rf /var/lib/apt/lists/*
 
 
 # Git
+
+## Tags
+```bash
+git fetch --tags
+git checkout tags/<tag_name>
+git checkout tags/<tag_name> -b <branch_name> # If you want to work on the tag instead of just exploring
+```
+
 
 ## Git shallow pull
 ```bash
