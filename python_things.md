@@ -50,4 +50,8 @@ print(np.finfo(np.float32))
 print(np.finfo(np.float64))
 print(np.finfo(np.longdouble))
 ```
-
+# Subprocess
+```python
+process = subprocess.Popen(shlex.split("ls -l"),stdout=subprocess.PIPE,stderr=subprocess.PIPE,cwd="/home/himanshu/Desktop")
+stdout, stderr = process.communicate() # To make sure that the python waits for the code to finish before moving on
+```
