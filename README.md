@@ -50,6 +50,26 @@ jupyter nbconvert ./*.ipynb --to="python"
 git add ./*
 ```
 
+
+### Better way of doing this using .gitattributes + global .gitignore
+
+add to .gitconfig
+```
+[core]
+    excludesfile = ~/.gitignore
+[filter "strip-notebook-output"]
+    clean = "jupyter nbconvert --ClearOutputPreprocessor.enabled=True --to=notebook --stdin --stdout --log-level=ERROR"
+```
+
+now anything added to ~/.gitignore will be not be tracked in any of your local repos
+
+
+add a .gitattributes file to any repo containing python notebooks with the following:
+```
+*.ipynb filter=strip-notebook-output
+```
+
+
 # GCP
 ## File transfer
 ### Copy to local system from compute instance 
@@ -74,6 +94,12 @@ find . -name "*.bak" -type f -delete
 ```
 
 # Paraview
+
+```pvserver -sp=11123``` # on the remote
+
+then ssh into the remote with: ```-L 11111:localhost:11123```
+
+Finally add a new server in paraview and set the port to 11123.
 
 ### vtk U(x,y); U as a surface on xy plane
 extract surface1
