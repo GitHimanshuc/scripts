@@ -1,0 +1,84 @@
+# Keep the gauge items in a separate file GaugeItems.input so ringdown can
+# grab it.
+DataBoxItems =
+   Subdomain(Items=
+
+             AddDampedHarmonicHelperItems
+             (
+              InitHhatt=InitHhatt;
+              InitGridHi=InitGridHi;
+              MapPrefixFromInitGaugeFrameToInertialFrame=GridToInertial;
+              InertialFramePrefix                       =Inertial;
+              SecondaryWeightFramePrefix                =Inertial;
+              SecondaryWeightRmax  = 100;
+              ),
+
+              DampedHarmonicH(
+               Output=H;
+               psi   =psi;
+
+               TimeRolloff::TimeScale = __TimeRolloffTimeScale__;
+               TimeRolloff::StartTime = __TimeRolloffStartTime__;
+               coef_L::TimeScale = __LapseCoefTimeScale__;
+               coef_L::StartTime = __LapseCoefStartTime__;
+               coef_S::TimeScale = __ShiftCoefTimeScale__;
+               coef_S::StartTime = __ShiftCoefStartTime__;
+
+               InitHhatt=InitHhatt;
+               InitGridHi=InitGridHi;
+               InitHi=InitInertialHi;
+
+               RotationMatrix = QuatRotMatrix(QuatRotMatrix=QuatRotMatrix;);
+
+               Lapse=Lapse;Shift=Shift;detg=Detg;
+               W=SecondaryWeightZ;
+
+              ),
+
+              SpacetimeDerivOfDampedHarmonicH(
+               Output=SpacetimeDerivOfH;
+               psi   =psi;
+               kappa =kappa;
+
+               TimeRolloff::TimeScale = __TimeRolloffTimeScale__;
+               TimeRolloff::StartTime = __TimeRolloffStartTime__;
+               coef_L::TimeScale = __LapseCoefTimeScale__;
+               coef_L::StartTime = __LapseCoefStartTime__;
+               coef_S::TimeScale = __ShiftCoefTimeScale__;
+               coef_S::StartTime = __ShiftCoefStartTime__;
+
+               Lapse=Lapse;
+               Shift=Shift;
+               detg=Detg;
+               W=SecondaryWeightZ;
+               SpacetimeDerivOfW = SpacetimeDerivOfSecondaryWeightZ;
+
+               InitHhatt=InitHhatt;
+               InitGridHi=InitGridHi;
+               InitHi=InitInertialHi;
+               DtInitHi=DtInitInertialHi;
+               DxInitHi=InertialdInitInertialHi;
+               DtInitHhatt=DtInitHhatt;
+               DxInitHhatt=InertialdInitHhatt;
+
+               Dx_detg   = InertialdDetg;
+               Dt_detg   = DtDetg;
+               Dt_g      = Dtg;
+
+               RotationMatrix = QuatRotMatrix(QuatRotMatrix=QuatRotMatrix;);
+
+               Invpsi=Invpsi;
+               Invg=Invg;
+               UnitTimelikeNormalVector=UnitTimelikeNormalVector;
+
+              ),
+
+              ExtractLowerDimDeriv(
+                   Input          = SpacetimeDerivOfH;
+                   Output         = InertialdH;
+                   InnerOutputDim = 3;
+                   InnerOffset    = 1;
+                   OuterOutputDim = 4;
+                   OuterOffset    = 0;
+                   ),
+             );
