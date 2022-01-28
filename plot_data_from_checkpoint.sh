@@ -25,7 +25,7 @@ cd $cp_called &&\
 if test -f "./GrDomain.input"; then
     echo "GrDomain.input detected. It is a BBH simulation, using Gaugecheck_small_bbh"
     # call the apply observer
-    ApplyObservers -t psi,kappa -r 11,122 -d 4,4 -domaininput "./GrDomain.input" -h5prefix 'Cp-VarsGr' /panfs/ds09/sxs/himanshu/scripts/helper_files/Gaugecheck_small_bbh.input
+    ApplyObservers -t psi,kappa -r 11,122 -d 4,4 -domaininput "./GrDomain.input" -h5prefix 'Cp-VarsGr' $scripts_path/helper_files/Gaugecheck_small_bbh.input
 
 else
 
@@ -33,7 +33,7 @@ else
     # echo "Adding HistoryFile=<<NONE>>; to Domain.input"
     # echo "HistoryFile=<<NONE>>;" >> ./Domain.input
     # call the apply observer
-    ApplyObservers -t psi,kappa -r 11,122 -d 4,4 -domaininput "./Domain.input" -h5prefix 'Cp-Vars' /panfs/ds09/sxs/himanshu/scripts/helper_files/Gaugecheck_small_bh.input
+    ApplyObservers -t psi,kappa -r 11,122 -d 4,4 -domaininput "./Domain.input" -h5prefix 'Cp-Vars' $scripts_path/helper_files/Gaugecheck_small_bh.input
 
 fi
 
