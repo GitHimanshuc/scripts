@@ -10,6 +10,12 @@ $ sudo apt-get install gcc g++ gcc-5 g++-5 gcc-6 g++-6 gcc-10 g++-7 gfortran-10
 --justprint (-n), --print-data-base (-p), and --warn-undefined-variables.
 
 # Docker
+To use mpi inside a docker container. ~Do not use this anywhere else as it can brick your system~
+```
+export OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+```
+
+
 ```
 docker run -it --name dealii_dev -v $(pwd):/home/ dealii/dealii
 ```
