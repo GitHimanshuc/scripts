@@ -36,9 +36,13 @@ else
     ApplyObservers -t psi,kappa -r 11,122 -d 4,4 -domaininput "./Domain.input" -h5prefix 'Cp-Vars' $scripts_path/helper_files/Gaugecheck_small_bh.input
 
 fi
+# Remove all domains but the spheres surrounding the BHs
+sed '/Cylinder/d' GaugeVis.pvd | sed '/SphereC/d'> just_BHs.pvd &&\
 
 touch ./data_location.txt &&\
 echo $cp_folder >> ./data_location.txt &&\
+
+
 
 var_name="${cp_folder////_}" &&\
 cd .. &&\
