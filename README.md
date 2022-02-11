@@ -9,6 +9,13 @@ $ sudo apt-get install gcc g++ gcc-5 g++-5 gcc-6 g++-6 gcc-10 g++-7 gfortran-10
 ### Some make file commands for debugging
 --justprint (-n), --print-data-base (-p), and --warn-undefined-variables.
 
+#SXS
+
+Remove all domains but the spheres surrounding the BHs
+```
+sed '/Cylinder/d' GaugeVis.pvd | sed '/SphereC/d'> just_BHs.pvd
+```
+
 # Docker
 To use mpi inside a docker container. ~Do not use this anywhere else as it can brick your system~
 ```
