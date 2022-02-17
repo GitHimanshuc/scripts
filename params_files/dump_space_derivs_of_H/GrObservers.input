@@ -1,0 +1,214 @@
+Observers=
+    ################################################################
+    # Physics output
+    ################################################################
+    Add(ObservationTrigger=EveryDeltaT(DeltaT=0.5);
+        Observers =
+        ObserveQuaternionOmegaPhase(Input=QuatRotMatrix;
+                                    Filename=OrbitDiagnostics;),
+        DumpTensors(Input=psi,kappa, H, Lapse, Shift, SpacetimeDerivOfHFlattened,dCoordHFlattened,dInertialHFlattened;),
+    ),        
+    Add(ObservationTrigger=
+        Or(DenseTriggers = 
+           EveryNSteps(NSteps=1;NoTriggerAfterStep=10),
+           EveryDeltaT(DeltaT=0.5),
+        );
+        Observers = 
+        ObserveInSubdir
+        (Subdir=ApparentHorizons;
+         Observers =
+         ObserveDoubles(Input=ProperSepHorizons,CoordSepHorizons;
+                        Filename=HorizonSepMeasures.dat;
+         ),
+# Uncomment the following 4 Observers to output
+# char speeds on the AH and on 9 other surfaces
+# equal to the AH scaled by factors <1.
+# These 10 surfaces are between the AH and the excision bdry.
+         ObserveMvDoubles(Input    = MinCharSpeedAhA;
+                          Filename = MinCharSpeedAhA.dat;
+                          ),
+         ObserveMvDoubles(Input    = MinCharSpeedAhB;
+                          Filename = MinCharSpeedAhB.dat;
+                          ),
+         FieldsOnSurfaceInfo(Input              = RescaledAhA;
+                             OutputFileBaseName = RescaledRadAhA;
+                             OutputThisField    = ROverRAh;
+         ),
+         FieldsOnSurfaceInfo(Input              = RescaledAhB;
+                             OutputFileBaseName = RescaledRadAhB;
+                             OutputThisField    = ROverRAh;
+         ),
+         SurfaceInfo(Input=AhA; CrossSections=no;
+                     FileNamesContainL=no;
+                     SpatialCoordMap=DistortedToInertial::SpatialCoordMap;
+                     OutputCoefficients=yes),
+         SurfaceInfo(Input=AhB; CrossSections=no;
+                     FileNamesContainL=no;
+                     SpatialCoordMap=DistortedToInertial::SpatialCoordMap;
+                     OutputCoefficients=yes),
+        ) # ObserveInSubDir
+    ),
+
+    # Common Horizon
+    Add(
+      ObservationTrigger = EveryNSteps(NSteps=1;);
+      InternalStateTrigger = Never;
+      EvolutionObservers = WhenSurfaceFound(
+        Surface = AhC;
+        Observers =
+          ObserveInSubdir(
+            Subdir    = ForContinuation;
+            Observers = SurfaceInfo(
+              Input              = AhC;
+              FileNamesContainL  = no;
+              CrossSections      = no;
+              OutputCoefficients = yes;
+            ),
+          ),
+        ;
+      );
+    ),
+    Add(
+      ObservationTrigger = EveryChunk;
+      InternalStateTrigger = Never;
+      EvolutionObservers = WhenSurfaceFound(
+        Surface = AhC;
+        Observers =
+          ObserveInSubdir(
+            Subdir = ApparentHorizons;
+	      # list AH observers explicitly, because
+	      # AddStrahlkorperPhysicalQuantities cannot
+	      # wrap Observers in the 'WhenSurfaceIsFound'
+           Observers =
+              StrahlkorperDumpTensors(
+		  StrahlkorperDataBoxBaseName = CommonHorizon;
+		  FileNames=RicciScalar,SpinFunction,WeylE_NN,WeylB_NN, 
+    		            CoordsMeasurementFrame,DimlessRicciScalar; 
+		  H5FileName = HorizonsDump.h5;
+		  H5Legends=2-D Ricci Scalar,SpinFunction,
+                             WeylE-NN,WeylB-NN,                            
+                             Coordinates of a mesh on the apparent horizon,
+                             2-D Ricci Scalar (dimensionless);            
+                   Input    =SkRicciScalar,SpinFunction,Enn,Bnn,          
+                             InertialCoords,SkDimensionlessRicciScalar; 
+              ),
+              StrahlkorperMassAndSpinAndCenter(
+                StrahlkorperDataBoxBaseName = CommonHorizon;
+                FileName = Horizons.h5;
+                IrreducibleMass = Mirr;
+                ChristodoulouMass = Mch;
+                DimensionfulSpin = S;
+                DimensionlessSpin = chi;
+                CoordCenterInMeasurementFrame = InertialCenter;
+                TerminateOnPointsOutside = yes;
+              ),
+   	      # redshift quantities
+              StrahlkorperDumpTensors(
+                  StrahlkorperDataBoxBaseName = CommonHorizon;
+                  H5FileName = RedshiftQuantities.h5;
+                  FileNames = Lapse, SurfaceRedshift, ScaledSurfaceGravity,
+                              AreaElement, CoordsMeasurementFrame;
+                  Input = Lapse, SurfaceRedshift, ScaledSurfaceGravity,
+                          AreaElement, InertialCoords;
+              ),
+              ScalarsOnStrahlkorper(
+                  StrahlkorperDataBoxBaseName= CommonHorizon;
+                  Scalars = Redshift, RedshiftRMS, AvgScaledSurfaceGravity,
+                            ScaledSurfaceGravityRMS, KerrSurfaceGravity;
+                  Legends = Redshift, RedshiftRMS, ScaledSurfaceGravity,
+                            ScaledSurfaceGravityRMS, KerrSurfaceGravity;
+                  FileName = RedshiftQuantities.h5;
+                  FileNameBaseInsideH5 = RedshiftScalars;
+              )
+	      ;
+          ),
+	  ;
+	);
+    ),
+
+    ################################################################
+    # Diagnostic Output
+    ################################################################
+    Add(ObservationTrigger =
+        EveryChunk;
+        Observers =
+        PowerDiagnosticsH5(GridDiagnostics=GridDiagPowerpsi,
+          GridDiagPowerkappa;
+          PowerMonitors=Powerpsi,Powerkappa;
+          Subdomains=*;),
+        ObserveMvDoublesH5(
+          AncestryLevel=1;
+          Input=NormOf2Con,NormOf3Con;
+          Filename=ProjectedCon.h5;);
+       ),
+    Add(ObservationTrigger =
+        EveryDeltaT(DeltaT=0.5);
+        Observers =
+         ObserveDoublesInSubdomains(Input=MinimumGridSpacing;
+                                    Filename=MinimumGridSpacing.dat),
+        ObserveInSubdir
+        (Subdir=CharSpeedNorms;
+         Observers =
+         FoshCharSpeedNorms(Norms     = Min,Max;
+                        Slices    =
+                        SphericalSlices(Center = 5.00000011191598,-2.654593e-10,-2.994621e-10;
+                                        Normal = Both),
+                        SphericalSlices(Center = -4.99999988808402,-2.654593e-10,-2.994621e-10;
+                                        Normal = Both);
+                        SliceType = External;
+     ),
+         FoshCharSpeedNorms(Norms     = Min,Max;
+                        Slices    =
+                        SphericalSlices(Center = 0,0,0;
+                                        Normal = UFF);
+                        SliceType = External;
+     ),
+    ),
+
+        ObserveInSubdir
+        (Subdir=ConstraintNorms;
+         Observers =
+         NormOfTensor(Input=GhCe; Filename=GhCe_Norms.dat;
+                      Op=VolLp(p=2; SqrtDetg=SqrtDetg),L2, Linf;),
+         NormOfTensor(Input=GhCeExt; Filename=GhCeExt_Norms.dat;
+                      Op=VolLp(p=2; SqrtDetg=SqrtDetg),L2, Linf;),
+         NormOfTensor(Input=NormalizedGhCe; Filename=NormalizedGhCe_Norms.dat;
+                      Op=VolLp(p=2; SqrtDetg=SqrtDetg),L2, Linf;),
+         NormOfTensor(Input=GhCe,1Con,2Con,3Con, GhCeDenom;
+                      Op=VolLp(p=2;SqrtDetg=SqrtDetg);
+                      Filename=GhCe.dat; MetricForTensors=None),
+         # Constraint norms outside of horizons
+         NormOfTensor(Input    = GhCeExt,1ConExt,2ConExt,3ConExt,GhCeDenomExt,
+                      NormalizedGhCeExt;
+                      MetricForTensors=None;
+                      Op       = VolLp(p=2;SqrtDetg=SqrtDetg);
+                      Filename = GhCeExt.dat),
+
+         ),
+
+        ObserveInSubdir
+        (Subdir=ConstraintNorms;
+         Observers =
+         NormOfTensor(Input=GhCeExt; Op=L2;
+                      Filename=GhCeExt_L2.dat; EachSubdomainSeparately=yes),
+         NormOfTensor(Input=GhCe; Op=VolLp(p=2;SqrtDetg=SqrtDetg);
+                      MetricForTensors=None;
+                      Filename=GhCe_VolL2.dat; EachSubdomainSeparately=yes),
+         NormOfTensor(Input=GhCe; Op=L2;
+                      MetricForTensors=None;
+                      Filename=GhCe_L2.dat; EachSubdomainSeparately=yes),
+         NormOfTensor(Input=GhCe; Op=Linf;
+                      MetricForTensors=None;
+                      Filename=GhCe_Linf.dat; EachSubdomainSeparately=yes),
+         NormOfTensor(Input=NormalizedGhCe; Op=Linf;
+                      MetricForTensors=None;
+                      Filename=NormalizedGhCe_Linf.dat; EachSubdomainSeparately=yes),
+        )
+    ),
+    Add(ObservationTrigger=EveryDeltaT(DeltaT=0.5);
+        Observers=ObserveGridPointsVsRadius(CenterA=5.00000011191598,-2.654593e-10,-2.994621e-10;
+                                            CenterB=-4.99999988808402,-2.654593e-10,-2.994621e-10;
+                                            File=GridPointsVsRadius;
+                                            Rmax=599.999993285539;
+        );
+    );

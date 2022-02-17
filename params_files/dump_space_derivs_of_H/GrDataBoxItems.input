@@ -1,0 +1,466 @@
+EventAndItemAdders =
+    ReadFromFile(File = GrSetupAndEvolution.input),
+    ReadFromFile(File = GrWaveExtraction.input),
+    ReadFromFile(File = ApparentHorizonFinders.input),
+
+    # Smoothed (coordinate) horizon separation: SmoothCoordSep
+    AddSmoothProperSep(InitialTdamping = 0.199999997761846;
+                       InitialGuessProperSep = 8.4386665935801;
+                       InitialGuessTstart = 0;
+                       UseEuclideanMetricForLineElement = true;
+                       ObserveSubdir = ApparentHorizons;
+                       ObservationTrigger =
+                       EveryDeltaT(DeltaT=0.5);
+                       DerivOrderFuncVsTime = 2;
+                       MeasureAtStepAfterChunkFraction=yes;
+                       MeasurementFractionOfChunk=0.25;
+                       ),
+
+    # Smoothed horizon radii: SmoothAh{A,B}
+    AddSmoothAhRadius(Surface = AhA;
+                      InitialGuess = AhCFromPlunge
+                      (SmoothAhRadiusFile=/central/groups/sxs/hchaudha/new_gauge_condition/runs/ab_ms_1_ns_dump_data_dH/ID/EvID//ID_Init_SmoothAhRadiusA.txt;);
+                      InitialGuessTstart = 0;
+                      DerivOrderFuncVsTime = 2;
+                      UpdateDependsOn      = AhA;
+                      MeasureAtStepAfterChunkFraction=yes;
+                      MeasurementFractionOfChunk=0.25;
+                      OverrideTimescaleTuner =
+                      Simple(MaxThreshold       = 0.000999999999999998;
+                             MaxThresholdItem   = DeltaR0AhAOver20;
+                             DtMaxThresholdItem = DtDeltaR0AhAOver20;
+                             CrossingTimeFac    = 0.5;
+                             MinDampTime        = 0.01;
+                             MaxDampTime        = 20;
+                             IncreaseFactor     = 1.01;
+                             DecreaseFactor     = 0.98;
+                             InitialState       = Specified
+                             (Tdamping=0.0199999991281363);
+                             CheckpointFile   = Cp-TdampSmoothRAhA.txt;);
+    ),
+    AddSmoothAhRadius(Surface = AhB;
+                      InitialGuess = AhCFromPlunge
+                      (SmoothAhRadiusFile=/central/groups/sxs/hchaudha/new_gauge_condition/runs/ab_ms_1_ns_dump_data_dH/ID/EvID//ID_Init_SmoothAhRadiusB.txt;);
+                      InitialGuessTstart = 0;
+                      DerivOrderFuncVsTime = 2;
+                      UpdateDependsOn      = AhB;
+                      MeasureAtStepAfterChunkFraction=yes;
+                      MeasurementFractionOfChunk=0.25;
+                      OverrideTimescaleTuner =
+                      Simple(MaxThreshold       = 0.000999999999999998;
+                             MaxThresholdItem   = DeltaR0AhBOver20;
+                             DtMaxThresholdItem = DtDeltaR0AhBOver20;
+                             CrossingTimeFac    = 0.5;
+                             MinDampTime        = 0.01;
+                             MaxDampTime        = 20;
+                             IncreaseFactor     = 1.01;
+                             DecreaseFactor     = 0.98;
+                             InitialState       = Specified
+                             (Tdamping=0.0200000004242329);
+                             CheckpointFile   = Cp-TdampSmoothRAhB.txt;);
+    ),
+
+    # Smoothed distance between AH and exc bdry: SmoothMinDeltaRNoLam00Ah{A,B}
+    AddSmoothAhRadius(Surface = AhA;
+                      WhatToCompute          = SmoothMinDeltaRNoLam00;
+                      MapPrefixGridToAhFrame = GridToDistorted;
+                      FunctionVsTimeLam00    = LambdaFactorA0;
+                      InitialGuess = AhCFromPlunge
+                      (SmoothAhRadiusFile=/central/groups/sxs/hchaudha/new_gauge_condition/runs/ab_ms_1_ns_dump_data_dH/ID/EvID//ID_Init_SmoothAhRadiusA.txt;);
+                      InitialGuessTstart = 0;
+                      DerivOrderFuncVsTime = 2;
+                      UpdateDependsOn      = AhA;
+                      MeasureAtStepAfterChunkFraction=yes;
+                      MeasurementFractionOfChunk=0.25;
+                      OverrideTimescaleTuner =
+                      Simple(MaxThreshold       = 0.000999999999999998;
+                             MaxThresholdItem   = DeltaR0AhAOver20;
+                             DtMaxThresholdItem = DtDeltaR0AhAOver20;
+                             CrossingTimeFac    = 0.5;
+                             MinDampTime        = 0.01;
+                             MaxDampTime        = 20;
+                             IncreaseFactor     = 1.01;
+                             DecreaseFactor     = 0.98;
+                             InitialState       = Specified
+                             (Tdamping=0.0199999991281363);
+                             CheckpointFile   = Cp-TdampSmoothDRAhA.txt;);
+    ),
+    AddSmoothAhRadius(Surface = AhB;
+                      WhatToCompute          = SmoothMinDeltaRNoLam00;
+                      MapPrefixGridToAhFrame = GridToDistorted;
+                      FunctionVsTimeLam00    = LambdaFactorB0;
+                      InitialGuess = AhCFromPlunge
+                      (SmoothAhRadiusFile=/central/groups/sxs/hchaudha/new_gauge_condition/runs/ab_ms_1_ns_dump_data_dH/ID/EvID//ID_Init_SmoothAhRadiusB.txt;);
+                      InitialGuessTstart = 0;
+                      DerivOrderFuncVsTime = 2;
+                      UpdateDependsOn      = AhB;
+                      MeasureAtStepAfterChunkFraction=yes;
+                      MeasurementFractionOfChunk=0.25;
+                      OverrideTimescaleTuner =
+                      Simple(MaxThreshold       = 0.000999999999999998;
+                             MaxThresholdItem   = DeltaR0AhBOver20;
+                             DtMaxThresholdItem = DtDeltaR0AhBOver20;
+                             CrossingTimeFac    = 0.5;
+                             MinDampTime        = 0.01;
+                             MaxDampTime        = 20;
+                             IncreaseFactor     = 1.01;
+                             DecreaseFactor     = 0.98;
+                             InitialState       = Specified
+                             (Tdamping=0.0200000004242329);
+                             CheckpointFile   = Cp-TdampSmoothDRAhB.txt;);
+    );
+
+DataBoxItems =
+    ReadFromFile(File = SpatialCoordMap.input),
+    ReadFromFile(File = ConstraintDamping.input),
+    ReadFromFile(File = GaugeItems.input),
+
+    #-----------------------------------------------------------------
+    # This defines DeltaR0Ah*Over20 for use in TimeScaleTuner::Simple
+    #-----------------------------------------------------------------
+    Domain(Items =
+           SmoothMinRAhMinusRex
+           (Output                         = DeltaR0AhAOver20;
+            FunctionVsTimeLam00            = LambdaFactorA0;
+            FunctionVsTimeMinDeltaRNoLam00 = SmoothMinDeltaRNoLam00AhA;
+            ComputeFirstDeriv              = no;
+            ScaleFactor                    = 0.05;
+           ),
+           SmoothMinRAhMinusRex
+           (Output                         = DtDeltaR0AhAOver20;
+            FunctionVsTimeLam00            = LambdaFactorA0;
+            FunctionVsTimeMinDeltaRNoLam00 = SmoothMinDeltaRNoLam00AhA;
+            ComputeFirstDeriv              = yes;
+            ScaleFactor                    = 0.05;
+           ),
+           SmoothMinRAhMinusRex
+           (Output                         = DeltaR0AhBOver20;
+            FunctionVsTimeLam00            = LambdaFactorB0;
+            FunctionVsTimeMinDeltaRNoLam00 = SmoothMinDeltaRNoLam00AhB;
+            ComputeFirstDeriv              = no;
+            ScaleFactor                    = 0.05;
+           ),
+           SmoothMinRAhMinusRex
+           (Output                         = DtDeltaR0AhBOver20;
+            FunctionVsTimeLam00            = LambdaFactorB0;
+            FunctionVsTimeMinDeltaRNoLam00 = SmoothMinDeltaRNoLam00AhB;
+            ComputeFirstDeriv              = yes;
+            ScaleFactor                    = 0.05;
+           );
+    ),
+
+    #---------------------------------------------------------
+    # items needed by the GH system
+    #---------------------------------------------------------
+    Domain(Items=
+           AddGeneralizedHarmonicInfo(MatterSourceName=;)
+           ),
+    Subdomain(Items=
+              Add3Plus1ItemsFromGhPsiKappa(psi=psi;kappa=kappa;OutputPrefix=;),
+              ),
+    Boundary(Items=
+             GeneralizedHarmonicBoundaryItems(FramePrefix=Inertial),
+             ExtractDerivFromParent(Input=Inertialdkappa,Inertialdpsi),
+             AddBoundaryOneFormInDualFrame(FramePrefix=Inertial)
+             ),
+
+    #---------------------------------------------------------
+    # Char speeds on/near AH
+    #---------------------------------------------------------
+    Subdomain(
+      Items =
+      AddSpacetimeJacobianAndHessianItems(MapPrefix=DistortedToInertial),
+      SpatialCoordMap::TransformTensorToDifferentFrame
+      (Input                 = psi;
+       Output                = Distortedpsi;
+       IndexPositions        = ll;
+       MapPrefixToInputFrame = DistortedToInertial;
+      ),
+    ),
+    Domain(Items =
+           RescaledSurfaceInfos(Input             = AhA;
+                                Output            = RescaledAhA;
+                                MapPrefixGridToAh = GridToDistorted;
+                                OutputSize        = 10;
+                                ),
+           RescaledSurfaceInfos(Input             = AhB;
+                                Output            = RescaledAhB;
+                                MapPrefixGridToAh = GridToDistorted;
+                                OutputSize        = 10;
+                                ),
+           MinSpeedOnSurfaceInfos(Input               = RescaledAhA;
+                                  Output              = MinCharSpeedAhA;
+                                  PsiAhFrame          = Distortedpsi;
+                                  MapPrefixGridToAhFrame = GridToDistorted;
+                                  TopolInterpolator   = CardinalInterpolator;
+                                  ),
+           MinSpeedOnSurfaceInfos(Input               = RescaledAhB;
+                                  Output              = MinCharSpeedAhB;
+                                  PsiAhFrame          = Distortedpsi;
+                                  MapPrefixGridToAhFrame = GridToDistorted;
+                                  TopolInterpolator   = CardinalInterpolator;
+                                  ),
+    ),
+
+    #---------------------------------------------------------
+    # Used in MeasureControlCharSpeeds
+    #---------------------------------------------------------
+    Domain(Items = AddControlSysTimescaleHolder),
+    Boundary(Items =
+             SpatialCoordMap::TransformTensorToDifferentFrame
+             (Input =InertialOutwardNormalOneForm;
+              Output=DistortedOutwardNormalOneForm;
+              IndexPositions=l;
+              MapPrefixToInputFrame=DistortedToInertial;
+              ),
+             ),
+    #---------------------------------------------------------
+    # Used for State3 in AhSpeeds
+    #---------------------------------------------------------
+    Boundary(Items =
+             SpatialCoordMap::TransformTensorToDifferentFrame
+             (Input =InertialUnitNormalVector;
+              Output=GridUnitNormalVector;
+              IndexPositions=u;
+              MapPrefixToInputFrame=GridToInertial;
+             ),
+             SpatialCoordMap::TransformTensorToDifferentFrame
+             (Input =InertialUnitNormalVector;
+              Output=DistortedUnitNormalVector;
+              IndexPositions=u;
+              MapPrefixToInputFrame=DistortedToInertial;
+             ),
+             SpatialCoordMap::TransformTensorToDifferentFrame
+             (Input =InertialUnitNormalOneForm;
+              Output=DistortedUnitNormalOneForm;
+              IndexPositions=l;
+              MapPrefixToInputFrame=DistortedToInertial;
+             ),
+             ExtractDerivFromParent(Input=dgFromkappa),
+             ExtractFromParent(Input=GridToInertial::HessianSpaceSpace),
+             ExtractFromParent(Input=GridToInertial::HessianTimeSpace),
+             ExtractFromParent(Input=DistortedToInertial::HessianSpaceSpace),
+             ExtractFromParent(Input=DistortedToInertial::HessianTimeSpace),
+             SpatialDerivLapseFromGhKappa(kappa=kappa;
+                                          InversePsi=Invpsi;
+                                          Output=InertialdLapse),
+             SpatialDerivShiftFromGhKappa(kappa=kappa;
+                                          InversePsi=Invpsi;
+                                          Output=InertialdShift),
+             DerivOfUnitNormalOneForm(Output      = InertialdUnitNormalOneForm;
+                                      FramePrefix = Inertial;
+                                      dg          = dgFromkappa;
+                                      UnitNormalOneForm=
+                                      InertialUnitNormalOneForm;
+                                      UnitNormalVector=
+                                      InertialUnitNormalVector;
+                                      NormalizationFactor =
+                                      PenaltyCorrectionFactor;
+             ),
+    ),
+
+
+    #---------------------------------------------------------
+    # Used in constraint-preserving BC
+    #---------------------------------------------------------
+    Boundary(Items =
+             ExtractFromParent(Input=H),
+             ExtractDerivFromParent(Input=InertialdH),
+             ),
+
+    #---------------------------------------------------------
+    # for Observers
+    #---------------------------------------------------------
+    Subdomain(Items=
+              MinimumGridSpacing(Output=MinimumGridSpacing;MapPrefix=GridToInertial),
+              SpatialCoordMap::TransformSpatialComponentsOfSpacetimeTensorToDifferentFrame
+              (MapPrefixToInputFrame=GridToInertial;
+               Input =psi; Output=PseudoGridpsi;
+               IndexPositions=ll;),
+              SpatialCoordMap::TransformSpatialComponentsOfSpacetimeTensorToDifferentFrame
+              (MapPrefixToInputFrame=GridToInertial;
+               Input =kappa; Output=PseudoGridkappa;
+               IndexPositions=lll;),
+              PowerMonitor(Inputs=psi,kappa;
+                           InputPrefixForTensorYlm=PseudoGrid;
+                           AddRadialMonitorForB2B3=yes;
+                           UseTensorYlmForS2=yes;),
+              NumberOfFilteredModes(
+                FilterLabelDefault = ExpCheb;
+                FilterLabelForS2   = KillTop;
+                # FilterLabelForB3   = KillTop;
+              ),
+              GridDiagnostics(PowerMonitorItems=Powerpsi,Powerkappa;),
+
+              Eigenvalues(Input=g;Output=Eigenvaluesg),
+              Eigenvalues(Input=Distortedg;Output=EigenvaluesDistortedg),
+              RatioOfSmallestToLargestEigenvalue(Input=Eigenvaluesg;
+                                                 Output=MinOverMaxEvg),
+              RatioOfSmallestToLargestEigenvalue(Input=EigenvaluesDistortedg;
+                                                Output=MinOverMaxEvDistortedg),
+              ),
+
+    #---------------------------------------------------------
+    # GeneralizedHarmonic constraint violation
+    #---------------------------------------------------------
+    Subdomain
+    (Items =
+     AddGhConstraintItems
+     (OutputPrefix=;
+      psi    = psi;
+      kappa  = kappa;
+      H      = H;
+      dpsi   = Inertialdpsi;
+      dkappa = Inertialdkappa;
+      dH     = InertialdH;
+      MeasureConstraintsOutsideSurfaces=AhA(Prefix=AhA),AhB(Prefix=AhB);
+      MapPrefixFromGridToAhFrame = GridToDistorted;
+     ),
+     NormOfProjectedDerivConstraint
+     (
+      Input                        =2Con;
+      DerivativeIndex              =0;
+      Output                       =NormOf2Con;
+      DataMeshNorm                 =L2Norm;
+      MapPrefixFromGridToInputFrame=GridToInertial;
+      AddRadialProjectionForB2B3   =yes),
+
+     NormOfProjectedDerivConstraint
+     (
+      Input                        =3Con;
+      DerivativeIndex              =0;
+      Output                       =NormOf3Con;
+      DataMeshNorm                 =L2Norm;
+      MapPrefixFromGridToInputFrame=GridToInertial;
+      AddRadialProjectionForB2B3   =yes),
+      
+     FlattenDeriv(
+      Input = SpacetimeDerivOfH;
+      Output = SpacetimeDerivOfHFlattened;
+      DerivPosition = Last;
+     ),
+
+      FirstDeriv(Input=H;
+        Output=dCoordH;
+      ),
+      FlattenDeriv(
+        Input = dCoordH;
+        Output = dCoordHFlattened;
+        DerivPosition = Last;
+        ZeroFillOffset = 1;
+      ),
+
+      FirstDeriv(Input=H;
+              MapPrefix=GridToInertial;
+              Output=dInertialH;),
+      FlattenDeriv(
+        Input = dInertialH;
+        Output = dInertialHFlattened;
+        DerivPosition = Last;
+        ZeroFillOffset = 1;
+      ),      
+
+    ), # Subdomain
+
+    #---------------------------------------------------------
+    # Apparent horizon finder
+    #---------------------------------------------------------
+    Subdomain
+    (Items=
+     Add3Plus1ItemsInDifferentFrame
+     (InputPrefix=;
+      OutputPrefix=Distorted;
+      MapPrefixToInputFrame=DistortedToInertial;
+      MapPrefixFromGridToOutputFrame=GridToDistorted;),
+
+     # NOTE: passing the map prefix directly to the
+     # differentiator item is more efficient as this
+     # will then transform the derivative index
+     # directly from the topological to the mapped frame
+     FirstDeriv(Input=DistortedSpatialChristoffel2ndKind;
+                MapPrefix=GridToDistorted;
+                Output=dDistortedSpatialChristoffel2ndKind;),
+#    FirstDeriv(Input=DistortedSpatialChristoffel2ndKind;
+#               Output=dGRIDDistortedSpatialChristoffel2ndKind;),
+#    SpatialCoordMap::TransformDerivToDifferentFrame
+#    (Input=dGRIDDistortedSpatialChristoffel2ndKind;
+#     Output=dDistortedSpatialChristoffel2ndKind;
+#     MapPrefixToOutputFrame=GridToDistorted;
+#     ),
+     Ricci(Output=DistortedSpatialRicci;
+           Gamma=DistortedSpatialChristoffel2ndKind;
+           dGamma=dDistortedSpatialChristoffel2ndKind;),
+     Trace(Input=DistortedSpatialRicci;Output=DistortedSpatialRicciScalar;
+           Indices=0,1;
+           PositionOfIndices=l,l; InvMetric=DistortedInvg;),
+
+     #Horizon quantities in inertial frame
+     # See note above about passing MapPrefix to FirstDeriv
+     FirstDeriv(Input=SpatialChristoffel2ndKind;
+                MapPrefix=GridToInertial;
+                Output=dSpatialChristoffel2ndKind;),
+#    FirstDeriv(Input=SpatialChristoffel2ndKind;
+#               Output=dGRIDSpatialChristoffel2ndKind;),
+#    SpatialCoordMap::TransformDerivToDifferentFrame
+#    (Input=dGRIDSpatialChristoffel2ndKind;
+#     Output=dSpatialChristoffel2ndKind;
+#     MapPrefixToOutputFrame=GridToInertial;
+#     ),
+     Trace(Input=SpatialRicci;Output=SpatialRicciScalar;
+           Indices=0,1;
+           PositionOfIndices=l,l; InvMetric=Invg;),
+
+
+     #For Bnn
+     FirstDeriv(Input=DistortedK;
+                MapPrefix=GridToDistorted;
+                Output=dDistortedK;),
+#    FirstDeriv(Input=DistortedK;
+#               Output=dGRIDDistortedK;),
+#    SpatialCoordMap::TransformDerivToDifferentFrame
+#    (Input=dGRIDDistortedK;
+#     Output=dDistortedK;
+#     MapPrefixToOutputFrame=GridToDistorted;
+#     ),
+     CovariantDerivative(Input=DistortedK;
+                         CoordDeriv=dDistortedK;
+                         Indices=ll;
+                         Christoffel2ndKind=DistortedSpatialChristoffel2ndKind;
+                         Output=DistortedCdK;
+                         ),
+     WeylMagnetic(Output=DistortedWeylB;
+                  CdK=DistortedCdK;
+                  g=Distortedg;
+                  SqrtDetg=DistortedSqrtDetg;
+                  ),
+
+     # for Redshift
+     FirstDeriv(
+	 Input = Lapse;
+	 Output = dDistortedLapse;
+	 MapPrefix = GridToDistorted;
+     ),
+     FlattenDeriv(
+	 Input = dDistortedLapse;
+	 Output = dDistortedFlattenedLapse;
+	 DerivPosition = First;
+     ),
+     FlattenDeriv( # for AhC finder during inspiral
+	 Input = dLapseFromkappa;
+	 Output = dFlattenedLapseFromkappa;
+	 DerivPosition = First;
+     ),
+
+
+    ),
+    Domain(Items=
+     ProperSepHorizons(
+      Surface-=AhB; Id-=;
+      Surface+=AhA; Id+=;
+      DomainInterpolator=Simple(TopologicalInterpolator=CardinalInterpolator);
+      Output=ProperSepHorizons;
+      Eps=1.e-6;
+      Metric=Distortedg;
+      MapPrefixFromGridFrame = GridToDistorted;
+     ),
+    );
