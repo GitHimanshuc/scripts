@@ -51,7 +51,7 @@ def generate_params_file(mass_ratio=1, spinA=(0, 0, 0), spinB=(0, 0, 0), D0=10):
   # Write the generated params file
   with open("./Params.input", 'w') as f:
     f.write(param_file)
-    f.write(command)
+    f.write("# ",command)
 
 
 
@@ -60,6 +60,9 @@ def checkout_and_compile_branch(branch_name):
 
 def prepare_ID(folder_path):
   subprocess.run(f"zsh ./call_prepare_id.sh {folder_path}".split())
+
+def submit_job(folder_path):
+  subprocess.run(f"zsh ./submit.sh {folder_path}".split())
 
 
 def read_data_from_json_file(file_location):
@@ -75,7 +78,7 @@ def create_simulation_folders(file_location="./runs_data.json"):
 
   for data in runs_data:
     git_branch = data["git_branch"]
-    # checkout_and_compile_branch(git_branch)
+    checkout_and_compile_branch(git_branch)
 
     mass_ratio = data["mass_ratio"]
     spinA = tuple(data["spinA"])
@@ -92,6 +95,7 @@ def create_simulation_folders(file_location="./runs_data.json"):
     shutil.copy("./Params.input",f"{dir_name}/Params.input")
     shutil.copy("./DoMultipleRuns.input",f"{dir_name}/Ev/DoMultipleRuns.input")
 
+    submit_job(dir_name)
     print("DONE: ",dir_name)
 
 

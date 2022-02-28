@@ -20,6 +20,27 @@
     "spinA": [0.0,0.0,0.0],
     "spinB": [0.0,0.0,0.0],
     "D0": 10.0
+  },
+  {
+    "git_branch": "origin/new_gauge_conditions",
+    "mass_ratio": 3.0,
+    "spinA": [0.0,0.0,0.0],
+    "spinB": [0.0,0.0,0.0],
+    "D0": 10.0
+  },
+  {
+    "git_branch": "origin/new_gauge_conditions",
+    "mass_ratio": 1.0,
+    "spinA": [0.0,0.0,0.60],
+    "spinB": [0.0,0.60,0.0],
+    "D0": 10.0
+  },
+  {
+    "git_branch": "origin/new_gauge_conditions",
+    "mass_ratio": 1.0,
+    "spinA": [0.0,0.0,0.8],
+    "spinB": [0.0,0.0,0.0],
+    "D0": 10.0
   }
 
   ]
