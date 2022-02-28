@@ -1,0 +1,26 @@
+{
+  "params": [
+  {
+    "git_branch": "origin/kerr_shift_gauge_no_passing",
+    "mass_ratio": 1.0,
+    "spinA": [0.0,0.0,0.0],
+    "spinB": [0.0,0.0,0.0],
+    "D0": 10.0
+  },
+  {
+    "git_branch": "origin/just_kerr_shift_gauge",
+    "mass_ratio": 1.0,
+    "spinA": [0.0,0.0,0.0],
+    "spinB": [0.0,0.0,0.0],
+    "D0": 10.0
+  },
+  {
+    "git_branch": "origin/new_gauge_conditions",
+    "mass_ratio": 1.0,
+    "spinA": [0.0,0.0,0.0],
+    "spinB": [0.0,0.0,0.0],
+    "D0": 10.0
+  }
+
+  ]
+}

@@ -1,0 +1,880 @@
+#!/usr/bin/env perl
+use strict;
+use warnings FATAL => 'all';
+use List::Util qw[min max];
+use Math::Trig qw[pi];
+use Cwd;
+#########################################################################
+# Stuff that you might want to change for each run, at top of this file.
+# Automatically generated or not-to-usually-be-changed stuff is lower.
+#########################################################################
+my $JobName    = undef;    # if undef, set to be the last three directories
+
+# Which levels (i.e. resolutions) to run?
+my $MinLev = 1;
+my $MaxLev = 1;
+
+# Is this an eccentricity reduction run? (1 for yes, 0 for no)
+# If yes, will set EccRedFinalTime and change MinLev->MaxLev
+my $EccRedRun = 0;
+
+# Is this a PBandJ (Perform Branching after Junk) run? (1 for yes, 0 for no).
+# If PBandJ=1, the branching into multiple Levs is done after a certain time
+# so that all Levs have exactly the same post-junk initial data.
+# For EccRedRun = 1 this is done at the time when the eccentricity has been
+# deemed acceptibly small.
+my $PBandJ = 0;
+
+# For most runs, the following two options should be set to 0.
+# Set them to 1 only if you want to do Newman-Penrose extraction of Psi2, Psi1,
+# Psi0. These are not necessary for CCE. Setting these to 1 makes the following
+# changes:
+# 1) Increases the outer boundary of the domain and will drop the
+#    outermost shell when the junk radiation enters it. This prevents the junk
+#    radiation from reflecting off the outerboundary back into the domain.
+# 2) Reduces WaveExtractionRmin to 2 reduced GW wavelengths or the minimum set
+#    by SphereC0. The number of extraction radii and WaveExtractionRmax will
+#    not change.
+# For more details, see the documentation in:
+#   spec/Evolution/WeylScalarExtraction.tex
+my $DropJunkShell = 0;
+my $ExtendExtractionRegion = 0;
+
+# Should the junk-radiation be resolved with AMR?
+# This is more accurate, but much slower.
+my $JunkAMR = 0;
+
+# Set outer boundary radius and number of wave-zone spherical shells.
+# If undef, determined automatically by SpEC::Auto{Rmax,NSphereC}.
+# NOTE: Rmax must be defined for unbound orbits
+my $Rmax = undef;
+my $NumSphereCs = undef;
+
+# Should this be treated as a binary on a hyperbolic orbit?
+# If 1, checks preventing hyperbolic orbits are disabled.
+my $HyperbolicOrbit = 0;
+
+# Should AMR be triggered frequently?
+# You would want that for example for hyperbolic or highly eccentric orbits
+my $TriggerAMRFrequently = 0;
+
+# Two methods for notification if the jobs terminate badly:
+# 1) Comma-separated list of email addresses in single quotes (no newlines)
+# 2) File path (in single quotes) for termination messages to be appended
+# If undef, determined by GetDotSpecOptions (parsing options in ~/.SpEC)
+my $EmailAddresses = undef;
+my $TerminationInfoFile = undef;
+
+# Make job a preemptee (-1), preemptor (1), or normal priority (0)
+# This only has an effect if preemption is set up on your machine.
+my $Preempt = 0;
+
+################################################################
+# import parameters from initial data
+################################################################
+
+# Declare all the variables loaded by ID_Params.perl.
+our ($ID_Origin, $ID_MA, $ID_MB, $ID_d, $ID_chiAMagnitude, $ID_chiBMagnitude,
+     $ID_Omega0, $ID_adot0,@ID_chiA, @ID_chiB, @ID_cA, @ID_cB, $ID_rA, $ID_rB,
+     $ID_rExcA, $ID_rExcB, $ID_MAhA, $ID_MAhB, $ID_Eadm, $ID_Type);
+my $IDDIR = AbsolutePathToDir("../ID/EvID"); # path to initial data directory
+EvalPerlCodeInFile("$IDDIR/ID_Params.perl");
+print "ID_Origin=$ID_Origin\n";
+print "ID_Type=$ID_Type\n";
+
+################################################################
+# changes for eccentricity reduction runs
+################################################################
+my $EccRedLev = $MaxLev; # Lev to run for final eccentricity reduction
+my $TargetEcc = 7e-4;    # Stop final ecc red iterations if below this ecc
+
+# The first few iterations of eccentricity reduction are done using
+# $InitialEccRedLev until the eccentricity goes below $InitialTargetEcc. We
+# refer to this as RoughEccReduction; this is much faster than using $MaxLev
+# but is only approximate. After $InitialTargetEcc is reached, this variable
+# ($RoughEccReduction) will be reset to 0 in this file, and the above
+# $EccRedLev and $TargetEcc will be used.
+my $InitialEccRedLev = $MinLev;
+my $InitialTargetEcc = 1e-3;
+my $RoughEccReduction = ($InitialEccRedLev == $EccRedLev) ? 0 : 1;
+
+$InitialTargetEcc = max($InitialTargetEcc, $TargetEcc);
+if ($RoughEccReduction) {
+    $EccRedLev = $InitialEccRedLev;
+    $TargetEcc = $InitialTargetEcc;
+}
+
+my $ContinueAfterTargetEccReached = "yes"; # If yes, can start full evolution
+
+################################################################
+# mass ratio (will be used below)
+################################################################
+my $q = $ID_MA/$ID_MB;
+my $Mtotal = $ID_MA+$ID_MB;
+
+################################################################
+# constraint damping parameters
+################################################################
+my $CDamping_AmpA        = 4. / $ID_MA;
+my $CDamping_WidthA      = 7. * $ID_MA;
+
+my $CDamping_AmpB        = 4./$ID_MB;
+my $CDamping_WidthB      = 7. * $ID_MB;
+
+my $CDamping_AmpOrigin   = 0.075 / $Mtotal;
+my $CDamping_WidthOrigin = 2.5*$ID_d;
+
+my $CDamping_Asymptotic  = 0.001 / $Mtotal;
+
+################################################################
+# Observation frequency
+################################################################
+
+my $DeltaTObserve       = 0.5;
+my $DeltaTObserveVolumeDump = 10.* $DeltaTObserve;
+my $WaveObservationRate = "ObservationsPerOrbit = 400;";
+if($HyperbolicOrbit==1) {
+    # In inspiral runs this is based on the orbital frequency.
+    # For hyperbolic runs wave observation is observed every DeltaT.
+    $WaveObservationRate = "DeltaT = $DeltaTObserve;";
+}
+
+################################################################
+# Various options
+################################################################
+
+my $StartTime = 0;
+my $FinalTime = 1e9;  # Default is large to avoid trigger before merger
+
+# By default treat black holes flying apart as an error
+my $ReachedLargeSeparationIsError = 1;
+if($HyperbolicOrbit==1) {
+  $ReachedLargeSeparationIsError = 0;
+}
+
+# When to begin searching for AhC.
+# Note that the 'CommonHorizon' termination criteria will wait
+# after each unsuccessful find for a 5% decrease of the trigger
+# function (proper separation), implying that an early start
+# in searching for AhC will have a minimal impact on efficiency.
+my $CoordSepFindAhC     = 2.0;
+
+my $ShellDropThreshold                    = 0.05;
+my $ShellDropComovingCharSpeedThreshold   = 0.02;
+
+my $InsaneResolution = 400;
+my $ThresholdBase    = 2.e-3;
+my $TdampCoefBase    = 0.2;
+my $MaxDampTime      = 20; # For all systems except AhSpeed.
+
+# AhSpeed only
+my $CharSpeedsMaxDampTimeA = ($ID_chiAMagnitude>0.9) ? 10 : 20;
+my $CharSpeedsMaxDampTimeB = ($ID_chiBMagnitude>0.9) ? 10 : 20;
+
+
+my $AmrExcisionSplitL = 100;
+
+if($ID_chiAMagnitude>0.9 || $ID_chiBMagnitude>0.9) {
+  $ThresholdBase   =2.e-4;
+  $TdampCoefBase   =0.1;
+  $MaxDampTime     =10;
+}
+
+################################################################
+# ControlSystem settings
+################################################################
+my $TstateOverTdamp = 0.3;  #the recommended default value
+my $TstepOverTdamp  = 0.1;  #Factor 3 smaller cuz AhSpeed triggers every 3 steps
+my $TaverageFac     = 0.25; #Ratio of Taverage/Tdamping
+my $MeasureFractionOfChunk = 0.25;# Measure controlsystems this often per chunk
+
+my $coef = $TdampCoefBase; # overall scaling of all initial control timescales
+my $Tdamping    = $coef*1.0*$Mtotal;  # all except char speed
+my $TdampingA   = $coef*0.2*($ID_MA); # AhSpeedA
+my $TdampingB   = $coef*0.2*($ID_MB); # AhSpeedB
+
+# For smooth Ah*
+my $TdampingSmoothAhA = $TdampingA;
+my $TdampingSmoothAhB = $TdampingB;
+
+# We initialize the shape control smoothly
+# in order to avoid wrecking the char speeds.
+my $TdampingShapeA = 5.0*$Tdamping;
+my $TdampingShapeB = 5.0*$Tdamping;
+
+# We do not include $TdampingA and $TdampingB in the minimum
+# because those correspond to AhSpeed, which is not triggered per chunk.
+my $Tstatechange = $TstateOverTdamp*min($TdampingShapeA,$TdampingShapeB,
+                                        $TdampingSmoothAhA,$TdampingSmoothAhB,
+                                        $Tdamping);
+
+# Initial timestep should not get too big.
+my $InitialDt = min(1.e-3,$TstepOverTdamp*min($TdampingA,$TdampingB));
+
+#--------------------------------
+# TimeScaleTuner
+#--------------------------------
+my $IncreaseFactor = 1.01;   # Increase/decrease damping
+my $DecreaseFactor = 0.98;   # timescales by these factors
+# Higher mass ratio runs need tigher control system (Bela).
+my $Threshold   = $ThresholdBase/($q+1/$q);
+my $MinDampTime = 0.01;  # systems except
+
+my $CharSpeedsThreshold      = 1e-3; # AhSpeed only
+my $CharSpeedsDecreaseFactor = 1.0;  # AhSpeed only
+                    # (AhSpeed is smart enough to decrease on its own).
+my $CharSpeedsMinDampTime    = 1e-4; # AhSpeed only
+                    # (This should be limited only by the min allowed timestep).
+
+my $CharSpeedsTaverageFac = 0.3;
+my $ShellDropTargetSpeed  = 0;    # No acceleration of shell drop
+
+# Location of holes on grid and other domain parameters.
+# First, orbital parameters:
+my $Omega = $ID_Omega0;
+my $aDot  = $ID_adot0;
+
+#-------------------------
+# How high an L can we
+# accept for the ringdown?
+#-------------------------
+# For low mass ratio, L=20 seems ok.
+# For higher mass ratio, AhC is very
+# distorted and takes a long time to get
+# to L=20, so we raise it so that it is
+# L=40 by q=10.
+my $TerminateBelowThisL = 20;
+if($q>10.0) {
+  $TerminateBelowThisL = 40;
+} elsif($q>4.0) {
+  $TerminateBelowThisL = 21+int(($q-4.0)*19.99/6.0);
+}
+
+################
+# Grid Geometry
+################
+#Define the centers of the holes and the coordinate separation at t=0
+my $xA         = $ID_cA[0];
+my $xB         = $ID_cB[0];
+my $yA         = $ID_cA[1];
+my $yB         = $yA; #must have yA=yB for PitchAndYaw
+my $zA         = $ID_cA[2];   #must have zA=zB for the map I'm using (???)
+my $zB         = $zA;
+my $Separation = abs(eval($xA)-eval($xB));
+
+#Define the spin of hte holes
+my $chiAx         = $ID_chiA[0];
+my $chiBx         = $ID_chiB[0];
+my $chiAy         = $ID_chiA[1];
+my $chiBy         = $ID_chiB[1];
+my $chiAz         = $ID_chiA[2];
+my $chiBz         = $ID_chiB[2];
+
+
+# Terminate, when the separation exceeds this value
+# The 1.4 factor is a conservative value motivated by the 1.5 threshold at which the radial map
+# in Eq. (9) of https://arxiv.org/pdf/0710.0158v2.pdf develops a singularity.
+my $MaxSeparation = 1.4 * $Separation;
+
+# Initial AH radius from ID
+my $rInitAhA = $ID_rA;
+my $rInitAhB = $ID_rB;
+
+# Extrapolation fraction from ID
+if (not defined($ID_rExcA)) {
+  die "ERROR: ID_Params.perl does not define 'ID_rExc{A,B}'.\n".
+      "See Support/LegacyFileConversion/UpdateIDParams.pl for help.";
+}
+my $ExtrFracA = $ID_rExcA/$ID_rA;
+my $ExtrFracB = $ID_rExcB/$ID_rB;
+
+# Excision radius (phenomenological formula)
+# NOTE: The ratio between $rExcA and $rInitAhA (and same for B) defined
+#       below must be the same as what is assumed in initial data
+#       (function FindAhCoefs in BBH_ID.py), or else shape control will
+#       not have Q=0 at the start of the evolution.
+my $rExcA = sqrt($ExtrFracA)*$rInitAhA;
+my $rExcB = sqrt($ExtrFracB)*$rInitAhB;
+
+# Approx. initial coord separation between the line connecting the
+# BH centers, excluding the region interior to the horizons.
+my $InitCoordSep = $Separation - $rInitAhA - $rInitAhB;
+
+# We place a limit on the maximum shell
+# radius around the larger hole for q>2.
+my $rMaxA = "<<DEFAULT>>";
+my $rMaxB = "<<DEFAULT>>";
+$rMaxA = 0.5*abs($xB) unless ($q<2);
+
+# radial size of inner spheres is set by setting
+# RelativeDeltaR := DeltaR/Ravg
+my $RelativeDeltaR = 0.40;
+
+# Width of the Gaussian weight-function for the skew map
+# This applies only to the SmoothDistortedToInertialMap
+# For small initial separation we retain the primordial value of 100
+my $SkewMapRmax = max(2 * $Separation, 100);
+
+# angular resolution of inner spheres function of mass-ratio
+# for LB, choose increasing resolution with q, but with an upper
+# limit reached at q=10.5 (q>6 aren't well understood!)
+my $LA = "12 + 2*k";
+my $LB = sprintf("%i + %i*k",
+                 12 +int($q -0.49) - int($q>10.5)*int($q-10.5),
+                 2+int($q>3.9)+int($q>7.9) );
+
+# for rolling the initial spatial part of the gauge off so non-smooth
+# maps are safe at t=0
+my $ID_SpatialGaussianPower = 4;
+
+# SpatialCoordMap parameters
+# note that these values are a maximum
+# angular resolution for shape control for the
+# course of the entire run.  The shape control
+# map is adaptive and it will only use as much
+# angular resolution as it needs based on the
+# Ylm coefficients of the shape control system,
+# which in turn is driven by the AH finder.
+
+my $LControlA = 40;
+my $LControlB = 40;
+
+# Directories
+my $MapDir = $IDDIR;  # where to get the Init*txt files
+
+my $AmrMinTimeBeforeChangingSdAgain =  min(1,min($ID_MAhA,$ID_MAhB) * 2);
+if($TriggerAMRFrequently==1) {
+  $AmrMinTimeBeforeChangingSdAgain =  0.01 * $AmrMinTimeBeforeChangingSdAgain;
+}
+
+#########################
+# Outer Boundary Radius
+#########################
+
+my $ExpansionFactorOuterBdryTimeScale  = 50;
+my $ExpansionFactorOuterBdryDriftSpeed = -1e-6;
+
+my $RminSphereCFactor  = 6; # Rmin of SphereC0 is abs($xB) times this factor.
+if($HyperbolicOrbit==1) {
+  $RminSphereCFactor  = 3;  # Compensate larger initial separation
+}
+
+my $WaveExtractionRmin =  SpEC::AutoWaveExtractionRmin(
+                            $RminSphereCFactor*abs($xB),
+                            $ID_Omega0,
+                            $Mtotal,
+                            $ExtendExtractionRegion);
+
+# Outer boundary should decrease by at most this factor during inspiral
+my $MinRadiusFrac = 0.9;
+
+my $SemiMajorAxis = undef;
+
+if($HyperbolicOrbit==0) {
+  my $MinimumRmax = 2*$WaveExtractionRmin;
+  if ($ExtendExtractionRegion) {
+    # If $ExtendExtractionRegion==1, then WaveExtractionRmin is smaller by a
+    # factor of pi. To prevent this from affecting Rmax, we need to include
+    # that factor pi in the computation of Rmax.
+    $MinimumRmax *= pi;
+  }
+  my $AutoRmax = undef;
+  ($AutoRmax, $SemiMajorAxis) = SpEC::AutoRmax(
+    $ID_MA, $ID_MB,
+    $Separation, $Omega,
+    $aDot, $MinRadiusFrac,
+    $MinimumRmax);
+  unless (defined $Rmax) {
+    $Rmax = $AutoRmax;
+  }
+}
+elsif($HyperbolicOrbit==1) {
+  unless(defined $Rmax) {
+    $Rmax = 10 * $RminSphereCFactor*abs($xB);
+  }
+  # put inner extraction sphere as far in as possible
+  # Rmin will be smaller than the inner SphereC radius, but this is intentional.
+  $WaveExtractionRmin = int(2 * abs($xB));
+}
+else {
+  die "ERROR: HyperbolicOrbit should be set to either 0 or 1.";
+}
+
+SpEC::CheckOuterBdrySpeed($Rmax, $ExpansionFactorOuterBdryDriftSpeed);
+unless (defined $NumSphereCs) {
+  $NumSphereCs = SpEC::AutoNSphereC($Rmax, $SemiMajorAxis, $Mtotal);
+}
+my $WaveExtractionRmax = int($MinRadiusFrac*$Rmax/5.0)*5.0;
+
+#################
+# Ah finding
+#################
+my $MinLAhA = 6;
+my $MinLAhB = 6;
+my $InitLAhA  = ($ID_chiAMagnitude>0.9) ? 12 : $MinLAhA;
+my $InitLAhB  = ($ID_chiBMagnitude>0.9) ? 12 : $MinLAhB;
+my $MinLAhC   = 6;
+my $MaxLAhC   = 40;
+my $InitLAhC  = 16;
+
+# Ah Initial Guess
+my $AhAFile = "$IDDIR/ID_AhACoefs.dat";
+my $AhBFile = "$IDDIR/ID_AhBCoefs.dat";
+
+# Gauge control timescales
+# This sets up the time-scale on which the
+# InitH is rolled off.
+my $wRolloff = "50.0";
+my $wRollon  = "50.0";
+
+my $TimeRolloffTimeScale = "$wRolloff";
+my $TimeRolloffStartTime = "$StartTime";
+my $LapseCoefTimeScale   = "$wRollon";
+my $LapseCoefStartTime   = "$StartTime";
+my $ShiftCoefTimeScale   = "$wRollon";
+my $ShiftCoefStartTime   = "$StartTime";
+
+# The radius of the outer shell around each BH can
+# only be changed once the initial gauge has
+# completely been rolled off.  Here we set this
+# time to a value where the coefficient of the
+# initial gauge is well below roundoff values.
+my $TimeAtWhichInitGaugeIsRolledOff = eval($StartTime)+3.0*$wRolloff;
+
+# Derived quantities involving statechange and checkpoint
+my $InitialDeltaTChunk = $Tstatechange;
+
+################################################################
+# changes for JunkAMR run
+################################################################
+
+# This default effectively disables DoNotChangeExtentjBeforeRadiusPlusTime
+my $TimeOffsetToAdjustSphereCExtents = -$Rmax;
+my $TriggerEveryNChunks = "TriggerEveryNChunks=1;\n";
+if ($JunkAMR==0) {
+  # Do NOT do JunkAMR; Adjust certain numbers accordingly
+  print "NOTICE: JunkAMR=0. Junk radiation will not be resolved.\n";
+  # AMR will start after t > subdomain radius + $Separation
+  # Assuming coordinate lightspeed = 1 this is roughly the time after which
+  # junk radiation has traversed the subdomain
+  if ($ID_Type eq "BBH_SHK") {
+    # We add one separation extra just to be safe
+    $TimeOffsetToAdjustSphereCExtents = 2*$Separation;
+  }
+  elsif($ID_Type eq "BBH_SKS" or $ID_Type eq "BBH_CFMS" or
+        $ID_Type eq "BBH_SSphKS") {
+    # Initial data like SKS has a wider junk pulse
+    $TimeOffsetToAdjustSphereCExtents = max(200,3*$Separation);
+  }
+  else {
+    die "Unknown ID type $ID_Type\n";
+  }
+  $TriggerEveryNChunks =
+    "TriggerEveryNChunks=1,10,50;\n".
+    "          TriggerEveryNChunksSeparatorName = SmoothCoordSepDouble;\n".
+    "          TriggerEveryNChunksSeparatorValues = 0.5*8,8;\n";
+  if($TriggerAMRFrequently==1) {
+    # slow down AMR in the initial phase of large junk radiation,
+    # i.e. until junk radiation has reached SphereC,
+    # but otherwise resolve fast dynamics
+    my  $SeparatorValue = ($RminSphereCFactor+1) * abs($xB);
+    if($HyperbolicOrbit==1) {
+        # in hyperbolic encounters fast refinement could be required earlier
+        $SeparatorValue = $Separation;
+    }
+    $TriggerEveryNChunks =
+    "TriggerEveryNChunks=50,1;\n".
+    "          TriggerEveryNChunksSeparatorName = Time;\n".
+    "          TriggerEveryNChunksSeparatorValues = $SeparatorValue;\n";
+  }
+}
+
+################################################################
+# Set up SphereC radii and possible junkyard shells
+################################################################
+
+# If $DropJunkShell==1, then the function SetSphereCRadii below will increase
+# the value of $Rmax to include extra SphereC subdomains that will be dropped
+# later in the run. We save the value of $Rmax without this extension as
+# $RmaxAfterDrop, so we know what value $Rmax will be after dropping the shells.
+# Even if $DropJunkShell==0, we still need to define $RmaxAfterDrop for the sake
+# of filling in variables in the input files.
+my $RmaxAfterDrop = $Rmax;
+
+# $MinimumJunkyardWidth is ignored if $DropJunkShell==0.
+# If $DropJunkShell==1, we extend the outer boundary radius by an amount greater
+# than or equal to $MinimumJunkyardWidth. For more details, see the comments in
+# the SpEC::SetSphereCRadii function.
+# Heuristically, the junk radiation lasts for <450 M of coordinate time in the
+# waveforms. This was determined by looking at runs in the catalog as well as
+# runs where all the Weyl scalars were extracted. About half of the junk will
+# have already reached the outer boundary when the shells are dropped at one
+# light-crossing time, so the minimum value 250 should be safe enough for
+# containing all the junk radiation. This has been shown to work for a
+# precessing bbh run with q=4, chi_A=0.6, and chi_B=0.3. If the junkyard width
+# is too large and the mass ratio/spins are too high, then the char speeds at
+# the outer boundary will be unstable and cause the run to fail.
+my $MinimumJunkyardWidth = 250;
+
+my $Radii = undef
+my $DropJunkShellTime = undef;
+($Radii, $Rmax, $DropJunkShellTime) =
+    SpEC::SetSphereCRadii($DropJunkShell,
+                          $Rmax,
+                          $RminSphereCFactor*abs($xB), # Rmin
+                          $NumSphereCs,
+                          $MinimumJunkyardWidth);
+
+################################################################
+# PBandJ
+################################################################
+
+my $ActivatePBandJTimeTermination = $PBandJ;
+my $PBandJTime = 1.2 * $Rmax;
+my $PBandJBaseLev = $MaxLev;
+
+if ($EccRedRun) {
+    # Eccentricity reduction has it's own termination trigger
+    $ActivatePBandJTimeTermination = 0;
+    $PBandJBaseLev = $EccRedLev;
+}
+
+if ($HyperbolicOrbit) {
+    # ToDo: estimate encounter time
+    # For now we put some rough value
+    $PBandJTime = 4 * abs($xB);
+}
+
+################################################################
+# Job Organization
+################################################################
+
+# Set WallClock in Evolution.input (NOTE: SpECBatchScript replaces this
+# limit in Evolution.input, so this is only relevant if one runs these
+# input files without using Submit.input).
+my $HoursToRun = 2;
+
+# Set JobName if it is not yet defined (last 3 directories)
+if (not defined $JobName) {
+  $JobName = `/bin/pwd`;
+  $JobName =~ s|.+/(.+/.+/.+)\n|$1|;
+  $JobName =~ s|/|_|g;
+}
+
+# Get TensorYlmDB stuff.
+my $TensorYlmDataBaseDir = TensorYlmDbPath();
+my $TensorYlmDataBaseIsReadOnly = TensorYlmDbIsReadOnly();
+
+################################################################
+# Loop over levels and pattern replacement in files
+################################################################
+
+die "ERROR: MinLev=$MinLev > MaxLev=$MaxLev" if ($MinLev > $MaxLev);
+for (my $k=$MinLev; $k<=$MaxLev; ++$k) { # loop over levels
+
+  my $EccRedFinalTime = 1e9;  # i.e. effectively no trigger if not EccRedRun
+  if ($EccRedRun) {
+    next unless ($k == $EccRedLev);  # Skip all Levs except EccRedLev
+    my $tmin = 400;  # Start time of ecc red fitting regime
+    $EccRedFinalTime = $tmin + 5*3.14159/$ID_Omega0;  # Stop after 2.5 orbits
+  }
+
+  next if($PBandJ and not $k == $PBandJBaseLev);
+
+  #Accuracy requirements for the grid, and
+  #accuracy requirements for the Ah finder for hole A and hole B
+  my $TruncationErrorMax = 0.000216536 * 4**(-$k);
+  my $ProjectedConstraintsMax = 0.216536 * 4**(-$k);
+  my $TruncationErrorMaxA = $TruncationErrorMax*1.e-4;
+  my $TruncationErrorMaxB = $TruncationErrorMax*1.e-4;
+
+  my $AhMaxRes  = $TruncationErrorMax;
+  my $AhMinRes  = $AhMaxRes / 10.0;
+
+  my $AhMaxTrunc=$TruncationErrorMax;
+  my $AhMinTrunc=$AhMaxTrunc / 100.0;
+
+  #Set up subdir names
+  my $WaveDir                     = "GW2";
+  my $ForContinuationDir          = "ForContinuation";
+  my $ApparentHorizonsDir         = "ApparentHorizons";
+  my $ConstraintNormsDir          = "ConstraintNorms";
+  my $CharSpeedsDir               = "CharSpeedNorms";
+
+  my $DIR = "Lev".$k."_AA";
+
+  RunInDirectory($DIR,
+  {
+    # All AMR tolerances should go in AmrTolerances.input. Other input files
+    # should get the tolerances from AmrTolerances.input. This way, we have all
+    # AmrTolerances in a single, easy-to-modify input file. This is useful, for
+    # example, if you want to change the tolerance halfway thru the run.
+    # See ApparentHorizonFinders.input for an example of how the tolerances
+    # are read.
+    "AmrTolerances.input" => {
+      "__AhMinRes__"    => $AhMinRes,
+      "__AhMaxRes__"    => $AhMaxRes,
+      "__AhMinTrunc__"  => $AhMinTrunc,
+      "__AhMaxTrunc__"  => $AhMaxTrunc,
+      "__TruncationErrorMax__" => $TruncationErrorMax,
+      "__TruncationErrorMaxA__" => $TruncationErrorMaxA,
+      "__TruncationErrorMaxB__" => $TruncationErrorMaxB,
+      "__ProjectedConstraintsMax__" => $ProjectedConstraintsMax,
+    },
+    "GrDomain.input" => {
+      "__Lev__"   => $k,
+      "__LA__"    => $LA,
+      "__LB__"    => $LB,
+      "__rExcA__" => $rExcA,
+      "__rMaxA__" => $rMaxA,
+      "__rExcB__" => $rExcB,
+      "__rMaxB__" => $rMaxB,
+      "__Radii__" => $Radii,
+      "__xA__"    => $xA,
+      "__yA__"    => $yA,
+      "__zA__"    => $zA,
+      "__xB__"    => $xB,
+      "__yB__"    => $yB,
+      "__zB__"    => $zB,
+      "__RelativeDeltaR__" => $RelativeDeltaR,
+    },
+    "CombinedStateChangers.input" => {
+      "__TstateOverTdamp__" => $TstateOverTdamp,
+      "__TstepOverTdamp__"  => $TstepOverTdamp,
+    },
+    "GrStateChangers.input" => {
+      "__MeasureFractionOfChunk__" => $MeasureFractionOfChunk,
+      "__Threshold__" => $Threshold,
+      "__IncreaseFactor__" => $IncreaseFactor,
+      "__DecreaseFactor__" => $DecreaseFactor,
+      "__MinDampTime__" => $MinDampTime,
+      "__MaxDampTime__" => $MaxDampTime,
+      "__xA__"             => $xA,
+      "__yA__"             => $yA,
+      "__zA__"             => $zA,
+      "__xB__"             => $xB,
+      "__yB__"             => $yB,
+      "__zB__"             => $zB,
+      "__Tdamping__"       => $Tdamping,
+      "__TdampingShapeA__" => $TdampingShapeA,
+      "__TdampingShapeB__" => $TdampingShapeB,
+      "__TdampingAhA__"    => $TdampingA,
+      "__TdampingAhB__"    => $TdampingB,
+      "__TaverageFac__"    => $TaverageFac,
+      "__SkewMapRmax__"    => $SkewMapRmax,
+      "__CharSpeedsThreshold__"   => $CharSpeedsThreshold,
+      "__CharSpeedsDecreaseFactor__" => $CharSpeedsDecreaseFactor,
+      "__CharSpeedsMinDampTime__" => $CharSpeedsMinDampTime,
+      "__CharSpeedsMaxDampTimeA__"=> $CharSpeedsMaxDampTimeA,
+      "__CharSpeedsMaxDampTimeB__"=> $CharSpeedsMaxDampTimeB,
+      "__CharSpeedsTaverageFac__" => $CharSpeedsTaverageFac,
+      "__ShellDropThreshold__"    => $ShellDropThreshold,
+      "__ShellDropComovingCharSpeedThreshold__" => $ShellDropComovingCharSpeedThreshold,
+    },
+    "AmrDriver.input" => {
+      "__Lev__"   => $k,
+      "__InsaneResolution__"    => $InsaneResolution,
+      "__ExcisionSplitL__"      => $AmrExcisionSplitL,
+      "__xA__"  => $xA,
+      "__yA__"  => $yA,
+      "__zA__"  => $zA,
+      "__xB__"  => $xB,
+      "__yB__"  => $yB,
+      "__zB__"  => $zB,
+      "__AmrMinTimeBeforeChangingSdAgain__" => $AmrMinTimeBeforeChangingSdAgain,
+      "__TriggerEveryNChunks__" => $TriggerEveryNChunks,
+      "__TimeOffsetToAdjustSphereCExtents__" => $TimeOffsetToAdjustSphereCExtents,
+    },
+    "Evolution.input" => {
+      "__TensorYlmDataBaseDir__" => $TensorYlmDataBaseDir,
+      "__TensorYlmDataBaseIsReadOnly__" => $TensorYlmDataBaseIsReadOnly,
+      "__HoursToRun__" => $HoursToRun,
+      "__FinalTime__" => $FinalTime,
+      "__DropJunkShellTime__" => $DropJunkShellTime,
+      "__EccRedFinalTime__" => $EccRedFinalTime,
+      "__TargetEcc__" => $TargetEcc,
+      "__ContinueAfterTargetEccReached__" => $ContinueAfterTargetEccReached,
+      "__RoughEccReduction__" => $RoughEccReduction,
+      "__PBandJ__" => $PBandJ,
+      "__PBandJTime__" => $PBandJTime,
+      "__PBandJTimeActive__" => $ActivatePBandJTimeTermination,
+      "__TerminateBelowThisL__" => $TerminateBelowThisL,
+      "__MaxSeparation__"  => $MaxSeparation,
+      "__ReachedLargeSeparationIsError__" => $ReachedLargeSeparationIsError,
+      "__xA__"  => $xA,
+      "__yA__"  => $yA,
+      "__zA__"  => $zA,
+      "__xB__"  => $xB,
+      "__yB__"  => $yB,
+      "__zB__"  => $zB,
+      "__time__"              => $StartTime,
+      #"__TimeAtWhichInitGaugeIsRolledOff__" => $TimeAtWhichInitGaugeIsRolledOff,
+      "__TimeRolloffTimeScale__" => $TimeRolloffTimeScale,
+      "__TimeRolloffStartTime__" => $TimeRolloffStartTime,
+      "__InitialDeltaTChunk__"    => $InitialDeltaTChunk,
+      "__InitialDt__"         => $InitialDt,
+      "__RelativeDeltaR__"    => $RelativeDeltaR,
+    },
+    "ConstraintDamping.input" => {
+      "__CDamping_gamma0_AmpA__"        => $CDamping_AmpA,
+      "__CDamping_gamma0_WidthA__"      => $CDamping_WidthA,
+      "__CDamping_gamma0_AmpB__"        => $CDamping_AmpB,
+      "__CDamping_gamma0_WidthB__"      => $CDamping_WidthB,
+      "__CDamping_gamma0_AmpOrigin__"   => $CDamping_AmpOrigin,
+      "__CDamping_gamma0_WidthOrigin__" => $CDamping_WidthOrigin,
+      "__CDamping_gamma0_Asymptotic__"  => $CDamping_Asymptotic,
+      "__CDamping_gamma2_AmpA__"        => $CDamping_AmpA,
+      "__CDamping_gamma2_WidthA__"      => $CDamping_WidthA,
+      "__CDamping_gamma2_AmpB__"        => $CDamping_AmpB,
+      "__CDamping_gamma2_WidthB__"      => $CDamping_WidthB,
+      "__CDamping_gamma2_AmpOrigin__"   => $CDamping_AmpOrigin,
+      "__CDamping_gamma2_WidthOrigin__" => $CDamping_WidthOrigin,
+      "__CDamping_gamma2_Asymptotic__"  => $CDamping_Asymptotic,
+      "__xA__"  => $xA,
+      "__yA__"  => $yA,
+      "__zA__"  => $zA,
+      "__xB__"  => $xB,
+      "__yB__"  => $yB,
+      "__zB__"  => $zB,
+      "__d__"   => $Separation,
+    },
+    "GrInitialConditions.input" => {
+      "__xA__"  => $xA,
+      "__yA__"  => $yA,
+      "__zA__"  => $zA,
+      "__xB__"  => $xB,
+      "__yB__"  => $yB,
+      "__zB__"  => $zB,
+      "__ID_SpatialGaussianPower__"=>$ID_SpatialGaussianPower,
+      "__DIR__"      => $IDDIR . "/",
+    },
+    "ApparentHorizonFinders.input" => {
+      "__ApparentHorizonsDir__" => $ApparentHorizonsDir,
+      "__MeasureFractionOfChunk__" => $MeasureFractionOfChunk,
+      "__xA__"          => $xA,
+      "__yA__"          => $yA,
+      "__zA__"          => $zA,
+      "__xB__"          => $xB,
+      "__yB__"          => $yB,
+      "__zB__"          => $zB,
+      "__AhAFile__"     => $AhAFile,
+      "__AhBFile__"     => $AhBFile,
+      "__time__"        => $StartTime,
+      "__DeltaTObserve__" => $DeltaTObserve,
+      "__MinLAhA__"     => $MinLAhA,
+      "__MinLAhB__"     => $MinLAhB,
+      "__InitLAhA__"    => $InitLAhA,
+      "__InitLAhB__"    => $InitLAhB,
+      "__MinLAhC__"     => $MinLAhC,
+      "__MaxLAhC__"     => $MaxLAhC,
+      "__InitLAhC__"    => $InitLAhC,
+      "__CoordSepFindAhC__" => $CoordSepFindAhC,
+    },
+    "GrDataBoxItems.input" => {
+      "__IncreaseFactor__" => $IncreaseFactor,
+      "__DecreaseFactor__" => $DecreaseFactor,
+      "__MinDampTime__" => $MinDampTime,
+      "__MaxDampTime__" => $MaxDampTime,
+      "__Threshold__"   => $Threshold,
+      "__MeasureFractionOfChunk__" => $MeasureFractionOfChunk,
+      "__StartTime__" => $StartTime,
+      "__Tdamping__" => $Tdamping,
+      "__TdampingSmoothAhA__" => $TdampingSmoothAhA,
+      "__TdampingSmoothAhB__" => $TdampingSmoothAhB,
+      "__ApparentHorizonsDir__" => $ApparentHorizonsDir,
+      "__DeltaTObserve__" => $DeltaTObserve,
+      "__InitCoordSep__" => $InitCoordSep,
+      "__DIR__"      => $IDDIR . "/",
+    },
+    "GrVolumeDumps.input" => {
+      "__DeltaTObserveVolumeDump__"    => $DeltaTObserveVolumeDump,
+    },
+    "GaugeItems.input" => {
+      "__TimeRolloffTimeScale__" => $TimeRolloffTimeScale,
+      "__TimeRolloffStartTime__" => $TimeRolloffStartTime,
+      "__LapseCoefTimeScale__"   => $LapseCoefTimeScale,
+      "__LapseCoefStartTime__"   => $LapseCoefStartTime,
+      "__ShiftCoefTimeScale__"   => $ShiftCoefTimeScale,
+      "__ShiftCoefStartTime__"   => $ShiftCoefStartTime,
+      "__MA__"          => $ID_MA,
+      "__MB__"          => $ID_MB,
+      "__xA__"          => $xA,
+      "__yA__"          => $yA,
+      "__zA__"          => $zA,
+      "__xB__"          => $xB,
+      "__yB__"          => $yB,
+      "__zB__"          => $zB,
+      "__chiAx__"       => $chiAx,
+      "__chiAy__"       => $chiAy,
+      "__chiAz__"       => $chiAz,
+      "__chiBx__"       => $chiBx,
+      "__chiBy__"       => $chiBy,
+      "__chiBz__"       => $chiBz,
+    },
+    "SpatialCoordMap.input" => {
+      "__xA__"          => $xA,
+      "__yA__"          => $yA,
+      "__zA__"          => $zA,
+      "__xB__"          => $xB,
+      "__yB__"          => $yB,
+      "__zB__"          => $zB,
+      "__Rmax__"        => $RmaxAfterDrop,
+      "__AltRmax__"     => $Rmax,
+      # Note that $RmaxAfterDrop == $Rmax if $DropJunkShell==False
+      "__StartTime__"   => $StartTime,
+      "__Omega__"       => $Omega,
+      "__aDot__"        => $aDot,
+      "__LControlA__"   => $LControlA,
+      "__LControlB__"   => $LControlB,
+      "__SkewMapRmax__" => $SkewMapRmax,
+      "__MapDir__"      => $MapDir . "/",
+      "__ExpFacTimeScale__" => $ExpansionFactorOuterBdryTimeScale,
+      "__FixedSpeed__"  => $ExpansionFactorOuterBdryDriftSpeed,
+    },
+    "GrObservers.input" => {
+      "__ForContinuationDir__" => $ForContinuationDir,
+      "__ApparentHorizonsDir__" => $ApparentHorizonsDir,
+      "__ConstraintNormsDir__" => $ConstraintNormsDir,
+      "__CharSpeedsDir__" => $CharSpeedsDir,
+      "__DeltaTObserve__"    => $DeltaTObserve,
+      "__xA__" => $xA,
+      "__yA__" => $yA,
+      "__zA__" => $zA,
+      "__xB__" => $xB,
+      "__yB__" => $yB,
+      "__zB__" => $zB,
+      "__Rmax__"  => $Rmax,
+    },
+    "GrWaveExtraction.input" => {
+      "__WaveDir__"             => $WaveDir,
+      "__WaveExtractionRmin__"  => $WaveExtractionRmin,
+      "__WaveExtractionRmax__"  => $WaveExtractionRmax,
+      "__WaveObservationRate__" => $WaveObservationRate,
+      "__InitialAdmEnergy__" => $ID_Eadm,
+    },
+  },
+  {
+    RequireBinDir => 1,
+    GenerateSubmissionScript => 1,
+    OptsToCreateSubmitScript =>
+    {
+      Preempt => $Preempt,
+      Jobname => "$JobName.$k",
+    },
+  },
+  );
+}
+
+#==============================================================================
+# Subfunctions
+#==============================================================================
+
+# Given a directory name, returns the absolute pathname.
+sub AbsolutePathToDir {
+  my($path)=@_;
+  my $pwd=`/bin/pwd`; chomp $pwd;
+  chdir($path) || die "Cannot chdir $path";
+  $path = `/bin/pwd`; chomp $path;
+  chdir($pwd) || die "Cannot chdir $pwd";
+  return $path;
+}
