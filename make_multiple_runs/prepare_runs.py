@@ -27,31 +27,31 @@ def generate_params_file(mass_ratio=1, spinA=(0, 0, 0), spinB=(0, 0, 0), D0=10):
   # Params.input
   param_file = f"""# Set the initial data parameters
 
-  # Orbital parameters
-  $Omega0 = {parameters[1].split("= ")[1]};
-  $adot0 = {parameters[3].split("= ")[1]};
-  $D0 = {D0};
+# Orbital parameters
+$Omega0 = {parameters[1].split("= ")[1]};
+$adot0 = {parameters[3].split("= ")[1]};
+$D0 = {D0};
 
-  # Physical parameters (spins are dimensionless)
-  $MassRatio = {mass_ratio};
-  @SpinA = {spinA};
-  @SpinB = {spinB};
+# Physical parameters (spins are dimensionless)
+$MassRatio = {mass_ratio};
+@SpinA = {spinA};
+@SpinB = {spinB};
 
-  # Evolve after initial data completes?
-  $Evolve = 1;
+# Evolve after initial data completes?
+$Evolve = 1;
 
-  # IDType: "SKS", "SHK", "SSphKS" or "CFMS".
-  $IDType = "SKS";
+# IDType: "SKS", "SHK", "SSphKS" or "CFMS".
+$IDType = "SKS";
 
-  # Expected Norbits: {parameters[-2].split("= ")[-1]}
-  # Expected tMerger: {parameters[-1].split("= ")[-1]}
+# Expected Norbits: {parameters[-2].split("= ")[-1]}
+# Expected tMerger: {parameters[-1].split("= ")[-1]}
 
   """
 
   # Write the generated params file
   with open("./Params.input", 'w') as f:
     f.write(param_file)
-    f.write("# ",command)
+    # f.write("# "+command)
 
 
 
