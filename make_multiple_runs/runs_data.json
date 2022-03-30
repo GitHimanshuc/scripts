@@ -1,11 +1,42 @@
 {
   "params": [
   {
-    "git_branch": "origin/kerr_shift_gauge_no_passing",
+    "git_branch": "origin/corotating_gauge_conndition",
+    "folder_name":"test_folder",
     "mass_ratio": 1.0,
     "spinA": [0.0,0.0,0.0],
     "spinB": [0.0,0.0,0.0],
-    "D0": 10.0
+    "D0": 10.0,
+    "file_replace": [
+      {
+        "file_path": "/Ev/GaugeItems.input",
+        "original_str": [
+          "SecondaryWeightRmax  = 100;"
+        ],
+        "replaced_str": [
+          "SecondaryWeightRmax  = 50;"
+        ]
+      },
+      {
+        "file_path": "/Ev/DoMultipleRuns.input",
+        "original_str": [
+          "my \\$LapseCoefTimeScale   = \\\"\\$wRollon\\\";",
+          "my \\$LapseCoefStartTime   = \\\"\\$StartTime\\\";",
+          "my \\$ShiftCoefTimeScale   = \\\"\\$wRollon\\\";",
+          "my \\$ShiftCoefStartTime   = \\\"\\$StartTime\\\";",
+          "my \\$FinalTime = 1e9",
+          "my \\$MaxLev = 3;"
+        ],
+        "replaced_str": [
+          "my $LapseCoefTimeScale   = \"50\";",
+          "my $LapseCoefStartTime   = \"20\";",
+          "my $ShiftCoefTimeScale   = \"50\";",
+          "my $ShiftCoefStartTime   = \"20\";",
+          "my $FinalTime = 100",
+          "my $MaxLev = 1;"
+        ]
+      }
+    ]
   },
   {
     "git_branch": "origin/just_kerr_shift_gauge",
@@ -25,20 +56,6 @@
     "git_branch": "origin/new_gauge_conditions",
     "mass_ratio": 3.0,
     "spinA": [0.0,0.0,0.0],
-    "spinB": [0.0,0.0,0.0],
-    "D0": 10.0
-  },
-  {
-    "git_branch": "origin/new_gauge_conditions",
-    "mass_ratio": 1.0,
-    "spinA": [0.0,0.0,0.60],
-    "spinB": [0.0,0.60,0.0],
-    "D0": 10.0
-  },
-  {
-    "git_branch": "origin/new_gauge_conditions",
-    "mass_ratio": 1.0,
-    "spinA": [0.0,0.0,0.8],
     "spinB": [0.0,0.0,0.0],
     "D0": 10.0
   }

@@ -3,10 +3,14 @@ import sys
 import json
 import os
 import shutil
+import re
+from datetime import datetime
+
+spec_home = "/home/himanshu/spec/my_spec"
 
 def generate_params_file(mass_ratio=1, spinA=(0, 0, 0), spinB=(0, 0, 0), D0=10):
 
-  command = f"/home/hchaudha/spec/Support/bin/ZeroEccParamsFromPN --q \"{mass_ratio}\" --chiA \"{spinA[0]},{spinA[1]},{spinA[2]}\" --chiB \"{spinB[0]},{spinB[1]},{spinB[2]}\" --D0 \"{D0}\""
+  command = f"{spec_home}/Support/bin/ZeroEccParamsFromPN --q \"{mass_ratio}\" --chiA \"{spinA[0]},{spinA[1]},{spinA[2]}\" --chiB \"{spinB[0]},{spinB[1]},{spinB[2]}\" --D0 \"{D0}\""
 
   # Generate a temporary shell file to run the script because directly calling
   # the command is not working
@@ -73,12 +77,51 @@ def read_data_from_json_file(file_location):
   return data["params"]
 
 
-def create_simulation_folders(file_location="./runs_data.json"):
+def add_to_start_jobs_script(dir):
+  with open("./start_jobs.sh",'a') as file:
+    file.write(f"cd {dir} && ./StartJob.sh\n")
+
+def replace_current_file(file_path,original_str,replaced_str):
+    with open(file_path,'r') as file:
+        data = file.read()
+        
+    data,replaced_status = re.subn(original_str,replaced_str,data)
+    if replaced_status != 0:
+        print(f"""
+        Replaced in File: {file_path}
+        Original String: {original_str}
+        Replaced String: {replaced_str}
+        """)
+    else:
+        print(f"""
+        !!!!FAILED TO REPLACE!!!!
+        File path: {file_path}
+        Original String: {original_str}
+        Replaced String: {replaced_str}
+        """)
+    
+    with open(file_path,'w') as file:
+        file.write(data)
+        
+        
+def replace_files(curr_run,run_dir):
+    if 'file_replace' in curr_run:
+        for i in curr_run['file_replace']:
+            if(len(i['original_str']) != len(i['replaced_str'])):
+                print("original_str and replaced_str should have the same length.")
+                sys.exit("original_str and replaced_str should have the same length.")
+            else:
+                for original_str,replaced_str in zip(i['original_str'],i['replaced_str']):
+                    replace_current_file(run_dir+i["file_path"],original_str,replaced_str)
+
+
+def create_simulation_folders(file_location="./runs_data.json",dry_run=False):
   runs_data = read_data_from_json_file(file_location)
 
   for data in runs_data:
     git_branch = data["git_branch"]
-    checkout_and_compile_branch(git_branch)
+    if(dry_run==False):
+      checkout_and_compile_branch(git_branch)
 
     mass_ratio = data["mass_ratio"]
     spinA = tuple(data["spinA"])
@@ -87,18 +130,30 @@ def create_simulation_folders(file_location="./runs_data.json"):
 
     generate_params_file(mass_ratio,spinA,spinB,D0)
 
-    dir_name = "./" + git_branch.replace("/","_") + f"_{mass_ratio}_{spinA[0]}_{spinA[1]}_{spinA[2]}_{spinB[0]}_{spinB[1]}_{spinB[2]}_{D0}"
+    current_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
+    dir_name = "./" + git_branch.replace("/","_") + f"_{mass_ratio}_{spinA[0]}_{spinA[1]}_{spinA[2]}_{spinB[0]}_{spinB[1]}_{spinB[2]}_{D0}_{current_datetime}"
 
     os.makedirs(dir_name)
     prepare_ID(dir_name)
 
     shutil.copy("./Params.input",f"{dir_name}/Params.input")
-    shutil.copy("./DoMultipleRuns.input",f"{dir_name}/Ev/DoMultipleRuns.input")
+    replace_files(data,dir_name)
+    # shutil.copy("./DoMultipleRuns.input",f"{dir_name}/Ev/DoMultipleRuns.input")
 
-    submit_job(dir_name)
-    print("DONE: ",dir_name)
+    if(dry_run==False):
+      submit_job(dir_name)
+      
+    add_to_start_jobs_script(dir_name)
+    print(f"""
+    DONE: {dir_name}
+    ###########################################################################
+    ###########################################################################
+
+    """)
 
 
 if __name__ == '__main__':
-  # pass the 
-  create_simulation_folders(sys.argv[1])
+  if sys.argv[2] == "dry":
+    create_simulation_folders(sys.argv[1],True)
+  else:
+    create_simulation_folders(sys.argv[1])
