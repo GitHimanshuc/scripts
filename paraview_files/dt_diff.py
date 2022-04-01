@@ -24,7 +24,7 @@ for var_name in data.PointData.keys():
 
 
 dxnum = data.PointData["dxTargetShiftNumericalFlattened"]
-dxana = data.PointData["dTargetShiftAnalyticFlattened"]
+dxana = data.PointData["SpacetimeDerivOfTargetShiftFlattened"]
 
 print(algs.shape(dxnum))
 print(algs.shape(dxana))
@@ -70,9 +70,9 @@ print(algs.shape(tshift0))
 print(algs.shape(tshift1))
 
 
-
-time_step = 1.2999999999999999e-04
-output.PointData.append((tshift1 - tshift0)/time_step,"pv_dtTargetShiftNumerical")
+time_step = 1.299999999999999999e-04
+fddTargetShift = (tshift1 - tshift0)/time_step
+output.PointData.append(fddTargetShift,"pv_dtTargetShiftNumerical")
 
 copy_dt_shift = tshift0*0.0
 copy_dt_shift[:,0] = dxana[:,4]
@@ -80,4 +80,4 @@ copy_dt_shift[:,1] = dxana[:,8]
 copy_dt_shift[:,2] = dxana[:,12]
 
 output.PointData.append(copy_dt_shift,"pv_dtTargetShiftAnalytical")
- 
+output.PointData.append(copy_dt_shift-fddTargetShift,"pv_dtDiff")
