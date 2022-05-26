@@ -131,8 +131,10 @@ def create_simulation_folders(file_location="./runs_data.json",dry_run=False):
     generate_params_file(mass_ratio,spinA,spinB,D0)
 
     current_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
-    dir_name = "./" + git_branch.replace("/","_") + f"_{mass_ratio}_{spinA[0]}_{spinA[1]}_{spinA[2]}_{spinB[0]}_{spinB[1]}_{spinB[2]}_{D0}_{current_datetime}"
-
+    if "folder_name" not in data:
+      dir_name = "./" + git_branch.replace("/","_") + f"_{mass_ratio}_{spinA[0]}_{spinA[1]}_{spinA[2]}_{spinB[0]}_{spinB[1]}_{spinB[2]}_{D0}_{current_datetime}"
+    else:
+      dir_name = "./" + data["folder_name"]
     os.makedirs(dir_name)
     prepare_ID(dir_name)
 
@@ -153,7 +155,9 @@ def create_simulation_folders(file_location="./runs_data.json",dry_run=False):
 
 
 if __name__ == '__main__':
-  if sys.argv[2] == "dry":
+  if len(sys.argv) == 2 :
+    create_simulation_folders(sys.argv[1])
+  elif sys.argv[2] == "dry":
     create_simulation_folders(sys.argv[1],True)
   else:
-    create_simulation_folders(sys.argv[1])
+    print("prepare_runs.py ./data.json dry")

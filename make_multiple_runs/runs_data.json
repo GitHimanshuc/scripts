@@ -40,6 +40,7 @@
   },
   {
     "git_branch": "origin/just_kerr_shift_gauge",
+    "folder_name":"override_default_folder_name",
     "mass_ratio": 1.0,
     "spinA": [0.0,0.0,0.0],
     "spinB": [0.0,0.0,0.0],
