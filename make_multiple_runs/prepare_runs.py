@@ -6,7 +6,14 @@ import shutil
 import re
 from datetime import datetime
 
-spec_home = "/home/himanshu/spec/my_spec"
+if "central" in os.getcwd(): # We are on caltech HPC
+  spec_home = "/home/hchaudha/spec"
+elif "panfs" in os.getcwd(): # Wheeler
+  spec_home = "/home/himanshu/spec/my_spec"
+else:
+  print("Machine not recognized\n")
+  exit(0)
+
 
 def generate_params_file(mass_ratio=1, spinA=(0, 0, 0), spinB=(0, 0, 0), D0=10):
 
@@ -60,7 +67,7 @@ $IDType = "SKS";
 
 
 def checkout_and_compile_branch(branch_name):
-  subprocess.run(f"zsh ./checkout_and_compile.sh {branch_name}".split())
+  subprocess.run(f"zsh ./checkout_and_compile.sh {spec_home} {branch_name}".split())
 
 def prepare_ID(folder_path):
   subprocess.run(f"zsh ./call_prepare_id.sh {folder_path}".split())

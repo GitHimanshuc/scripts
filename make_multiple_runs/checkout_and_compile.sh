@@ -1,6 +1,6 @@
 # usage
-# zsh ./checkout_and_compile.sh <branch name>
+# zsh ./checkout_and_compile.sh <SPEC_HOME> <branch name>
 
-cd /home/himanshu/spec/my_spec
-git checkout $1
+cd $1
+git checkout $2
 make parallel
