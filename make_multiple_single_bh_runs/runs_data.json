@@ -1,0 +1,71 @@
+{
+  "params": [
+  {
+    "git_branch": "single_bh_gauge_driver",
+    "folder_name":"test_folder",
+    "file_replace": [
+      {
+        "file_path": "/GaugeItems.input",
+        "original_str": [
+          "SecondaryWeightRmax  = 100;",
+          "KerrShiftDampingScale=1.0;"
+        ],
+        "replaced_str": [
+          "SecondaryWeightRmax  = 25;",
+          "KerrShiftDampingScale=10.0;"
+        ]
+      },
+      {
+        "file_path": "/DoMultipleRuns.input",
+        "original_str": [
+          "my \\$TimeRolloffTimeScale = \\\"\\$wRolloff\\\";",
+          "my \\$TimeRolloffStartTime = \\\"\\$StartTime\\\";",
+          "my \\$LapseCoefTimeScale   = \\\"\\$wRollon\\\";",
+          "my \\$LapseCoefStartTime   = \\\"\\$StartTime\\\";",
+          "my \\$ShiftCoefTimeScale   = \\\"\\$wRollon\\\";",
+          "my \\$ShiftCoefStartTime   = \\\"\\$StartTime\\\";",
+
+          "my \\$FinalTime = 100",
+          "my \\$MinLev=1;",
+          "my \\$MaxLev=3;",
+
+          "my \\$chix         = 0.0;",
+          "my \\$chiy         = 0.0;",
+          "my \\$chiz         = 0.5;",
+
+          "my \\$vx         = 0.0;",
+          "my \\$vy         = 0.0;",
+          "my \\$vz         = 0.0;",
+
+          "my \\$cx         = 0.0;",
+          "my \\$cy         = 0.0;",
+          "my \\$cz         = 0.0;"
+        ],
+        "replaced_str": [
+          "my $TimeRolloffTimeScale = \"50\";",
+          "my $TimeRolloffStartTime = \"0\";",
+          "my $LapseCoefTimeScale   = \"50\";",
+          "my $LapseCoefStartTime   = \"0\";",
+          "my $ShiftCoefTimeScale   = \"50\";",
+          "my $ShiftCoefStartTime   = \"0\";",
+          "my $FinalTime = 100",
+          "my $MinLev=2;",
+          "my $MaxLev=3;",
+
+          "my \\$chix         = 0.0;",
+          "my \\$chiy         = 0.0;",
+          "my \\$chiz         = 0.5;",
+
+          "my \\$vx         = 0.0;",
+          "my \\$vy         = 0.0;",
+          "my \\$vz         = 0.0;",
+
+          "my \\$cx         = 0.0;",
+          "my \\$cy         = 0.0;",
+          "my \\$cz         = 0.0;"
+        ]
+      }
+    ]
+  }
+  ]
+}
