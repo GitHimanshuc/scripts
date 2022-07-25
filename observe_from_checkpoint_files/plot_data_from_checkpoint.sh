@@ -1,6 +1,11 @@
+# Copies the checkpoint folder give as input in the current directory and does ApplyObsever
+
 called_dir=$(pwd)
 
 cp_folder_input="$1"
+
+# bin folder of the particular run
+bin_folder=$(cd $cp_folder_input/../../../bin && pwd)
 
 # Goto the checkpoint directory
 cd $cp_folder_input &&\
@@ -25,7 +30,7 @@ cd $cp_called &&\
 if test -f "./GrDomain.input"; then
     echo "GrDomain.input detected. It is a BBH simulation, using Gaugecheck_small_bbh"
     # call the apply observer
-    ApplyObservers -t psi,kappa -r 11,122 -d 4,4 -domaininput "./GrDomain.input" -h5prefix 'Cp-VarsGr' $scripts_path/helper_files/Gaugecheck_small_bbh.input
+    $bin_folder/ApplyObservers -t psi,kappa -r 11,122 -d 4,4 -domaininput "./GrDomain.input" -h5prefix 'Cp-VarsGr' $scripts_path/observe_from_checkpoint_files/helper_files/Gaugecheck_small_bbh.input
 
 else
 
@@ -33,7 +38,7 @@ else
     # echo "Adding HistoryFile=<<NONE>>; to Domain.input"
     # echo "HistoryFile=<<NONE>>;" >> ./Domain.input
     # call the apply observer
-    ApplyObservers -t psi,kappa -r 11,122 -d 4,4 -domaininput "./Domain.input" -h5prefix 'Cp-Vars' $scripts_path/helper_files/Gaugecheck_small_bh.input
+    $bin_folder/ApplyObservers -t psi,kappa -r 11,122 -d 4,4 -domaininput "./Domain.input" -h5prefix 'Cp-Vars' $scripts_path/observe_from_checkpoint_files/helper_files/Gaugecheck_small_bh.input
 
 fi
 # Remove all domains but the spheres surrounding the BHs
