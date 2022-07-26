@@ -1,0 +1,137 @@
+DataBoxItems =
+    ReadFromFile(File=SpatialCoordMap.input),
+    ReadFromFile(File=GaugeItems.input),
+    Domain(Items=
+           AddGeneralizedHarmonicInfo(MatterSourceName=;)
+           ),
+    Subdomain(Items =
+              # GlobalIntegrator(Integrator=Spectral),
+              # Add 3+1 items in Grid frame
+              Add3Plus1ItemsFromGhPsiKappa(psi=psi;kappa=kappa;OutputPrefix=),
+              # Needed for transforming spacetime tensors to different frame
+              AddSpacetimeJacobianAndHessianItems(MapPrefix=GridToInertial;),
+              TensorExpression(Output=TheDampFactor; Symm=; Dim=3;
+                               Expression=(T[]=SqrtDetg[]/Lapse[];)
+              ),
+
+              GlobalDifferentiator
+              (GlobalDifferentiator=
+                MatrixMultiply(MultiDim_by_BasisFunction=yes;
+                TopologicalDifferentiator
+                =Spectral(SetBasisFunctionsFromTimingInfo=yes;
+                         # BasisFunctions= (ChebyshevGaussLobatto=ChebyshevGaussLobattoMatrix);
+                         )
+                );
+              ),
+
+              EvaluateScalarFormula(Output=ZeroScalar;Formula=0.;),
+              EvaluateScalarFormula(Output=OneScalar;Formula=1.;),
+              EvaluateVectorFormula(Output=Zero3Vector;V[0]=0;V[1]=0;V[2]=0;),
+              EvaluateVectorFormula(Output=Zero4Vector;V[0]=0;V[1]=0;V[2]=0;V[3]=0;),
+
+     ScaleTensorDataMeshByFunctionVsTime(Output          = InvExpansionFactor;
+                                         Input             = OneScalar;
+                                         FunctionVsTime    = ExpansionFactor;
+                                         FunctionComponent = 0;
+                                         ScaleBy           = Inverse;),
+     EvaluateScalarFormula
+     (Output=CDamping_distA_squared;
+      Coords=GridToDistorted::MappedCoords;
+      Formula=sqr(x0-(0.219562068809201))+sqr(x1-(0.0104235672860183))+sqr(x2-(5.9853114e-09));),
+     EvaluateScalarFormula
+     (Output=CDamping_distB_squared;
+      Coords=GridToDistorted::MappedCoords;
+      Formula=sqr(x0-(-6.4492001382208))+sqr(x1-(0.0104235672860183))+sqr(x2-(5.9853114e-09));
+      ),
+     EvaluateScalarFormula(Output=CDamping_distOrigin_squared;
+                           Coords=GridToDistorted::MappedCoords;
+                           Formula=sqr(x0)+sqr(x1)+sqr(x2);
+                           ),
+
+     EvaluateScalarFormula
+     (Output=GhGamma0;
+      Coords=GridToDistorted::MappedCoords;
+      S = InvExpansionFactor;
+      A = CDamping_distA_squared;
+      B = CDamping_distB_squared;
+      O = CDamping_distOrigin_squared;
+      Formula =
+      4.13333333410161 *exp(-A/sqr(6.77419354712796*S))
+      +123.999995132797 *exp(-B/sqr(0.225806460476176*S))
+      +0.0749999999185271
+      *exp(-O/sqr(16.671905517575*S))
+      +0.000999999998913695;
+      ),
+
+     # NOTE: GhGamma1 includes the factor 0.999 (and not, for example, 1.001),
+     # to prevent incoming zero-speed modes at the outer boundary.
+     # The zero-speed mode U0 has a coordinate speed -n.B, where n is
+     # the outward unit normal oneform on the outer boundary, and B is
+     # the upper Shift, which normally (for the gauges we use) points in
+     # the +r direction.
+     # The frame velocity at the outer boundary is thus chosen to drift
+     # inward with -n.B_frame > n.B, so that the resulting mode speed is
+     # positive (outgoing).
+     # The zero-speed mode Upsi has a speed -(1+GhGamma1)*n.(B+B_frame).
+     # The above considerations fix the sign of -n.(B+B_frame) to be positive.
+     # Therefore, we need (1+GhGamma1)>0 to ensure that both zero-speed modes
+     # are outgoing at the outer boundary.
+     EvaluateScalarFormula(Output=GhGamma1;W=GhGamma1FalloffFunc;
+                           Formula=(.999)*(W-1)),
+     ScalarFunction(Output=GhGamma1FalloffFunc;
+                    Coords=GridToDistorted::MappedCoords;
+                    Function=Radial(Center  = 0,0,0;
+                                    Profile = GeneralizedGaussian
+                                    (Width     = 10*6.66876220703;
+                                     Amplitude = 1.00;
+                                     Center    = 0.0;
+                                     Power     = 2;
+                                     );
+                                    );),
+
+     EvaluateScalarFormula
+     (Output=GhGamma2;
+      Coords=GridToDistorted::MappedCoords;
+      S = InvExpansionFactor;
+      A = CDamping_distA_squared;
+      B = CDamping_distB_squared;
+      O = CDamping_distOrigin_squared;
+      Formula =
+      4.13333333410161 *exp(-A/sqr(6.77419354712796*S))
+      +123.999995132797 *exp(-B/sqr(0.225806460476176*S))
+      +0.0749999999185271
+                              *exp(-O/sqr(16.671905517575*S))
+      +0.000999999998913695;
+      ),
+
+              FirstDeriv(
+                Input=psi;
+                Output=dpsi;
+                MapPrefix = GridToInertial;
+              ),
+
+              FirstDeriv(
+                Input=kappa;
+                Output=dkappa;
+                MapPrefix = GridToInertial;
+              ),
+
+              AddGhConstraintItems(
+                OutputPrefix=;
+                psi    = psi;
+                kappa  = kappa;
+                H      = H;
+                dpsi   = dpsi;
+                dkappa = dkappa;
+                dH     = InertialdH;
+          ),
+          );
+
+Observers =
+    DumpDataBox(File=databox.output;
+                OverwriteFile=yes;),
+    ConvertToVtk(
+        Input = Lapse, SqrtDetg, TheDampFactor, GhCe, NormalizedGhCe, Shift;
+        Coords = GridToInertial::MappedCoords;
+        Basename = GaugeVis;
+    );
