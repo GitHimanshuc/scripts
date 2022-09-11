@@ -4,6 +4,7 @@ import json
 import os
 import shutil
 import re
+import shlex
 from datetime import datetime
 
 if "central" in os.getcwd():  # We are on caltech HPC
@@ -18,18 +19,9 @@ def generate_params_file(mass_ratio=1, spinA=(0, 0, 0), spinB=(0, 0, 0), D0=10):
 
   command = f"{spec_home}/Support/bin/ZeroEccParamsFromPN --q \"{mass_ratio}\" --chiA \"{spinA[0]},{spinA[1]},{spinA[2]}\" --chiB \"{spinB[0]},{spinB[1]},{spinB[2]}\" --D0 \"{D0}\""
 
-  # Generate a temporary shell file to run the script because directly calling
-  # the command is not working
-  shell_file = "./temp_params_generation_file.sh"
-  with open(shell_file, 'w') as file:
-    file.write(command)
-
-  # Save the output
-  data = subprocess.run(["zsh", shell_file], capture_output=True)
+  data = subprocess.run(shlex.split(command), capture_output=True, text=True)
   # print(data.stdout)
-
-  # Delete the temp file
-  subprocess.run(f"rm ./{shell_file}".split())
+  # print(data.stderr)
 
   parameters = data.stdout.splitlines()[-13:]
   parameters = [str(i).replace('\'', '') for i in parameters]
@@ -64,17 +56,33 @@ $IDType = "SKS";
     # f.write("# "+command)
 
 
-def checkout_and_compile_branch(branch_name):
-  subprocess.run(
-      f"zsh ./checkout_and_compile.sh {spec_home} {branch_name}".split())
-
-
 def prepare_ID(folder_path):
-  subprocess.run(f"zsh ./call_prepare_id.sh {folder_path}".split())
+  command = f"cd {folder_path} && {spec_home}/Support/bin/PrepareID -t bbh2 -no-reduce-ecc"
+  status = subprocess.run(command, capture_output=True, shell=True, text=True)
+  if status.returncode == 0:
+    print(f"Succesfully ran PrepareID in {folder_path}")
+  else:
+    sys.exit(
+        f"PrepareID failed in {folder_path} with error: \n {status.stderr}")
+
+
+def checkout_and_compile_branch(branch_name):
+  command = f"cd {spec_home} && git checkout {branch_name} && make parallel"
+  status = subprocess.run(command, capture_output=True, shell=True, text=True)
+  if status.returncode == 0:
+    print(f"Succesfully compiled branch {branch_name}.")
+  else:
+    sys.exit(
+        f"Checkout/Compilation of the branch: {branch_name} failed. \n {status.stderr}")
 
 
 def submit_job(folder_path):
-  subprocess.run(f"zsh ./submit.sh {folder_path}".split())
+  command = f"cd {folder_path} && bash ./Startjob.sh"
+  status = subprocess.run(command, capture_output=True, shell=True, text=True)
+  if status.returncode == 0:
+    print(f"Succesfully submitted job {folder_path}.")
+  else:
+    sys.exit(f"Failed to submit the job {folder_path}. \n {status.stderr}")
 
 
 def read_data_from_json_file(file_location):
