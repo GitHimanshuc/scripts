@@ -1,0 +1,74 @@
+# Distributed under the MIT License.
+# See LICENSE.txt for details.
+
+# Executable: CharacteristicExtract
+# Check: parse
+
+Evolution:
+  InitialTimeStep: 0.25
+  InitialSlabSize: 10.0
+
+ResourceInfo:
+  Singletons:
+    CharacteristicEvolution:
+      Proc: Auto
+      Exclusive: false
+    H5WorldtubeBoundary:
+      Proc: Auto
+      Exclusive: false
+
+Observers:
+  VolumeFileName: "CharacteristicExtractVolume"
+  ReductionFileName: "CharacteristicExtractUnusedReduction"
+
+Cce:
+  Evolution:
+    TimeStepper:
+      AdamsBashforthN:
+        Order: 3
+    StepChoosers:
+      - Constant: 1.0
+      - Increase:
+          Factor: 2
+      - ErrorControl(SwshVars):
+          AbsoluteTolerance: 1e-8
+          RelativeTolerance: 1e-6
+          MaxFactor: 2
+          MinFactor: 0.25
+          SafetyFactor: 0.9
+      - ErrorControl(CoordVars):
+          AbsoluteTolerance: 1e-8
+          RelativeTolerance: 1e-7
+          MaxFactor: 2
+          MinFactor: 0.25
+          SafetyFactor: 0.9
+    StepController:
+      BinaryFraction
+
+  LMax: 12
+  NumberOfRadialPoints: 12
+  ObservationLMax: 8
+
+  InitializeJ:
+    InverseCubic
+
+  StartTime: 0.0
+  EndTime: Auto
+  BoundaryDataFilename: __FILE_NAME__
+  H5IsBondiData: false
+  H5Interpolator:
+    BarycentricRationalSpanInterpolator:
+      MinOrder: 10
+      MaxOrder: 10
+  ExtractionRadius: 257.0
+  FixSpecNormalization: False
+
+  H5LookaheadTimes: 10000
+
+  Filtering:
+    RadialFilterHalfPower: 24
+    RadialFilterAlpha: 35.0
+    FilterLMax: 10
+
+  ScriInterpOrder: 5
+  ScriOutputDensity: 5
