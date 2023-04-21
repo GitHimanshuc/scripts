@@ -1,0 +1,80 @@
+# Distributed under the MIT License.
+# See LICENSE.txt for details.
+# Executable: MetricCharacteristicExtract
+# Check: parse
+
+ResourceInfo:
+  Singletons:
+    CharacteristicEvolution:
+      Proc: Auto
+      Exclusive: False
+    H5WorldtubeBoundary:
+      Proc: Auto
+      Exclusive: False
+
+Evolution:
+  InitialSlabSize: 10
+  InitialTimeStep: 0.1
+
+Observers:
+  VolumeFileName: "CharacteristicExtractUnusedFile_RRADIUS"
+  ReductionFileName: "CharacteristicExtractVolume_RRADIUS"
+
+Cce:
+  Evolution:
+    TimeStepper:
+      AdamsBashforthN:
+        Order: 7
+    StepChoosers:
+      - Constant: 0.1
+      - Increase:
+          Factor: 2
+      - ErrorControl(SwshVars):
+          AbsoluteTolerance: 1e-8
+          RelativeTolerance: 1e-6
+          MaxFactor: 2
+          MinFactor: 0.25
+          SafetyFactor: 0.9
+      - ErrorControl(CoordVars):
+          AbsoluteTolerance: 1e-8
+          RelativeTolerance: 1e-7
+          MaxFactor: 2
+          MinFactor: 0.25
+          SafetyFactor: 0.9
+    StepController:
+      BinaryFraction
+
+  LMax: 20
+  NumberOfRadialPoints: 12
+  ObservationLMax: 8
+
+  InitializeJ:
+    ConformalFactor:
+      AngularCoordTolerance: 1e-13
+      MaxIterations: 1000
+      RequireConvergence: False
+      OptimizeL0Mode: True
+      UseBetaIntegralEstimate: False
+      ConformalFactorIterationHeuristic: SpinWeight1CoordPerturbation
+      UseInputModes: False
+      InputModes: []
+
+  StartTime: 0
+  EndTime: Auto
+  FixSpecNormalization: False
+  BoundaryDataFilename: WORLDTUBE_PREFIXRRADIUS.h5
+  ExtractionRadius: Auto
+  H5Interpolator:
+    BarycentricRationalSpanInterpolator:
+      MinOrder: 10
+      MaxOrder: 10
+  H5IsBondiData: true
+  H5LookaheadTimes: 200
+
+  Filtering:
+    RadialFilterHalfPower: 24
+    RadialFilterAlpha: 35.0
+    FilterLMax: 18
+
+  ScriInterpOrder: 5
+  ScriOutputDensity: 1
