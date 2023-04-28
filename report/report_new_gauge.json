@@ -1,0 +1,93 @@
+{
+  "report_folder": "/panfs/ds09/sxs/himanshu/gauge_stuff/gauge_driver_runs/runs/new_gauge_tests",
+  "report_generation_frequency": 10,
+  "runs_to_track": [
+    "48_gd_weird_gauge/**/Lev1_??",
+    "49_gd_weird_gauge_mr3/**/Lev1_??",
+    "49_gd_weird_gauge_mr1_09/**/Lev1_??",
+    "49_ngd_weird_gauge_mr1/**/Lev1_??",
+    "49_ngd_weird_gauge_mr109/**/Lev1_??",
+    "51_master_mr1_d0_20/**/Lev1_??",
+    "51_master_mr1_d0_20/**/Lev2_??",
+    "51_master_mr1_d0_20/**/Lev3_??",
+    "51_ngd_KerrSch_gauge_mr1_d0_20_3/**/Lev1_??",
+    "51_ngd_KerrSch_gauge_mr1_d0_20_3/**/Lev2_??",
+    "51_ngd_KerrSch_gauge_mr1_d0_20_3/**/Lev3_??",
+    "51_ngd_KerrSch_gauge_mr1_d0_10_1/**/Lev1_??",
+    "51_ngd_KerrSch_gauge_mr1_d0_10_6/**/Lev1_??",
+    "51_ngd_KerrSch_gauge_mr1_d0_10_05/**/Lev1_??",
+    "51_ngd_KerrSch_gauge_mr1_d0_10_12/**/Lev1_??",
+    "52_ngd_KerrSch_gauge_mr1_d0_10_1/**/Lev1_??",
+    "52_ngd_KerrSch_gauge_mr1_d0_10_025/**/Lev1_??",
+    "52_ngd_KerrSch_gauge_mr1_d0_13_05/**/Lev1_??",
+    "52_ngd_KerrSch_gauge_mr1_d0_13_05/**/Lev2_??",
+    "52_ngd_KerrSch_gauge_mr1_d0_13_05/**/Lev3_??",
+    "52_ngd_KerrSch_gauge_mr1_d0_10_01/**/Lev1_??",
+    "runs_data50_ngd_no_1_r3_in_H_07/**/Lev1_??",
+    "runs_data50_ngd_no_1_r3_in_H_3/**/Lev1_??",
+    "runs_data50_ngd_no_1_r3_in_H_104/**/Lev1_??"
+  ],
+  "things_to_plot": [
+    {
+      "file_name": "TStepperDiag.dat",
+      "columns": [
+        "time after step",
+        "error/1e-08",
+        "NumRhsEvaluations in this segment",
+        "dt",
+        "courant factor"
+      ]
+    },
+    {
+      "file_name": "TimeInfo.dat",
+      "columns": [
+        "t",
+        "CPU-h",
+        "dCPU-h/dt"
+      ]
+    },
+    {
+      "file_name": "GhCe_Norms.dat",
+      "columns": [
+        "time",
+        "VolLp(GhCe)",
+        "L2(GhCe)",
+        "Linf(GhCe)"
+      ]
+    },
+    {
+      "file_name": "AhA.dat",
+      "columns": [
+        "time",
+        "min(r)",
+        "max(r)",
+        "min(|r^i-c^i|)",
+        "max(|r^i-c^i|)",
+        "L_surface",
+        "L_mesh",
+        "L_max"
+      ]
+    },
+    {
+      "file_name": "AhB.dat",
+      "columns": [
+        "time",
+        "min(r)",
+        "max(r)",
+        "min(|r^i-c^i|)",
+        "max(|r^i-c^i|)",
+        "L_surface",
+        "L_mesh",
+        "L_max"
+      ]
+    },
+    {
+      "file_name": "HorizonSepMeasures.dat",
+      "columns": [
+        "t",
+        "ProperSepHorizons",
+        "CoordSepHorizons"
+      ]
+    }
+  ]
+}
