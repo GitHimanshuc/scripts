@@ -158,3 +158,60 @@ cd infra
 make ce
 ./bin/ce_install list
 ```
+
+
+# VS code debug config for spec
+```json
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "(gdb) Launch",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/workspaces/spec/Tests/BlackBoxTests/GeneralizedHarmonicExamples/SingleBH_DhGauge/Run/Lev3/SpEC",
+            "args": [
+                "> SpEC.out 2>&1"
+            ],
+            "stopAtEntry": true,
+            "cwd": "/workspaces/spec/Tests/BlackBoxTests/GeneralizedHarmonicExamples/SingleBH_DhGauge/Run/Lev3/",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "BBH_ID.py",
+            "type": "python",
+            "python": "/root/miniconda3/envs/working/bin/python",
+            "request": "launch",
+            "program": "/workspaces/spec/InitialValueProblem/ScriptsIVP/BBH_ID.py",
+            "args": [
+                "--q=3",
+                "--chiA=0,0,0",
+                "--chiB=0,0,0",
+                "--D=10",
+                "--Omega0=0.0279722304683467",
+                "--adot=-0.000202425618780214",
+                "--levels=6",
+                "--nprocs=5",
+                "--its=100",
+                "--IDType=SKS"
+            ],
+            "cwd": "/workspaces/spec/not_tracked/ID_test/ID_1/ID",
+            "justMyCode": true
+        }
+    ]
+}
+```
