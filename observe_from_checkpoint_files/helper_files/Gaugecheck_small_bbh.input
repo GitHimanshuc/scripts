@@ -9,7 +9,7 @@ DataBoxItems =
               # Add 3+1 items in Grid frame
               Add3Plus1ItemsFromGhPsiKappa(psi=psi;kappa=kappa;OutputPrefix=),
               # Needed for transforming spacetime tensors to different frame
-              AddSpacetimeJacobianAndHessianItems(MapPrefix=GridToInertial;),
+              # AddSpacetimeJacobianAndHessianItems(MapPrefix=GridToInertial;),
               TensorExpression(Output=TheDampFactor; Symm=; Dim=3;
                                Expression=(T[]=SqrtDetg[]/Lapse[];)
               ),

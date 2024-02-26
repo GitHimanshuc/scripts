@@ -1,2 +1,4 @@
 scripts/data/
 *.output
+.ipynb_checkpoints
+temp.csv
