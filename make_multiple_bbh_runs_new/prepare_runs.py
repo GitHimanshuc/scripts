@@ -5,15 +5,19 @@ import os
 import shutil
 import re
 import shlex
+import time
+from pathlib import Path
 from datetime import datetime
 
 if "central" in os.getcwd():  # We are on caltech HPC
-  spec_home = "/home/hchaudha/spec"
+  spec_home = Path("/home/hchaudha/spec")
 elif "panfs" in os.getcwd():  # Wheeler
-  spec_home = "/home/himanshu/spec/my_spec"
+  spec_home = Path("/home/himanshu/spec/my_spec")
 else:
   sys.exit("Machine not recognized\n")
 
+# Folder we are running the script in
+script_run_folder = Path(".").absolute()
 
 def generate_params_file(mass_ratio=1, spinA=(0, 0, 0), spinB=(0, 0, 0), D0=10):
 
@@ -47,11 +51,10 @@ $IDType = "SKS";
 
 # Expected Norbits: {parameters[-2].split("= ")[-1]}
 # Expected tMerger: {parameters[-1].split("= ")[-1]}
-
-  """
+"""
 
   # Write the generated params file
-  with open("./Params.input", 'w') as f:
+  with open(f"{script_run_folder}/Params.input", 'w') as f:
     f.write(param_file)
     # f.write("# "+command)
 
@@ -67,6 +70,7 @@ def prepare_ID(folder_path):
 
 
 def checkout_and_compile_branch(branch_name):
+  print(f"Compiling branch {branch_name}.")
   command = f"cd {spec_home} && git checkout {branch_name} && make parallel"
   status = subprocess.run(command, capture_output=True, shell=True, text=True)
   if status.returncode == 0:
@@ -76,8 +80,12 @@ def checkout_and_compile_branch(branch_name):
         f"Checkout/Compilation of the branch: {branch_name} failed. \n {status.stderr}")
 
 
-def submit_job(folder_path):
-  command = f"cd {folder_path} && bash ./Startjob.sh"
+def submit_job(folder_path:Path):
+  StartJob_script = folder_path/"StartJob.sh"
+  if not StartJob_script.exists():
+     sys.exit(f"Something went wrong, {StartJob_script} does not exist.")
+     
+  command = f"cd {folder_path} && bash ./StartJob.sh"
   status = subprocess.run(command, capture_output=True, shell=True, text=True)
   if status.returncode == 0:
     print(f"Succesfully submitted job {folder_path}.")
@@ -94,7 +102,7 @@ def read_data_from_json_file(file_location):
 
 
 def add_to_start_jobs_script(dir):
-  with open("./start_jobs.sh", 'a') as file:
+  with open(f"{script_run_folder}/start_jobs.sh", 'a') as file:
     file.write(f"cd {dir} && ./StartJob.sh\n")
 
 
@@ -105,17 +113,17 @@ def replace_current_file(file_path, original_str, replaced_str):
     data, replaced_status = re.subn(original_str, replaced_str, data)
     if replaced_status != 0:
         print(f"""
-        Replaced in File: {file_path}
-        Original String: {original_str}
-        Replaced String: {replaced_str}
-        """)
+Replaced in File: {file_path}
+Original String: {original_str}
+Replaced String: {replaced_str}
+""")
     else:
         print(f"""
-        !!!!FAILED TO REPLACE!!!!
-        File path: {file_path}
-        Original String: {original_str}
-        Replaced String: {replaced_str}
-        """)
+!!!!FAILED TO REPLACE!!!!
+File path: {file_path}
+Original String: {original_str}
+Replaced String: {replaced_str}
+""")
         sys.exit("Failed to replace parameters in files.")
 
     with open(file_path, 'w') as file:
@@ -132,13 +140,44 @@ def replace_files(curr_run, run_dir):
             else:
                 for original_str, replaced_str in zip(i['original_str'], i['replaced_str']):
                     replace_current_file(
-                        run_dir+i["file_path"], original_str, replaced_str)
+                        Path(f'{run_dir}{i["file_path"]}'), original_str, replaced_str)
 
 
-def create_simulation_folders(file_location="./runs_data.json", dry_run=False):
+def create_simulation_folders(file_location, dry_run=False):
+  file_location = Path(file_location).absolute()
+  if not file_location.exists():
+     sys.exit(f"The input file path {file_location} is wrong.")
+     
   runs_data = read_data_from_json_file(file_location)
 
   for data in runs_data:
+    # Generate a folder name if not given
+    current_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
+    if "folder_name" not in data:
+      dir_name = "./" + git_branch.replace(
+          "/", "_") + f"_{mass_ratio}_{spinA[0]}_{spinA[1]}_{spinA[2]}_{spinB[0]}_{spinB[1]}_{spinB[2]}_{D0}_{current_datetime}"
+    else:
+      dir_name = "./" + data["folder_name"]
+
+    dir_name = Path(dir_name).absolute()
+    if dir_name.exists():
+       sys.exit(f"Folder {dir_name} already exists!")
+
+    # Print info
+    info=f"""
+===============================================================================
+===============================================================================
+Running from: {script_run_folder}
+run_folder: {data["folder_name"]}
+git_branch: {data["git_branch"]}
+
+mass_ratio = {data["mass_ratio"]}
+spinA = {tuple(data["spinA"])}
+spinB = {tuple(data["spinB"])}
+D0 = {data["D0"]}
+"""
+    print(info)
+
     git_branch = data["git_branch"]
     if(dry_run == False):
       checkout_and_compile_branch(git_branch)
@@ -150,29 +189,25 @@ def create_simulation_folders(file_location="./runs_data.json", dry_run=False):
 
     generate_params_file(mass_ratio, spinA, spinB, D0)
 
-    current_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
-    if "folder_name" not in data:
-      dir_name = "./" + git_branch.replace(
-          "/", "_") + f"_{mass_ratio}_{spinA[0]}_{spinA[1]}_{spinA[2]}_{spinB[0]}_{spinB[1]}_{spinB[2]}_{D0}_{current_datetime}"
-    else:
-      dir_name = "./" + data["folder_name"]
+
     os.makedirs(dir_name)
     prepare_ID(dir_name)
 
-    shutil.copy("./Params.input", f"{dir_name}/Params.input")
+    shutil.copy(f"{script_run_folder}/Params.input", f"{dir_name}/Params.input")
     replace_files(data, dir_name)
     # shutil.copy("./DoMultipleRuns.input",f"{dir_name}/Ev/DoMultipleRuns.input")
 
+    # Sleep a little so that file system catches up
+    time.sleep(1)
     if(dry_run == False):
       submit_job(dir_name)
 
     add_to_start_jobs_script(dir_name)
     print(f"""
-    DONE: {dir_name}
-    ###########################################################################
-    ###########################################################################
-
-    """)
+DONE: {dir_name}
+===============================================================================
+===============================================================================
+""")
 
 
 if __name__ == '__main__':
