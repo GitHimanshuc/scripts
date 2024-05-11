@@ -35,6 +35,33 @@
           "my $FinalTime = 100",
           "my $MaxLev = 1;"
         ]
+      },
+      {
+        "file_path": "/Ev/bin/Machines.pm",
+        "original_str": [
+          "  if\\(\\$ppn == 32\\) {"
+        ],
+        "replaced_str": [
+          "  $header .= \"#SBATCH --reservation=sxs\\\\n\";\n  if($ppn == 32) {"
+        ]
+      },
+      {
+        "file_path": "/bin/Machines.pm",
+        "original_str": [
+          "  if\\(\\$ppn == 32\\) {"
+        ],
+        "replaced_str": [
+          "  $header .= \"#SBATCH --reservation=sxs\\\\n\";\n  if($ppn == 32) {"
+        ]
+      },
+      {
+        "file_path": "/Submit.sh",
+        "original_str": [
+          "#SBATCH --constraint=skylake"
+        ],
+        "replaced_str": [
+          "#SBATCH --constraint=skylake\n#SBATCH --reservation=sxs"
+        ]
       }
     ]
   },
