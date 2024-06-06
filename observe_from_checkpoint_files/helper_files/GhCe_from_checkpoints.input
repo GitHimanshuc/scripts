@@ -1,0 +1,75 @@
+DataBoxItems =
+    ReadFromFile(File=SpatialCoordMap.input),
+    ReadFromFile(File=GaugeItems.input),
+    ReadFromFile(File=ConstraintDamping.input),
+    Domain(Items=
+           AddGeneralizedHarmonicInfo(MatterSourceName=;)
+           ),
+    Subdomain(Items =
+              # Set up zero quantities here (from GrSetupAndEvolution.input)
+              EvaluateScalarFormula(Output=OneScalar;Formula=1.;),
+              # GlobalIntegrator(Integrator=Spectral),
+              # Add 3+1 items in Grid frame
+              Add3Plus1ItemsFromGhPsiKappa(psi=psi;kappa=kappa;OutputPrefix=),
+              # Needed for transforming spacetime tensors to different frame
+              # AddSpacetimeJacobianAndHessianItems(MapPrefix=GridToInertial;),
+              TensorExpression(Output=TheDampFactor; Symm=; Dim=3;
+                               Expression=(T[]=SqrtDetg[]/Lapse[];)
+              ),
+              # GeneralizedHarmonicGaugeConstraint( 
+              #   H = H;
+              #   kappa=kappa;
+              #   Invpsi=Invpsi;
+              #   Output=1Con;
+              # ),
+              FirstDeriv(
+                Input=psi;
+                Output=dpsi;
+                MapPrefix=GridToInertial;
+              ),
+              FirstDeriv(
+                Input=kappa;
+                Output=dkappa;
+                MapPrefix=GridToInertial;
+              ),
+              FirstDeriv(
+                Input=H;
+                Output=dH;
+                MapPrefix=GridToInertial;
+              ),
+
+              AddGhConstraintItems(
+                OutputPrefix=;
+                psi    = psi;
+                kappa  = kappa;
+                H      = H;
+                dpsi   = dpsi;
+                dkappa = dkappa;
+                dH     = dH;
+                MeasureConstraintsOutsideSurfaces=AhA(Prefix=AhA),AhB(Prefix=AhB);
+                MapPrefixFromGridToAhFrame = GridToDistorted;
+              ),
+
+              GlobalDifferentiator
+              (GlobalDifferentiator=
+                MatrixMultiply(MultiDim_by_BasisFunction=yes;
+                TopologicalDifferentiator
+                =Spectral(SetBasisFunctionsFromTimingInfo=yes;
+                         # BasisFunctions= (ChebyshevGaussLobatto=ChebyshevGaussLobattoMatrix);
+                         )
+                );
+              );
+    );
+
+Observers =
+    ConvertToVtk(
+        Input = Lapse, SqrtDetg, TheDampFactor, Shift, 1Con, 2Con, 3Con, GhCe, GhCeDenom, NormalizedGhCe;
+        Coords = GridToInertial::MappedCoords;
+        SkipSubdomains = SphereC*;
+        Basename = GaugeVis_Cless;
+    ),
+    ConvertToVtk(
+        Input = Lapse, SqrtDetg, TheDampFactor, Shift, 1Con, 2Con, 3Con, GhCe, GhCeDenom, NormalizedGhCe;
+        Coords = GridToInertial::MappedCoords;
+        Basename = GaugeVisAll;
+    );
