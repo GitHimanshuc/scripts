@@ -33,6 +33,7 @@ cd $cp_called &&\
 if test -f "./GrDomain.input"; then
     echo "GrDomain.input detected. It is a BBH simulation, using Gaugecheck_small_bbh"
     cp $parent_dir/observe_from_checkpoint_files/helper_files/Gaugecheck_small_bbh.input .
+    cp $parent_dir/observe_from_checkpoint_files/helper_files/GhCe_from_checkpoints.input .
     # save the apply observer command
     command="$bin_folder/ApplyObservers -t psi,kappa -r 11,122 -d 4,4 -domaininput "./GrDomain.input" -h5prefix 'Cp-VarsGr' ./Gaugecheck_small_bbh.input"
     echo "$command" > ./run_apply_observer.sh
@@ -48,8 +49,6 @@ else
     echo "$command" > ./run_apply_observer.sh
 
 fi
-# Remove all domains but the spheres surrounding the BHs
-echo "sed '/Cylinder/d' GaugeVis.pvd | sed '/SphereC/d'> just_BHs.pvd" >> ./run_apply_observer.sh
 
 touch ./data_location.txt &&\
 echo $cp_folder >> ./data_location.txt &&\
