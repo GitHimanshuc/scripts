@@ -175,12 +175,12 @@ def make_submit_file(path_dict:dict):
 
         submit_script=\
 f"""#!/bin/bash -
-#SBATCH -J CCE_{run_name}              # Job Name
-#SBATCH -o CCE.stdout                # Output file name
-#SBATCH -e CCE.stderr                # Error file name
-#SBATCH -n 2                          # Number of cores
+#SBATCH -J CCE_{run_name}             # Job Name
+#SBATCH -o CCE.stdout                 # Output file name
+#SBATCH -e CCE.stderr                 # Error file name
+#SBATCH -n 3                          # Number of cores
 #SBATCH -p expansion                  # Queue name
-#SBATCH --ntasks-per-node 2        # number of MPI ranks per node
+#SBATCH --ntasks-per-node 3           # number of MPI ranks per node
 #SBATCH -t 24:0:00   # Run time
 #SBATCH -A sxs                # Account name
 #SBATCH --no-requeue
@@ -239,6 +239,9 @@ def add_cce_data_paths(path_dict):
       key_name = f"Lev{lev}_R{radius}"
       path_dict["cce_paths_keys"].append(key_name)
       path_dict[key_name] = list(path_dict["base_path"].glob(f"Ev/Lev{lev}_??/Run/GW2/BondiCceR{radius}.h5"))
+      path_dict[key_name] = path_dict[key_name]+ list(path_dict["base_path"].glob(f"Ev/Lev{lev}_Ringdown/Lev{lev}_??/Run/GW2/BondiCceR{radius}.h5"))
+      # sort because JoinH5 needs monotonic time step
+      path_dict[key_name].sort()
 
 
 # create directories to save cce waveforms
