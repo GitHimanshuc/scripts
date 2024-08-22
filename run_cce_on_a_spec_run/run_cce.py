@@ -178,9 +178,9 @@ f"""#!/bin/bash -
 #SBATCH -J CCE_{run_name}             # Job Name
 #SBATCH -o CCE.stdout                 # Output file name
 #SBATCH -e CCE.stderr                 # Error file name
-#SBATCH -n 3                          # Number of cores
+#SBATCH -n 4                          # Number of cores
 #SBATCH -p expansion                  # Queue name
-#SBATCH --ntasks-per-node 3           # number of MPI ranks per node
+#SBATCH --ntasks-per-node 4           # number of MPI ranks per node
 #SBATCH -t 24:0:00   # Run time
 #SBATCH -A sxs                # Account name
 #SBATCH --no-requeue
@@ -218,15 +218,29 @@ def submit_all_jobs(path_dict:dict):
 def add_levs(path_dict):
   base_path = path_dict["base_path"]
   path_dict["Lev_list"] = []
-  for lev in range(10):
-    if (base_path/f"Ev/Lev{lev}_AA").exists():
-      path_dict["Lev_list"].append(f"{lev}")
+  lev_folders = list(base_path.glob("Lev?_??"))
+  lev_set = set()
+  for lev in lev_folders:
+    lev_set.add(lev.stem[-4])
+  # for lev in range(10):
+  #   if (base_path/f"Lev{lev}_AA").exists():
+  #     path_dict["Lev_list"].append(f"{lev}")
+  
+  # if path_dict['past_lev_path_list'] is not None:
+  #   for lev in path_dict['past_lev_path_list']:
+  #     lev_set.add(lev.stem[-4])
+  # TODO! Check for lev overlaps
+
+  path_dict["Lev_list"] = list(lev_set)
+  path_dict["Lev_list"].sort()
 
 # 'cce_radius': ['0112', '0540', '0397', '0255']
 def add_cce_radius(path_dict):
   some_lev = path_dict["Lev_list"][0]
-  cce_list = list(path_dict["base_path"].glob(f"Ev/Lev{some_lev}_AA/Run/GW2/BondiCceR????.h5"))
-  path_dict["cce_radius"] = [file.name[9:-3] for file in cce_list]
+  cce_list = list(path_dict["base_path"].glob(f"Lev{some_lev}_??/Run/GW2/BondiCceR????.h5"))
+  #TODO! Check that the radius are present at all levs
+  path_dict["cce_radius"] = list(set([file.name[9:-3] for file in cce_list]))
+  path_dict["cce_radius"].sort()
 
 
 # 'cce_paths_keys': ['Lev_1_radius_0112', 'Lev_1_radius_0255']
@@ -234,15 +248,30 @@ def add_cce_radius(path_dict):
 # 'Lev1_R0255': [path_list],
 def add_cce_data_paths(path_dict):
   path_dict["cce_paths_keys"]=[]
+     
   for lev in path_dict["Lev_list"]:
     for radius in path_dict["cce_radius"]:
       key_name = f"Lev{lev}_R{radius}"
       path_dict["cce_paths_keys"].append(key_name)
-      path_dict[key_name] = list(path_dict["base_path"].glob(f"Ev/Lev{lev}_??/Run/GW2/BondiCceR{radius}.h5"))
-      path_dict[key_name] = path_dict[key_name]+ list(path_dict["base_path"].glob(f"Ev/Lev{lev}_Ringdown/Lev{lev}_??/Run/GW2/BondiCceR{radius}.h5"))
+      path_dict[key_name] = []
+              
+      path_dict[key_name] = path_dict[key_name] + list(path_dict["base_path"].glob(f"Lev{lev}_??/Run/GW2/BondiCceR{radius}.h5"))
+      path_dict[key_name] = path_dict[key_name] + list(path_dict["base_path"].glob(f"Lev{lev}_Ringdown/Lev{lev}_??/Run/GW2/BondiCceR{radius}.h5"))
       # sort because JoinH5 needs monotonic time step
       path_dict[key_name].sort()
 
+      # Add the past lev paths
+      if path_dict["past_lev_path_list"] is not None:
+        prev_lev_cce_paths = []
+        for prev_lev_path in path_dict["past_lev_path_list"]:
+           if f"Lev{lev}" in str(prev_lev_path):
+              prev_lev_cce_paths = prev_lev_cce_paths + list(prev_lev_path.glob(f"Run/GW2/BondiCceR{radius}.h5"))
+
+        prev_lev_cce_paths.sort()
+
+        path_dict[key_name] = prev_lev_cce_paths + path_dict[key_name]
+
+      print(path_dict[key_name])
 
 # create directories to save cce waveforms
 def create_folders_to_save_cce_data(path_dict):
@@ -251,21 +280,45 @@ def create_folders_to_save_cce_data(path_dict):
     folder_to_create.mkdir(parents=True,exist_ok=True)
 
 
-def run_JoinH5(save_folder,h5_file_list,output_file_name):
+def run_JoinH5(save_folder,h5_file_list,output_file_name, just_write_command=False):
   file_list_str = ""
   for file_path in h5_file_list:
     file_list_str += f" {file_path}"
 
   command = f"cd {save_folder} && {spec_home}/Support/bin/JoinH5 -o {output_file_name} {file_list_str}"
-  status = subprocess.run(command, capture_output=True, shell=True, text=True)
-  if status.returncode == 0:
-    print(f"Succesfully saved joined h5 file {output_file_name} in {save_folder}")
-  else:
-    sys.exit(
-        f"JoinH5 failed in {save_folder} with error: \n {status.stderr}")
+  with open(save_folder+"/joinH5_commands.sh",'w') as f:
+    submit_file =\
+f"""#!/bin/bash -
+#SBATCH -J JoinH5_{save_folder.split("/")[-1]}             # Job Name
+#SBATCH -o JoinH5.stdout                 # Output file name
+#SBATCH -e JoinH5.stderr                 # Error file name
+#SBATCH -n 1                          # Number of cores
+#SBATCH -p expansion                  # Queue name
+#SBATCH --ntasks-per-node 1           # number of MPI ranks per node
+#SBATCH -t 2:0:00   # Run time
+#SBATCH -A sxs                # Account name
+#SBATCH --no-requeue
+#SBATCH --reservation=sxs_standing
+#SBATCH --constraint=skylake
+
+# Go to the correct folder with the boundary data
+cd {save_folder}
+
+# run CCE
+{command}
+"""
+    f.writelines(submit_file)
+
+  if not just_write_command:
+    status = subprocess.run(command, capture_output=True, shell=True, text=True)
+    if status.returncode == 0:
+      print(f"Succesfully saved joined h5 file {output_file_name} in {save_folder}")
+    else:
+      sys.exit(
+          f"JoinH5 failed in {save_folder} with error: \n {status.stderr}")
 
 # Combines h5 files for different levs and radius
-def save_joined_cce_h5_files(path_dict,cce_paths_keys_list=None):
+def save_joined_cce_h5_files(path_dict,cce_paths_keys_list=None,just_write_command=False):
   if cce_paths_keys_list is None:
     cce_paths_keys_list = path_dict["cce_paths_keys"]
     
@@ -279,7 +332,7 @@ def save_joined_cce_h5_files(path_dict,cce_paths_keys_list=None):
     if output_file_path.exists():
       print(f"File {output_file_path} already exisits. Doing nothing!!!")
     else:
-      run_JoinH5(save_folder,h5_file_list,output_file_name)
+      run_JoinH5(save_folder,h5_file_list,output_file_name, just_write_command=just_write_command)
       
 # Makes input files for CCE for each radius of CCE
 def make_config_files_in_all_folders(path_dict:dict):
@@ -292,35 +345,49 @@ def save_boundary_data_paths(path_dict):
   path_dict['boundary_data_paths'] = list(path_dict['base_path'].glob("cce_bondi/*/*.h5"))
 
 def pickle_path_dict(path_dict):
-  with open(path_dict['base_path']/"cce_bondi/path_dict.pkl",'wb') as f:
+  with open(path_dict['base_path']/"cce_bondi/path_dict5.pkl",'wb') as f:
     pickle.dump(path_dict,f)
 
 # %% [markdown]
 # ## Function to do it all
 
 # %%
-def do_CCE(run_path_list: list, CCE_executable: Path, submit_jobs=True):
+def do_CCE(run_path_list: list, CCE_executable: Path, submit_jobs:bool=True,just_write_command:bool=False, past_lev_path_list:list[Path]=None):
     for base_path in run_path_list:
         path_dict = {"base_path":Path(base_path)}
         path_dict['CCE_Executable'] = CCE_executable
-        
+        if past_lev_path_list is not None:
+           path_dict['past_lev_path_list'] = past_lev_path_list
+        else:
+           path_dict['past_lev_path_list'] = None
+
         add_levs(path_dict)
         add_cce_radius(path_dict)
         add_cce_data_paths(path_dict)
         create_folders_to_save_cce_data(path_dict)
-        save_joined_cce_h5_files(path_dict)
+        save_joined_cce_h5_files(path_dict,just_write_command=just_write_command)
         save_boundary_data_paths(path_dict)
         pickle_path_dict(path_dict)
 
         # make cce input files and submit the job
-        make_config_files_in_all_folders(path_dict)          
+        make_config_files_in_all_folders(path_dict)
         make_submit_file(path_dict)
         if submit_jobs:
           submit_all_jobs(path_dict)
 
+
+past_lev_path_list = [
+   Path("/groups/sxs/hchaudha/spec_runs/high_accuracy_L35/Ev/Lev5_AA"),
+   Path("/groups/sxs/hchaudha/spec_runs/high_accuracy_L35/Ev/Lev5_AB"),
+   Path("/groups/sxs/hchaudha/spec_runs/high_accuracy_L35/Ev/Lev5_AC"),
+   ]
 runs_paths = [
-    Path("/groups/sxs/hchaudha/spec_runs/high_accuracy_L35")
+    # Path("/groups/sxs/hchaudha/spec_runs/high_accuracy_L35_variations/Lev5_big_gaussian"),
+    # Path("/groups/sxs/hchaudha/spec_runs/high_accuracy_L35_variations/Lev5_big_gaussian_constra"),
+    Path("/groups/sxs/hchaudha/spec_runs/high_accuracy_L35_variations/Lev5_big_gaussian_constra_200"),
+    # Path("/groups/sxs/hchaudha/spec_runs/high_accuracy_L35_variations/Lev5_big_gaussian_ah_tol10"),
+    # Path("/groups/sxs/hchaudha/spec_runs/high_accuracy_L35_variations/Lev5_big_gaussian_ah_tol100"),
 ]
 
 CCE_executable = Path("/groups/sxs/hchaudha/spec_runs/CCE_stuff/CceExecutables/CharacteristicExtract")
-do_CCE(runs_paths,CCE_executable)
+do_CCE(runs_paths,CCE_executable, submit_jobs=False, just_write_command=True, past_lev_path_list=past_lev_path_list)
