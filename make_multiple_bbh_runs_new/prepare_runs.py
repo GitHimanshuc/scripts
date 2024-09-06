@@ -33,15 +33,19 @@ def generate_params_file(mass_ratio=1, spinA=(0, 0, 0), spinB=(0, 0, 0), D0=10):
   # Params.input
   param_file = f"""# Set the initial data parameters
 
+# Physical parameters (spins are dimensionless)
+$MassRatio = {mass_ratio};
+@SpinA = {spinA};
+@SpinB = {spinB};
+
 # Orbital parameters
 $Omega0 = {parameters[1].split("= ")[1]};
 $adot0 = {parameters[3].split("= ")[1]};
 $D0 = {D0};
 
-# Physical parameters (spins are dimensionless)
-$MassRatio = {mass_ratio};
-@SpinA = {spinA};
-@SpinB = {spinB};
+# for hyperbolic encounters w/ E and J specification
+$E_ADM_target  = undef;
+$J_ADMz_target = undef;
 
 # Evolve after initial data completes?
 $Evolve = 1;
@@ -107,24 +111,32 @@ def add_to_start_jobs_script(dir):
 
 
 def replace_current_file(file_path, original_str, replaced_str):
+    matched_strings = []
+
+    def callback(match):
+        matched_strings.append(match.group(0))  # Store the matched string
+        return replaced_str  # Replace with the new string
+
     with open(file_path, 'r') as file:
         data = file.read()
 
-    data, replaced_status = re.subn(original_str, replaced_str, data)
+    # Use re.sub with callback to replace and collect matched strings
+    data, replaced_status = re.subn(original_str, callback, data)
+
     if replaced_status != 0:
         print(f"""
 Replaced in File: {file_path}
 Original String: {original_str}
 Replaced String: {replaced_str}
+Matched Strings: {matched_strings}
 """)
     else:
-        print(f"""
+        raise Exception(f"""
 !!!!FAILED TO REPLACE!!!!
 File path: {file_path}
 Original String: {original_str}
 Replaced String: {replaced_str}
 """)
-        sys.exit("Failed to replace parameters in files.")
 
     with open(file_path, 'w') as file:
         file.write(data)

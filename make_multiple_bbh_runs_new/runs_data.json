@@ -37,6 +37,17 @@
         ]
       },
       {
+          "file_path": "/Params.input",
+          "original_str": [
+            "Omega0 =\\s*([^;]*);",
+            "adot0 =\\s*([^;]*);"
+          ],
+          "replaced_str": [
+            "Omega0 = 0.012226459838;",
+            "adot0 = -1.72797015626e-05;"
+          ]
+      },
+      {
         "file_path": "/Ev/bin/Machines.pm",
         "original_str": [
           "  if\\(\\$ppn == 32\\) {"
