@@ -1,0 +1,92 @@
+DataBoxItems =
+    ReadFromFile(File=./SpatialCoordMap.input),
+    ReadFromFile(File=./GaugeItems.input),
+    Domain(Items=
+           AddGeneralizedHarmonicInfo(MatterSourceName=;)
+           ),
+    Subdomain(Items =
+              # GlobalIntegrator(Integrator=Spectral),
+              # Add 3+1 items in Grid frame
+              Add3Plus1ItemsFromGhPsiKappa(psi=psi;kappa=kappa;OutputPrefix=),
+              # Needed for transforming spacetime tensors to different frame
+              AddSpacetimeJacobianAndHessianItems(MapPrefix=GridToInertial;),
+              # TensorExpression(Output=TheDampFactor; Symm=; Dim=3;
+              #                  Expression=(T[]=SqrtDetg[]/Lapse[];)
+              # ),
+              SpatialCoordMap::TransformSpatialComponentsOfSpacetimeTensorToDifferentFrame
+              (MapPrefixToInputFrame=GridToInertial;
+               Input =psi; Output=PseudoGridpsi;
+               IndexPositions=ll;),
+              SpatialCoordMap::TransformSpatialComponentsOfSpacetimeTensorToDifferentFrame
+              (MapPrefixToInputFrame=GridToInertial;
+               Input =kappa; Output=PseudoGridkappa;
+               IndexPositions=lll;),
+              NumberOfFilteredModes(
+                FilterLabelDefault = ExpCheb;
+                FilterLabelForS2   = KillTop;
+                # FilterLabelForB3   = KillTop;
+              ),
+              PowerMonitor(Inputs=psi,kappa;
+                           InputPrefixForTensorYlm=PseudoGrid;
+                           AddRadialMonitorForB2B3=yes;
+                           UseTensorYlmForS2=yes;),
+              GridDiagnostics(PowerMonitorItems=Powerpsi,Powerkappa;),
+
+              GlobalDifferentiator
+              (GlobalDifferentiator=
+                MatrixMultiply(MultiDim_by_BasisFunction=yes;
+                TopologicalDifferentiator
+                =Spectral(SetBasisFunctionsFromTimingInfo=yes;
+                         # BasisFunctions= (ChebyshevGaussLobatto=ChebyshevGaussLobattoMatrix);
+                         )
+                );
+              );
+    );
+
+Observers =
+
+    # ObserveInSubdir
+    # (Subdir=__ConstraintNormsDir__;
+    #   Observers =
+    #   NormOfTensor(Input=GhCe; Filename=GhCe_Norms.dat;
+    #               Op=VolLp(p=2; SqrtDetg=SqrtDetg),L2, Linf;),
+    #   NormOfTensor(Input=GhCeExt; Filename=GhCeExt_Norms.dat;
+    #               Op=VolLp(p=2; SqrtDetg=SqrtDetg),L2, Linf;),
+    #   NormOfTensor(Input=NormalizedGhCe; Filename=NormalizedGhCe_Norms.dat;
+    #               Op=VolLp(p=2; SqrtDetg=SqrtDetg),L2, Linf;),
+    #   NormOfTensor(Input=GhCe,1Con,2Con,3Con, GhCeDenom;
+    #               Op=VolLp(p=2;SqrtDetg=SqrtDetg);
+    #               Filename=GhCe.dat; MetricForTensors=None),
+    #   # Constraint norms outside of horizons
+    #   NormOfTensor(Input    = GhCeExt,1ConExt,2ConExt,3ConExt,GhCeDenomExt,
+    #               NormalizedGhCeExt;
+    #               MetricForTensors=None;
+    #               Op       = VolLp(p=2;SqrtDetg=SqrtDetg);
+    #               Filename = GhCeExt.dat),
+
+    #   ),
+
+    # ConvertToVtk(
+    #     Input = Lapse;
+    #     Coords = GridToInertial::MappedCoords;
+    #     Basename = GaugeVis;
+    # ),
+    FilterModes(
+      # Variable = Lapse;
+      Variables = psi, kappa;
+      DomainRegex = SphereC1;
+      Threshold = 1.e-10;
+      # DomainRegex = *;
+      # DomainRegex = SphereA0*;
+      # DomainRegex = CylinderEB0*;
+    ),
+    # DumpSpectralCoefficients(
+    #   Input = psi,kappa;
+    #   TakeLog=no;
+    # ),
+    # PowerDiagnosticsH5(
+    #   GridDiagnostics=GridDiagPowerpsi,GridDiagPowerkappa;
+    #   PowerMonitors=Powerpsi,Powerkappa;
+    #   Subdomains=*;
+    # ),
+    ;
