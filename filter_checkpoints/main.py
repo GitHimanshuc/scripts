@@ -138,28 +138,22 @@ def load_filtered_data_into_dict(filtered_txt_folder_path: Path):
             )
     return data_dict
 
-
 def copy_and_modify_h5file(input_file, output_file, modification_data_dict):
-    with h5py.File(input_file, "r") as infile, h5py.File(output_file, "w") as outfile:
+    shutil.copy(input_file, output_file)
+    with h5py.File(output_file, "r+") as outfile:
         # Level 1: Root level items
-        for key1, item1 in infile.items():
+        for key1, item1 in outfile.items():
             if isinstance(item1, h5py.Group):
-                group1 = outfile.create_group(key1)
                 # Level 2: First nested level
                 for key2, item2 in item1.items():
                     if isinstance(item2, h5py.Group):
-                        group2 = group1.create_group(key2)
                         # Level 3: Second nested level
                         for key3, item3 in item2.items():
                             if isinstance(item3, h5py.Dataset):
                                 # print(f"{key1}/{key2}/{key3}")
                                 if key1 in modification_data_dict:
                                     print(f"Modifying {key1}/{key3}")
-                                    group2.create_dataset(
-                                        key3, data=modification_data_dict[key1][key3]
-                                    )
-                                else:
-                                    group2.create_dataset(key3, data=item3)
+                                    outfile[key1][key2][key3][()] = modification_data_dict[key1][key3]
                             else:
                                 raise ValueError(f"Unexpected item type: {type(item3)}")
                     else:
@@ -194,15 +188,46 @@ def make_filtered_checkpoints(
             print(f"Copying the domain {domain_name}")
             shutil.copy(fp, new_checkpoint_folder)
 
+def make_input_file_content(DomainRegex:str, Threshold:float):
+  content=f"""
+DataBoxItems =
+    ReadFromFile(File=./SpatialCoordMap.input),
+    ReadFromFile(File=./GaugeItems.input),
+    Domain(Items=
+           AddGeneralizedHarmonicInfo(MatterSourceName=;)
+           ),
+    Subdomain(Items =
+              Add3Plus1ItemsFromGhPsiKappa(psi=psi;kappa=kappa;OutputPrefix=),
+              GlobalDifferentiator
+              (GlobalDifferentiator=
+                MatrixMultiply(MultiDim_by_BasisFunction=yes;
+                TopologicalDifferentiator
+                =Spectral(SetBasisFunctionsFromTimingInfo=yes;)
+                );
+              );
+    );
+
+Observers =
+    FilterModes(
+      Variables = psi, kappa;
+      DomainRegex = {DomainRegex};
+      Threshold = {Threshold};
+    ),
+    ;
+"""
+  return content
 
 def make_filtered_checkpoint_from_another(
     ApplyObserversPath: Path,
     ConvertDumpToTextPath: Path,
-    ApplyObserverInputFilePath: Path,
     InputAndHistFolderPath: Path,
     CheckpointFolderPath: Path,
     work_dir: Path,
-):
+    FilterThreshold: float,
+    DomainRegex: str):
+
+    if not CheckpointFolderPath.exists():
+      raise Exception(f"{CheckpointFolderPath} does not exist!!")
 
     filtered_checkpoint_path = work_dir / "filtered_checkpoint"
     filtered_text_files_path = work_dir / "data"
@@ -222,7 +247,7 @@ def make_filtered_checkpoint_from_another(
 . /home/hchaudha/spec/MakefileRules/this_machine.env
 cd {work_dir}
 
-{ApplyObserversPath} -t psi,kappa,InitHhatt,InitGridHi -r 11,122,,1 -d 4,4,1,3 -domaininput ./GrDomain.input -h5prefix Cp-VarsGr {ApplyObserverInputFilePath}
+{ApplyObserversPath} -t psi,kappa,InitHhatt,InitGridHi -r 11,122,,1 -d 4,4,1,3 -domaininput ./GrDomain.input -h5prefix Cp-VarsGr ./input_file.input
 
 # For now the FilterMode observer is hard coded to output things in the data folder
 cd ./data
@@ -243,11 +268,13 @@ for file in "$DIRECTORY"/*.dump; do
 done
 
     """
+    with open(work_dir / "input_file.input", "w") as f:
+        f.write(make_input_file_content(DomainRegex, FilterThreshold))
 
     with open(work_dir / "apply_observer.sh", "w") as f:
         f.write(apply_observer)
 
-    command = f"cd {work_dir} && bash ./apply_observer.sh"
+    command = f"cd {work_dir} && bash ./apply_observer.sh > ./apply_observer.out"
     status = subprocess.run(command, capture_output=True, shell=True, text=True)
     if status.returncode == 0:
         print(f"Ran FilterModes observer in {work_dir}.\n {status.stdout}")
@@ -265,26 +292,32 @@ done
         CheckpointFolderPath, filtered_checkpoint_path, filtered_data_dict
     )
 
+    # Rename the original checkpoint folder
+    new_original_checkpoint_folder_name = CheckpointFolderPath.parent/f"{CheckpointFolderPath.stem}_original"
+    shutil.move(CheckpointFolderPath,new_original_checkpoint_folder_name)
 
-# Testing function
+    # Copy the filtered checkpoint data into the place of the original checkpoint data
+    shutil.copytree(work_dir / "filtered_checkpoint",CheckpointFolderPath)
+
+    # Copy the main file for reproducibility
+    shutil.copy(Path(__file__).absolute(), work_dir,follow_symlinks=True)
 
 ApplyObserversPath = Path("/groups/sxs/hchaudha/spec_runs/filtered_checkpoints/binaries/ApplyObservers")
 ConvertDumpToTextPath = Path("/groups/sxs/hchaudha/spec_runs/filtered_checkpoints/binaries/ConvertDumpToText")
 
 CheckpointFolderPath = Path(
-    "/groups/sxs/hchaudha/spec_runs/17_set3_q3_18_L3/Ev/Lev3_AA/Run/Checkpoints/17273"
+    "/groups/sxs/hchaudha/spec_runs/19_filtered_checkpoint_runs/6_set1_L3_5517_6/Ev/Lev3_AA/Run/Checkpoints/5517"
 )
 
 InputAndHistFolderPath = CheckpointFolderPath.parent.parent
-
-ApplyObserverInputFilePath = Path("/groups/sxs/hchaudha/spec_runs/filtered_checkpoints/input_file.input")
-work_dir = Path("/groups/sxs/hchaudha/spec_runs/filtered_checkpoints/temp")
+work_dir = CheckpointFolderPath.parent/f"{CheckpointFolderPath.stem}_workdir"
 
 make_filtered_checkpoint_from_another(
     ApplyObserversPath,
     ConvertDumpToTextPath,
-    ApplyObserverInputFilePath,
     InputAndHistFolderPath,
     CheckpointFolderPath,
     work_dir,
+    1e-10,
+    "SphereC*"
 )
