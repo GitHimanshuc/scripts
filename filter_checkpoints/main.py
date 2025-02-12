@@ -318,6 +318,40 @@ make_filtered_checkpoint_from_another(
     InputAndHistFolderPath,
     CheckpointFolderPath,
     work_dir,
+    1e-6,
+    "SphereC*"
+)
+
+CheckpointFolderPath = Path(
+    "/groups/sxs/hchaudha/spec_runs/19_filtered_checkpoint_runs/6_set1_L3_5517_8/Ev/Lev3_AA/Run/Checkpoints/5517"
+)
+
+InputAndHistFolderPath = CheckpointFolderPath.parent.parent
+work_dir = CheckpointFolderPath.parent/f"{CheckpointFolderPath.stem}_workdir"
+
+make_filtered_checkpoint_from_another(
+    ApplyObserversPath,
+    ConvertDumpToTextPath,
+    InputAndHistFolderPath,
+    CheckpointFolderPath,
+    work_dir,
+    1e-8,
+    "SphereC*"
+)
+
+CheckpointFolderPath = Path(
+    "/groups/sxs/hchaudha/spec_runs/19_filtered_checkpoint_runs/6_set1_L3_5517_10/Ev/Lev3_AA/Run/Checkpoints/5517"
+)
+
+InputAndHistFolderPath = CheckpointFolderPath.parent.parent
+work_dir = CheckpointFolderPath.parent/f"{CheckpointFolderPath.stem}_workdir"
+
+make_filtered_checkpoint_from_another(
+    ApplyObserversPath,
+    ConvertDumpToTextPath,
+    InputAndHistFolderPath,
+    CheckpointFolderPath,
+    work_dir,
     1e-10,
     "SphereC*"
 )
