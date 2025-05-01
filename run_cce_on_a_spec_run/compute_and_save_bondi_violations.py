@@ -258,10 +258,295 @@ def create_power_diff_dict(power_dict:dict, pow_mode:str, variable:str, base_key
   return diff_dict
 
 # %%
+# cce_data= {}
+
+# cce_data[f"r10_data"] = Path(f"/central/groups/sxs/hchaudha/spec_runs/single_bh/20_zero_spin_AMR_L5_10000M/GW_data/r100_data/ode_10/red_cce.h5")
+# cce_data[f"r100_data"] = Path(f"/central/groups/sxs/hchaudha/spec_runs/single_bh/20_zero_spin_AMR_L5_10000M/GW_data/r100_data/ode_100/red_cce.h5")
+# cce_data[f"r1000_data"] = Path(f"/central/groups/sxs/hchaudha/spec_runs/single_bh/20_zero_spin_AMR_L5_10000M/GW_data/r100_data/ode_1000/red_cce.h5")
+# cce_data[f"r10000_data"] = Path(f"/central/groups/sxs/hchaudha/spec_runs/single_bh/20_zero_spin_AMR_L5_10000M/GW_data/r100_data/ode_10000/red_cce.h5")
+# cce_data[f"r10000_data"] = Path(f"/central/groups/sxs/hchaudha/spec_runs/single_bh/20_zero_spin_AMR_L5_10000M/GW_data/r100_data/ode_100000/red_cce.h5")
+
+
+# # fail_flag = False
+# drop_unavailable_keys = True
+# unavailable_keys = []
+# for key in cce_data:
+#   if not cce_data[key].exists():
+#     fail_flag = True
+#     unavailable_keys.append(key)
+#     print(f"{cce_data[key]} does not exist!")
+# # if fail_flag:
+# #   raise Exception("Some paths do not exist!")
+
+# for key in unavailable_keys:
+#   cce_data.pop(key)
+
+# # %%
+# t_interpolate = None
+# t_interpolate = np.linspace(-2000,8000,num=2000)
+
+# abd_data = {}
+# failed_keys = {}
+# for key in cce_data:
+#   try:
+#     if "temp" in key:
+#       abd_data[key] = load_and_pickle(cce_data[key],options = {'t_interpolate':t_interpolate}, reload_data=True)
+#       abd_data[key] = load_bondi_constraints(cce_data[key])
+#     elif t_interpolate is None:
+#       abd_data[key] = load_and_pickle(cce_data[key], reload_data=False)
+#     #   abd_data[key] = load_and_pickle(cce_data[key],reload_data=True)
+#       abd_data[key] = load_bondi_constraints(cce_data[key])
+#     else:
+#       abd_data[key] = load_and_pickle(cce_data[key],options = {'t_interpolate':t_interpolate}, reload_data=False)
+#     #   abd_data[key] = load_and_pickle(cce_data[key],reload_data=True)
+#       abd_data[key] = load_bondi_constraints(cce_data[key])
+#   except Exception as e:
+#     failed_keys[key] = str(e)
+#     print(f"Failed to load and pickle data for key {key}: {e}")
+#     continue
+
+# for key,val in failed_keys.items():
+#   abd_data.pop(key)
+#   print(f"{key}: {val}")
+
+# print(abd_data.keys())
+
+
+# cce_data= {}
+# folder_test1 = Path("/groups/sxs/hchaudha/spec_runs/single_bh_CCE/runs/test1")
+# for i in folder_test1.glob("*"):
+#     if 'CCE_LMax15_RadPts20' in i.stem:
+#         continue
+#     cce_data[i.stem] = i/"red_cce.h5"
+
+# # fail_flag = False
+# drop_unavailable_keys = True
+# unavailable_keys = []
+# for key in cce_data:
+#   if not cce_data[key].exists():
+#     fail_flag = True
+#     unavailable_keys.append(key)
+#     print(f"{cce_data[key]} does not exist!")
+# # if fail_flag:
+# #   raise Exception("Some paths do not exist!")
+
+# for key in unavailable_keys:
+#   cce_data.pop(key)
+
+# # %%
+# t_interpolate = None
+# t_interpolate = np.linspace(-2000,8000,num=2000)
+
+# abd_data = {}
+# failed_keys = {}
+# for key in cce_data:
+#   try:
+#     if "temp" in key:
+#       abd_data[key] = load_and_pickle(cce_data[key],options = {'t_interpolate':t_interpolate}, reload_data=True)
+#       abd_data[key] = load_bondi_constraints(cce_data[key])
+#     elif t_interpolate is None:
+#       abd_data[key] = load_and_pickle(cce_data[key], reload_data=False)
+#     #   abd_data[key] = load_and_pickle(cce_data[key],reload_data=True)
+#       abd_data[key] = load_bondi_constraints(cce_data[key])
+#     else:
+#       abd_data[key] = load_and_pickle(cce_data[key],options = {'t_interpolate':t_interpolate}, reload_data=False)
+#     #   abd_data[key] = load_and_pickle(cce_data[key],reload_data=True)
+#       abd_data[key] = load_bondi_constraints(cce_data[key])
+#   except Exception as e:
+#     failed_keys[key] = str(e)
+#     print(f"Failed to load and pickle data for key {key}: {e}")
+#     continue
+
+
+########################################################################################################################
+
+
+# cce_data= {}
+# folder_rad_dep = Path("/groups/sxs/hchaudha/spec_runs/single_bh_CCE/runs/new_exe_rad_dep")
+# for i in folder_rad_dep.glob("*"):
+#     cce_data[i.stem] = i/"red_cce.h5"
+# folder_rad_dep = Path("/groups/sxs/hchaudha/spec_runs/single_bh_CCE/runs/obs_vol_data")
+# for i in folder_rad_dep.glob("*"):
+#     cce_data[i.stem] = i/"red_cce.h5"
+# folder_rad_dep = Path("/groups/sxs/hchaudha/spec_runs/single_bh_CCE/runs/rad_ode_tol_dep")
+# for i in folder_rad_dep.glob("*"):
+#     cce_data[i.stem] = i/"red_cce.h5"
+
+# # fail_flag = False
+# drop_unavailable_keys = True
+# unavailable_keys = []
+# for key in cce_data:
+#   if not cce_data[key].exists():
+#     fail_flag = True
+#     unavailable_keys.append(key)
+#     print(f"{cce_data[key]} does not exist!")
+# # if fail_flag:
+# #   raise Exception("Some paths do not exist!")
+
+# for key in unavailable_keys:
+#   cce_data.pop(key)
+
+# # %%
+# t_interpolate = None
+# t_interpolate = np.linspace(-5000,100000,num=5000)
+
+# abd_data = {}
+# failed_keys = {}
+# for key in cce_data:
+#   try:
+#     if "temp" in key:
+#       abd_data[key] = load_and_pickle(cce_data[key],options = {'t_interpolate':t_interpolate}, reload_data=True)
+#       abd_data[key] = load_bondi_constraints(cce_data[key])
+#     elif t_interpolate is None:
+#       abd_data[key] = load_and_pickle(cce_data[key], reload_data=False)
+#     #   abd_data[key] = load_and_pickle(cce_data[key],reload_data=True)
+#       abd_data[key] = load_bondi_constraints(cce_data[key])
+#     else:
+#       abd_data[key] = load_and_pickle(cce_data[key],options = {'t_interpolate':t_interpolate}, reload_data=False)
+#     #   abd_data[key] = load_and_pickle(cce_data[key],reload_data=True)
+#       abd_data[key] = load_bondi_constraints(cce_data[key])
+#   except Exception as e:
+#     failed_keys[key] = str(e)
+#     print(f"Failed to load and pickle data for key {key}: {e}")
+#     continue
+
+########################################################################################################################
+
+# cce_data= {}
+# folder_rad_dep = Path("/groups/sxs/hchaudha/spec_runs/22_cce_test/L3_new_executable/runs/")
+# for i in folder_rad_dep.glob("*"):
+#     cce_data[i.stem] = i/"red_cce.h5"
+
+# # fail_flag = False
+# drop_unavailable_keys = True
+# unavailable_keys = []
+# for key in cce_data:
+#   if not cce_data[key].exists():
+#     fail_flag = True
+#     unavailable_keys.append(key)
+#     print(f"{cce_data[key]} does not exist!")
+# # if fail_flag:
+# #   raise Exception("Some paths do not exist!")
+
+# for key in unavailable_keys:
+#   cce_data.pop(key)
+
+# # %%
+# t_interpolate = None
+# t_interpolate = np.linspace(-1000,10000,num=2000)
+
+# abd_data = {}
+# failed_keys = {}
+# for key in cce_data:
+#   try:
+#     if "temp" in key:
+#       abd_data[key] = load_and_pickle(cce_data[key],options = {'t_interpolate':t_interpolate}, reload_data=True)
+#       abd_data[key] = load_bondi_constraints(cce_data[key])
+#     elif t_interpolate is None:
+#       abd_data[key] = load_and_pickle(cce_data[key], reload_data=False)
+#     #   abd_data[key] = load_and_pickle(cce_data[key],reload_data=True)
+#       abd_data[key] = load_bondi_constraints(cce_data[key])
+#     else:
+#       abd_data[key] = load_and_pickle(cce_data[key],options = {'t_interpolate':t_interpolate}, reload_data=False)
+#     #   abd_data[key] = load_and_pickle(cce_data[key],reload_data=True)
+#       abd_data[key] = load_bondi_constraints(cce_data[key])
+#   except Exception as e:
+#     failed_keys[key] = str(e)
+#     print(f"Failed to load and pickle data for key {key}: {e}")
+#     continue
+
+# cce_data= {}
+# folder_rad_dep = Path("/groups/sxs/hchaudha/spec_runs/22_cce_test/L3_merged_data/runs")
+# for i in folder_rad_dep.glob("*"):
+#     cce_data[i.stem] = i/"red_cce.h5"
+
+# # fail_flag = False
+# drop_unavailable_keys = True
+# unavailable_keys = []
+# for key in cce_data:
+#   if not cce_data[key].exists():
+#     fail_flag = True
+#     unavailable_keys.append(key)
+#     print(f"{cce_data[key]} does not exist!")
+# # if fail_flag:
+# #   raise Exception("Some paths do not exist!")
+
+# for key in unavailable_keys:
+#   cce_data.pop(key)
+
+# # %%
+# t_interpolate = None
+# t_interpolate = np.linspace(-1000,20000,num=2000)
+
+# abd_data = {}
+# failed_keys = {}
+# for key in cce_data:
+#   try:
+#     if "temp" in key:
+#       abd_data[key] = load_and_pickle(cce_data[key],options = {'t_interpolate':t_interpolate}, reload_data=True)
+#       abd_data[key] = load_bondi_constraints(cce_data[key])
+#     elif t_interpolate is None:
+#       abd_data[key] = load_and_pickle(cce_data[key], reload_data=False)
+#     #   abd_data[key] = load_and_pickle(cce_data[key],reload_data=True)
+#       abd_data[key] = load_bondi_constraints(cce_data[key])
+#     else:
+#       abd_data[key] = load_and_pickle(cce_data[key],options = {'t_interpolate':t_interpolate}, reload_data=False)
+#     #   abd_data[key] = load_and_pickle(cce_data[key],reload_data=True)
+#       abd_data[key] = load_bondi_constraints(cce_data[key])
+#   except Exception as e:
+#     failed_keys[key] = str(e)
+#     print(f"Failed to load and pickle data for key {key}: {e}")
+#     continue
+
+
+# cce_data= {}
+# folder_rad_dep = Path("/groups/sxs/hchaudha/spec_runs/22_cce_test/L3_merged_data/runs")
+# for i in folder_rad_dep.glob("Delta*"):
+#     cce_data[i.stem] = i/"red_cce.h5"
+
+# # fail_flag = False
+# drop_unavailable_keys = True
+# unavailable_keys = []
+# for key in cce_data:
+#   if not cce_data[key].exists():
+#     fail_flag = True
+#     unavailable_keys.append(key)
+#     print(f"{cce_data[key]} does not exist!")
+# # if fail_flag:
+# #   raise Exception("Some paths do not exist!")
+
+# for key in unavailable_keys:
+#   cce_data.pop(key)
+
+# # %%
+# t_interpolate = None
+# t_interpolate = np.linspace(-1000,20000,num=2000)
+
+# abd_data = {}
+# failed_keys = {}
+# for key in cce_data:
+#   try:
+#     if "temp" in key:
+#       abd_data[key] = load_and_pickle(cce_data[key],options = {'t_interpolate':t_interpolate}, reload_data=True)
+#       abd_data[key] = load_bondi_constraints(cce_data[key])
+#     elif t_interpolate is None:
+#       abd_data[key] = load_and_pickle(cce_data[key], reload_data=False)
+#     #   abd_data[key] = load_and_pickle(cce_data[key],reload_data=True)
+#       abd_data[key] = load_bondi_constraints(cce_data[key])
+#     else:
+#       abd_data[key] = load_and_pickle(cce_data[key],options = {'t_interpolate':t_interpolate}, reload_data=False)
+#     #   abd_data[key] = load_and_pickle(cce_data[key],reload_data=True)
+#       abd_data[key] = load_bondi_constraints(cce_data[key])
+#   except Exception as e:
+#     failed_keys[key] = str(e)
+#     print(f"Failed to load and pickle data for key {key}: {e}")
+#     continue
+
+
 cce_data= {}
-radius = [20,35,50,75,100,150,200,250,300,400,500,600,800,1000,1500,2000,2500,]
-for r in radius:
-  cce_data[f"20_zero_err_{r}"] = Path(f"/groups/sxs/hchaudha/spec_runs/single_bh/20_zero_spin_AMR_L5_10000M/GW_data/long_16_2565_10000_14/BondiCceR{r:04}/red_cce.h5")
+folder_rad_dep = Path("/resnick/groups/sxs/hchaudha/spec_runs/22_cce_test/runs")
+for i in folder_rad_dep.glob("*"):
+    cce_data[i.stem] = i/"red_cce.h5"
 
 # fail_flag = False
 drop_unavailable_keys = True
@@ -279,7 +564,7 @@ for key in unavailable_keys:
 
 # %%
 t_interpolate = None
-# t_interpolate = np.linspace(-2000,8000,num=5000)
+t_interpolate = np.linspace(-1000,20000,num=2000)
 
 abd_data = {}
 failed_keys = {}
@@ -300,9 +585,3 @@ for key in cce_data:
     failed_keys[key] = str(e)
     print(f"Failed to load and pickle data for key {key}: {e}")
     continue
-
-for key,val in failed_keys.items():
-  abd_data.pop(key)
-  print(f"{key}: {val}")
-
-print(abd_data.keys())

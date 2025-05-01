@@ -7,7 +7,7 @@ import time
 import pickle
 import argparse
 from pathlib import Path
-spec_home="/home/himanshu/spec/my_spec"
+spec_home="/home/hchaudha/spec"
 
 
 # 'Lev_list': ['1','3']

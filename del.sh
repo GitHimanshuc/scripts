@@ -1,0 +1,3 @@
+mkdir Lev5_bg_ah100_cd_01_uamr2
+mkdir Lev5_bg_ah100_lapse2
+mkdir Lev5_bg_ah100_lapse_uamr2

@@ -2,3 +2,9 @@ scripts/data/
 *.output
 .ipynb_checkpoints
 temp.csv
+del/
+dealing_with_h5_files/**.h5
+del_*
+*.pkl
+*.out
+report/figures

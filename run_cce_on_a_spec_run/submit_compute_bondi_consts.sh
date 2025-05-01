@@ -18,4 +18,4 @@ ls -l
 which python
 ls -l
 
-python ./compute_and_save_bondi_violations.py
+PYTHONUNBUFFERED=1 python ./compute_and_save_bondi_violations.py >> ./compute_and_save_bondi_violations.out

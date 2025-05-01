@@ -27,8 +27,7 @@ def post_process_jobs(path_dict):
         bd_folder_path = bd_data_path.parent
 
         directory = str(bd_folder_path)+"/"
-
-        radius = bd_folder_path.stem[-4:]
+        
         # compute bianchi violations and save the pickel
 
         abd = scri.create_abd_from_h5(

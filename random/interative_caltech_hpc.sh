@@ -1,0 +1,1 @@
+#  srun -t 5:00:00 --cpus-per-task=8 --pty /bin/zsh

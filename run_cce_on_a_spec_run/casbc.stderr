@@ -1,0 +1,5 @@
++/var/spool/slurmd/job48792022/slurm_script:15> cd /groups/sxs/hchaudha/scripts/run_cce_on_a_spec_run
++/var/spool/slurmd/job48792022/slurm_script:16> ls -l
++/var/spool/slurmd/job48792022/slurm_script:18> which python
++/var/spool/slurmd/job48792022/slurm_script:19> ls -l
++/var/spool/slurmd/job48792022/slurm_script:21> PYTHONUNBUFFERED=1 python ./compute_and_save_bondi_violations.py

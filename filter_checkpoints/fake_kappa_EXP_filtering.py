@@ -312,106 +312,106 @@ ApplyObserversPath = Path("/groups/sxs/hchaudha/spec_runs/filtered_checkpoints/b
 # )
 
 
-CheckpointFolderPath = Path(
-    "/groups/sxs/hchaudha/spec_runs/19_filtered_checkpoint_runs/6_set1_L3_EXP_FK_14012_5_6_30/Ev/Lev3_AA/Run/Checkpoints/14012"
-)
-InputAndHistFolderPath = CheckpointFolderPath.parent.parent
-work_dir = CheckpointFolderPath.parent/f"{CheckpointFolderPath.stem}_workdir"
+# CheckpointFolderPath = Path(
+#     "/groups/sxs/hchaudha/spec_runs/19_filtered_checkpoint_runs/6_set1_L3_EXP_FK_14012_5_6_30/Ev/Lev3_AA/Run/Checkpoints/14012"
+# )
+# InputAndHistFolderPath = CheckpointFolderPath.parent.parent
+# work_dir = CheckpointFolderPath.parent/f"{CheckpointFolderPath.stem}_workdir"
 
-N,mean,std = 30,12,5
-minHalf,maxHalf = 6,30
-x = np.arange(N)
-guass = (1-np.exp(-((x - mean) ** 2) / (2 * std ** 2)))*(maxHalf-minHalf)+minHalf
-HalfPowerArr = np.array([np.ceil(i) for i in guass], dtype=int)
+# N,mean,std = 30,12,5
+# minHalf,maxHalf = 6,30
+# x = np.arange(N)
+# guass = (1-np.exp(-((x - mean) ** 2) / (2 * std ** 2)))*(maxHalf-minHalf)+minHalf
+# HalfPowerArr = np.array([np.ceil(i) for i in guass], dtype=int)
 
-make_filtered_checkpoint_from_another(
-    ApplyObserversPath,
-    InputAndHistFolderPath,
-    CheckpointFolderPath,
-    work_dir,
-    HalfPowerArr
-)
-
-
-CheckpointFolderPath = Path(
-    "/groups/sxs/hchaudha/spec_runs/19_filtered_checkpoint_runs/6_set1_L3_EXP_FK_14012_10_6_30/Ev/Lev3_AA/Run/Checkpoints/14012"
-)
-InputAndHistFolderPath = CheckpointFolderPath.parent.parent
-work_dir = CheckpointFolderPath.parent/f"{CheckpointFolderPath.stem}_workdir"
-
-N,mean,std = 30,12,10
-minHalf,maxHalf = 6,30
-x = np.arange(N)
-guass = (1-np.exp(-((x - mean) ** 2) / (2 * std ** 2)))*(maxHalf-minHalf)+minHalf
-HalfPowerArr = np.array([np.ceil(i) for i in guass], dtype=int)
-
-make_filtered_checkpoint_from_another(
-    ApplyObserversPath,
-    InputAndHistFolderPath,
-    CheckpointFolderPath,
-    work_dir,
-    HalfPowerArr
-)
+# make_filtered_checkpoint_from_another(
+#     ApplyObserversPath,
+#     InputAndHistFolderPath,
+#     CheckpointFolderPath,
+#     work_dir,
+#     HalfPowerArr
+# )
 
 
-CheckpointFolderPath = Path(
-    "/groups/sxs/hchaudha/spec_runs/19_filtered_checkpoint_runs/6_set1_L3_EXP_FK_14012_1_6_30/Ev/Lev3_AA/Run/Checkpoints/14012"
-)
-InputAndHistFolderPath = CheckpointFolderPath.parent.parent
-work_dir = CheckpointFolderPath.parent/f"{CheckpointFolderPath.stem}_workdir"
+# CheckpointFolderPath = Path(
+#     "/groups/sxs/hchaudha/spec_runs/19_filtered_checkpoint_runs/6_set1_L3_EXP_FK_14012_10_6_30/Ev/Lev3_AA/Run/Checkpoints/14012"
+# )
+# InputAndHistFolderPath = CheckpointFolderPath.parent.parent
+# work_dir = CheckpointFolderPath.parent/f"{CheckpointFolderPath.stem}_workdir"
 
-N,mean,std = 30,12,1
-minHalf,maxHalf = 6,30
-x = np.arange(N)
-guass = (1-np.exp(-((x - mean) ** 2) / (2 * std ** 2)))*(maxHalf-minHalf)+minHalf
-HalfPowerArr = np.array([np.ceil(i) for i in guass], dtype=int)
+# N,mean,std = 30,12,10
+# minHalf,maxHalf = 6,30
+# x = np.arange(N)
+# guass = (1-np.exp(-((x - mean) ** 2) / (2 * std ** 2)))*(maxHalf-minHalf)+minHalf
+# HalfPowerArr = np.array([np.ceil(i) for i in guass], dtype=int)
 
-make_filtered_checkpoint_from_another(
-    ApplyObserversPath,
-    InputAndHistFolderPath,
-    CheckpointFolderPath,
-    work_dir,
-    HalfPowerArr
-)
-
-
-CheckpointFolderPath = Path(
-    "/groups/sxs/hchaudha/spec_runs/19_filtered_checkpoint_runs/6_set1_L3_EXP_FK_14012_5_4_30/Ev/Lev3_AA/Run/Checkpoints/14012"
-)
-InputAndHistFolderPath = CheckpointFolderPath.parent.parent
-work_dir = CheckpointFolderPath.parent/f"{CheckpointFolderPath.stem}_workdir"
-
-N,mean,std = 30,12,5
-minHalf,maxHalf = 4,30
-x = np.arange(N)
-guass = (1-np.exp(-((x - mean) ** 2) / (2 * std ** 2)))*(maxHalf-minHalf)+minHalf
-HalfPowerArr = np.array([np.ceil(i) for i in guass], dtype=int)
-
-make_filtered_checkpoint_from_another(
-    ApplyObserversPath,
-    InputAndHistFolderPath,
-    CheckpointFolderPath,
-    work_dir,
-    HalfPowerArr
-)
+# make_filtered_checkpoint_from_another(
+#     ApplyObserversPath,
+#     InputAndHistFolderPath,
+#     CheckpointFolderPath,
+#     work_dir,
+#     HalfPowerArr
+# )
 
 
-CheckpointFolderPath = Path(
-    "/groups/sxs/hchaudha/spec_runs/19_filtered_checkpoint_runs/6_set1_L3_EXP_FK_14012_5_2_30/Ev/Lev3_AA/Run/Checkpoints/14012"
-)
-InputAndHistFolderPath = CheckpointFolderPath.parent.parent
-work_dir = CheckpointFolderPath.parent/f"{CheckpointFolderPath.stem}_workdir"
+# CheckpointFolderPath = Path(
+#     "/groups/sxs/hchaudha/spec_runs/19_filtered_checkpoint_runs/6_set1_L3_EXP_FK_14012_1_6_30/Ev/Lev3_AA/Run/Checkpoints/14012"
+# )
+# InputAndHistFolderPath = CheckpointFolderPath.parent.parent
+# work_dir = CheckpointFolderPath.parent/f"{CheckpointFolderPath.stem}_workdir"
 
-N,mean,std = 30,12,5
-minHalf,maxHalf = 2,30
-x = np.arange(N)
-guass = (1-np.exp(-((x - mean) ** 2) / (2 * std ** 2)))*(maxHalf-minHalf)+minHalf
-HalfPowerArr = np.array([np.ceil(i) for i in guass], dtype=int)
+# N,mean,std = 30,12,1
+# minHalf,maxHalf = 6,30
+# x = np.arange(N)
+# guass = (1-np.exp(-((x - mean) ** 2) / (2 * std ** 2)))*(maxHalf-minHalf)+minHalf
+# HalfPowerArr = np.array([np.ceil(i) for i in guass], dtype=int)
 
-make_filtered_checkpoint_from_another(
-    ApplyObserversPath,
-    InputAndHistFolderPath,
-    CheckpointFolderPath,
-    work_dir,
-    HalfPowerArr
-)
+# make_filtered_checkpoint_from_another(
+#     ApplyObserversPath,
+#     InputAndHistFolderPath,
+#     CheckpointFolderPath,
+#     work_dir,
+#     HalfPowerArr
+# )
+
+
+# CheckpointFolderPath = Path(
+#     "/groups/sxs/hchaudha/spec_runs/19_filtered_checkpoint_runs/6_set1_L3_EXP_FK_14012_5_4_30/Ev/Lev3_AA/Run/Checkpoints/14012"
+# )
+# InputAndHistFolderPath = CheckpointFolderPath.parent.parent
+# work_dir = CheckpointFolderPath.parent/f"{CheckpointFolderPath.stem}_workdir"
+
+# N,mean,std = 30,12,5
+# minHalf,maxHalf = 4,30
+# x = np.arange(N)
+# guass = (1-np.exp(-((x - mean) ** 2) / (2 * std ** 2)))*(maxHalf-minHalf)+minHalf
+# HalfPowerArr = np.array([np.ceil(i) for i in guass], dtype=int)
+
+# make_filtered_checkpoint_from_another(
+#     ApplyObserversPath,
+#     InputAndHistFolderPath,
+#     CheckpointFolderPath,
+#     work_dir,
+#     HalfPowerArr
+# )
+
+
+# CheckpointFolderPath = Path(
+#     "/groups/sxs/hchaudha/spec_runs/19_filtered_checkpoint_runs/6_set1_L3_EXP_FK_14012_5_2_30/Ev/Lev3_AA/Run/Checkpoints/14012"
+# )
+# InputAndHistFolderPath = CheckpointFolderPath.parent.parent
+# work_dir = CheckpointFolderPath.parent/f"{CheckpointFolderPath.stem}_workdir"
+
+# N,mean,std = 30,12,5
+# minHalf,maxHalf = 2,30
+# x = np.arange(N)
+# guass = (1-np.exp(-((x - mean) ** 2) / (2 * std ** 2)))*(maxHalf-minHalf)+minHalf
+# HalfPowerArr = np.array([np.ceil(i) for i in guass], dtype=int)
+
+# make_filtered_checkpoint_from_another(
+#     ApplyObserversPath,
+#     InputAndHistFolderPath,
+#     CheckpointFolderPath,
+#     work_dir,
+#     HalfPowerArr
+# )
