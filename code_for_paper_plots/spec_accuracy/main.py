@@ -1,35 +1,37 @@
-import copy
 import glob
+import itertools
 import os
+import pickle
 import random
 import re
-import subprocess
-import sys
+import string
+from pathlib import Path
+from random import choice as rc
 from typing import Dict, List
 
 import h5py
-import imageio.v3 as iio
 import matplotlib
-import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib.cm import ScalarMappable
-from matplotlib.colors import Normalize
-from matplotlib.patches import Circle, Polygon
-from numba import njit
+from scipy.interpolate import CubicSpline
 
 plt.style.use("ggplot")
 plt.rcParams["figure.figsize"] = (12, 10)
-import json
-import time
-from pathlib import Path
-
-from scipy.interpolate import CubicSpline
-from scipy.ndimage import uniform_filter1d
 
 spec_home = "/home/himanshu/spec/my_spec"
 matplotlib.matplotlib_fname()
+
+
+# =================================================================================================
+# =================================================================================================
+# FUNCTION DEFINITIONS
+# =================================================================================================
+# =================================================================================================
+
+# =================================================================================================
+# make_report_and_plots.ipynb
+# =================================================================================================
 
 
 def make_Bh_pandas(h5_dir):
@@ -775,229 +777,1193 @@ save_folder_path = Path("./plots/").resolve()
 if not save_folder_path.exists():
     raise Exception(f"Save folder {save_folder_path} does not exist")
 
-# %%
-# Plots for the ode change
-runs_to_plot = {}
 
-runs_to_plot["high_accuracy_L1_main"] = (
-    "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35_master/Ev/Lev1_A?/Run/"
-)
-runs_to_plot["high_accuracy_L2_main"] = (
-    "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35_master/Ev/Lev2_A?/Run/"
-)
-runs_to_plot["high_accuracy_L3_main"] = (
-    "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35_master/Ev/Lev3_A?/Run/"
-)
-runs_to_plot["high_accuracy_L4_main"] = (
-    "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35_master/Ev/Lev4_A?/Run/"
-)
-runs_to_plot["high_accuracy_L5_main"] = (
-    "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35_master/Ev/Lev5_A?/Run/"
-)
+# =================================================================================================
+# power_diag.ipynb
+# =================================================================================================
 
 
-data_file_path = "ConstraintNorms/GhCe_Linf.dat"
-column_names, runs_data_dict = load_data_from_levs(runs_to_plot, data_file_path)
+def join_str_with_underscore(str_list):
+    a = str_list[0]
+    for i in str_list[1:]:
+        a = a + f"_{i}"
+    return a
 
-moving_avg_len = 0
-save_path = None
-diff_base = None
-constant_shift_val_time = None
-plot_abs_diff = True
-y_axis_list = None
-x_axis = "t(M)"
 
-plot_abs_diff = False
+def get_top_name_from_number(top_number: int, subdomain_name: str) -> str:
+    if re.match(r"Sphere", subdomain_name):
+        return ["Bf0I1", "Bf1S2", "Bf1S2"][top_number]
+    elif re.match(r"Cylinder", subdomain_name):
+        return ["Bf0I1", "Bf1S1", "Bf2I1"][top_number]
+    elif re.match(r"FilledCylinder", subdomain_name):
+        return ["Bf0I1", "Bf1B2Radial", "Bf1B2"][top_number]
+    else:
+        raise Exception(f"{subdomain_name=} not recognized!")
 
-minT = 0
-maxT = 4000
 
-plot_fun = lambda x, y, label: plt.semilogy(x, y, label=label)
+def get_domain_name(col_name):
+    def AMR_domains_to_decimal(subdoamin_name):
+        # SphereC28.0.1
+        a = subdoamin_name.split(".")
+        # a = [SphereC28,0,1]
+        decimal_rep = a[0] + "."
+        # decimal_rep = SphereC28.
+        for i in a[1:]:
+            decimal_rep = decimal_rep + i
+        # decimal_rep = SphereC28.01
+        return decimal_rep
 
-legend_dict = {
-    "high_accuracy_L1_main": "Old Level 1",
-    "high_accuracy_L2_main": "Old Level 2",
-    "high_accuracy_L3_main": "Old Level 3",
-    "high_accuracy_L4_main": "Old Level 4",
-    "high_accuracy_L5_main": "Old Level 5",
+    if "on" in col_name:
+        return AMR_domains_to_decimal(col_name.split(" ")[-1])
+    if "." in col_name:
+        return AMR_domains_to_decimal(col_name.split(" ")[-1])
+    elif "_" in col_name:
+        return col_name.split("_")[0]
+    elif "MinimumGridSpacing" in col_name:
+        return col_name.split("[")[-1][:-1]
+    else:
+        return col_name
+        # raise Exception(f"{col_name} type not implemented in return_sorted_domain_names")
+
+
+def filtered_domain_names(domain_names, filter):
+    return [i for i in domain_names if re.match(filter, get_domain_name(i))]
+
+
+def sort_spheres(sphere_list, reverse=False):
+    if len(sphere_list) == 0:
+        return []
+    if "SphereA" in sphere_list[0]:
+        return sorted(
+            sphere_list,
+            key=lambda x: float(get_domain_name(x).lstrip("SphereA")),
+            reverse=reverse,
+        )
+    elif "SphereB" in sphere_list[0]:
+        return sorted(
+            sphere_list,
+            key=lambda x: float(get_domain_name(x).lstrip("SphereB")),
+            reverse=reverse,
+        )
+    elif "SphereC" in sphere_list[0]:
+        return sorted(
+            sphere_list,
+            key=lambda x: float(get_domain_name(x).lstrip("SphereC")),
+            reverse=reverse,
+        )
+    elif "SphereD" in sphere_list[0]:
+        return sorted(
+            sphere_list,
+            key=lambda x: float(get_domain_name(x).lstrip("SphereD")),
+            reverse=reverse,
+        )
+    elif "SphereE" in sphere_list[0]:
+        return sorted(
+            sphere_list,
+            key=lambda x: float(get_domain_name(x).lstrip("SphereE")),
+            reverse=reverse,
+        )
+
+
+def return_sorted_domain_names(domain_names):
+    FilledCylinderCA = filtered_domain_names(domain_names, r"FilledCylinder.{0,2}CA")
+    CylinderCA = filtered_domain_names(domain_names, r"Cylinder.{0,2}CA")
+    FilledCylinderEA = filtered_domain_names(domain_names, r"FilledCylinder.{0,2}EA")
+    CylinderEA = filtered_domain_names(domain_names, r"Cylinder.{0,2}EA")
+    SphereA = sort_spheres(filtered_domain_names(domain_names, "SphereA"), reverse=True)
+    CylinderSMA = filtered_domain_names(domain_names, r"CylinderS.{0,2}MA")
+    FilledCylinderMA = filtered_domain_names(domain_names, r"FilledCylinder.{0,2}MA")
+
+    FilledCylinderMB = filtered_domain_names(domain_names, r"FilledCylinder.{0,2}MB")
+    CylinderSMB = filtered_domain_names(domain_names, r"CylinderS.{0,2}MB")
+    SphereB = sort_spheres(filtered_domain_names(domain_names, "SphereB"), reverse=True)
+    CylinderEB = filtered_domain_names(domain_names, r"Cylinder.{0,2}EB")
+    FilledCylinderEB = filtered_domain_names(domain_names, r"FilledCylinder.{0,2}EB")
+    CylinderCB = filtered_domain_names(domain_names, r"Cylinder.{0,2}CB")
+    FilledCylinderCB = filtered_domain_names(domain_names, r"FilledCylinder.{0,2}CB")
+
+    SphereC = sort_spheres(
+        filtered_domain_names(domain_names, "SphereC"), reverse=False
+    )
+    SphereD = sort_spheres(
+        filtered_domain_names(domain_names, "SphereD"), reverse=False
+    )
+    SphereE = sort_spheres(
+        filtered_domain_names(domain_names, "SphereE"), reverse=False
+    )
+
+    combined_columns = [
+        FilledCylinderCA,
+        CylinderCA,
+        FilledCylinderEA,
+        CylinderEA,
+        SphereA,
+        CylinderSMA,
+        FilledCylinderMA,
+        FilledCylinderMB,
+        CylinderSMB,
+        SphereB,
+        CylinderEB,
+        FilledCylinderEB,
+        CylinderCB,
+        FilledCylinderCB,
+        SphereC,
+        SphereD,
+        SphereE,
+    ]
+    combined_columns = [item for sublist in combined_columns for item in sublist]
+
+    # Just append the domains not following any patterns in the front. Mostly domains surrounding sphereA for high spin and mass ratios
+    combined_columns_set = set(combined_columns)
+    domain_names_set = set()
+    for i in domain_names:
+        domain_names_set.add(i)
+    subdomains_not_sorted = list(domain_names_set - combined_columns_set)
+    return subdomains_not_sorted + combined_columns
+
+
+def limit_by_col_val(min_val, max_val, col_name, df):
+    filter = (df[col_name] >= min_val) & (df[col_name] <= max_val)
+    return df[filter]
+
+
+def read_dat_file_single_bh(file_name):
+    # Find the max number of columns
+    with open(file_name, "r") as f:
+        max_columns = max(len(line.split()) for line in f if not line.startswith("#"))
+    return pd.read_csv(
+        file_name,
+        sep="\s+",
+        comment="#",
+        header=None,
+        names=[str(i) for i in np.arange(-1, max_columns)],
+    ).rename(columns={"-1": "t"})
+
+
+def find_subdomains(path: Path):
+    subdomain_set = set()
+    for i in path.iterdir():
+        if i.is_dir():
+            subdomain_set.add(i.stem)
+
+    return list(subdomain_set)
+
+
+def find_topologies(path: Path):
+    topologies_set = set()
+    for i in path.iterdir():
+        if i.is_file():
+            topologies_set.add(i.stem.split("_")[0])
+
+    return list(topologies_set)
+
+
+def find_dat_file_names(path: Path):
+    file_name_set = set()
+    for i in path.iterdir():
+        if i.is_file():
+            file_name_set.add(i.stem.split("_")[1])
+
+    return list(file_name_set)
+
+
+def get_top_name_and_mode(name):
+    # Bf0I1(12 modes).dat -> Bf0I1, 12
+    top_name = name.split("(")[0]
+    mode = int(name.split("(")[-1].split(" ")[0])
+    return top_name, mode
+
+
+def find_highest_modes_for_topologies(path: Path):
+    highest_mode_dict = {}
+    for i in path.iterdir():
+        if i.is_file():
+            top_name, mode = get_top_name_and_mode(i.stem)
+            if top_name in highest_mode_dict:
+                if highest_mode_dict[top_name] < mode:
+                    highest_mode_dict[top_name] = mode
+            else:
+                highest_mode_dict[top_name] = mode
+
+    return highest_mode_dict
+
+
+def make_mode_dataframe(path: Path):
+    highest_mode_dict = find_highest_modes_for_topologies(path)
+    top_dataframe_list = {i: [] for i in highest_mode_dict}
+
+    for i in path.iterdir():
+        for top_name in highest_mode_dict:
+            if (top_name + "(") in i.stem:
+                top_dataframe_list[top_name].append(read_dat_file(i))
+
+    top_mode_df_dict = {}
+    for i, df_list in top_dataframe_list.items():
+        result = pd.concat(df_list, ignore_index=True)
+
+        # Remove duplicates based on 't' column (keep first occurrence)
+        # result = result.drop_duplicates(subset='t', keep='first')
+
+        # Sort by 't' and reset index
+        top_mode_df_dict[i] = result.sort_values("t").reset_index(drop=True)
+    return top_mode_df_dict
+
+
+def filter_columns(
+    cols: List[str],
+    include_patterns: List[str] = None,
+    exclude_patterns: List[str] = None,
+) -> List[str]:
+    """
+    Filter a list of column names using include and exclude regex patterns.
+
+    Args:
+        cols: List of column names to filter
+        include_patterns: List of regex patterns to include (if None, includes all)
+        exclude_patterns: List of regex patterns to exclude (if None, excludes none)
+
+    Returns:
+        List of filtered column names
+
+    Examples:
+        >>> cols = ['age_2020', 'age_2021', 'height_2020', 'weight_2021']
+        >>> filter_columns(cols, ['age_.*'], ['.*2021'])
+        ['age_2020']
+    """
+    # Handle None inputs
+    include_patterns = include_patterns or [".*"]
+    exclude_patterns = exclude_patterns or []
+
+    # First, get columns that match any include pattern
+    included_cols = set()
+    for pattern in include_patterns:
+        included_cols.update(col for col in cols if re.search(pattern, col))
+
+    # Then remove any columns that match exclude patterns
+    for pattern in exclude_patterns:
+        included_cols = {col for col in included_cols if not re.search(pattern, col)}
+
+    return sorted(list(included_cols))
+
+
+def chain_filter_columns(
+    cols: List[str],
+    include_patterns: List[str] = None,
+    exclude_patterns: List[str] = None,
+) -> List[str]:
+    """
+    Filter columns sequentially using chained include and exclude regex patterns.
+    Each pattern filters from the result of the previous pattern.
+
+    Args:
+        cols: List of column names to filter
+        include_patterns: List of regex patterns to include (if None, includes all)
+        exclude_patterns: List of regex patterns to exclude (if None, excludes none)
+
+    Returns:
+        List of filtered column names
+
+    Examples:
+        >>> cols = ['age_2020_q1', 'age_2020_q2', 'age_2021_q1', 'height_2020_q1']
+        >>> chain_filter_columns(cols, ['age_.*', '.*q1'], ['.*2021.*'])
+        ['age_2020_q1']
+    """
+    # Handle None inputs
+    include_patterns = include_patterns or [".*"]
+    exclude_patterns = exclude_patterns or []
+
+    # Start with all columns
+    filtered_cols = set(cols)
+
+    # Apply include patterns sequentially
+    for pattern in include_patterns:
+        filtered_cols = {col for col in filtered_cols if re.search(pattern, col)}
+
+    # Apply exclude patterns sequentially
+    for pattern in exclude_patterns:
+        filtered_cols = {col for col in filtered_cols if not re.search(pattern, col)}
+
+    return sorted(list(filtered_cols))
+
+
+def sort_by_coefs_numbers(col_list: List[str]):
+    with_coef_list = []
+    without_coef_list = []
+    for col in col_list:
+        if "coef" not in col:
+            without_coef_list.append(col)
+        else:
+            with_coef_list.append(col)
+    return without_coef_list + sorted(
+        with_coef_list, key=lambda x: int(x.split("_")[-1][4:])
+    )
+
+
+def get_extreme_coef_for_each_domain(df, min_or_max="min"):
+    col_names = df.columns
+    subdomains = set([i.split("_")[0] for i in col_names]) - set(["t(M)"])
+    exterme_coef = {"t(M)": df["t(M)"]}
+    for sd in subdomains:
+        sd_cols = [i for i in col_names if f"{sd}_" in i]
+        if min_or_max == "max":
+            exterme_coef[sd] = df[sd_cols].max(axis=1)
+        elif min_or_max == "min":
+            exterme_coef[sd] = df[sd_cols].min(axis=1)
+        else:
+            raise Exception(
+                f"Only supported values of min_or_max are min and max and not {min_or_max=}"
+            )
+
+    return pd.DataFrame(exterme_coef)
+
+
+def load_power_diagonistics(PowDiag_path: Path):
+    pow_diag_dict = {}
+    for sd in find_subdomains(PowDiag_path):
+        pow_diag_dict[sd] = {}
+        sd_path = PowDiag_path / f"{sd}.dir"
+
+        psi_pd = make_mode_dataframe(sd_path / f"Powerpsi.dir")
+        kappa_pd = make_mode_dataframe(sd_path / f"Powerkappa.dir")
+        # For each subdomain save things by topology
+        for top in find_topologies(sd_path):
+            pow_diag_dict[sd][top] = {}
+            psi_pd_sorted_cols = sort_by_coefs_numbers(psi_pd[top].columns.to_list())
+            pow_diag_dict[sd][top][f"psi_ps"] = psi_pd[top][psi_pd_sorted_cols]
+
+            kappa_pd_sorted_cols = sort_by_coefs_numbers(
+                kappa_pd[top].columns.to_list()
+            )
+            pow_diag_dict[sd][top][f"kappa_ps"] = kappa_pd[top][kappa_pd_sorted_cols]
+
+            for dat_file in find_dat_file_names(sd_path):
+                pow_diag_dict[sd][top][f"{dat_file}"] = read_dat_file(
+                    sd_path / f"{top}_{dat_file}.dat"
+                )
+
+    return pow_diag_dict
+
+
+def load_power_diagonistics_flat(
+    PowDiag_path: Path,
+    reload: bool = False,
+    return_df: bool = True,
+    load_dat_files_only: list[str] = None,
+):
+    cache_data = PowDiag_path / "pandas.pkl"
+    if cache_data.exists():
+        if not reload:
+            with open(cache_data, "rb") as f:
+                pow_diag_dict = pickle.load(f)
+                print(f"Loaded from cache {cache_data}")
+            return pow_diag_dict
+
+    # Same as load_power_diagonistics but no nested dicts. This makes it easy to filter
+    pow_diag_dict = {}
+    for sd in find_subdomains(PowDiag_path):
+        sd_path = PowDiag_path / f"{sd}.dir"
+
+        for top in find_topologies(sd_path):
+            for dat_file in find_dat_file_names(sd_path):
+                if load_dat_files_only is not None:
+                    for allowed_dat_files in load_dat_files_only:
+                        if re.search(allowed_dat_files, dat_file) is None:
+                            continue
+                        else:
+                            print(dat_file)
+                pow_diag_dict[f"{sd}_{top}_{dat_file}"] = read_dat_file(
+                    sd_path / f"{top}_{dat_file}.dat"
+                )
+        if load_dat_files_only is not None:
+            print(sd_path)
+            continue
+
+        psi_pd = make_mode_dataframe(sd_path / f"Powerpsi.dir")
+        kappa_pd = make_mode_dataframe(sd_path / f"Powerkappa.dir")
+        # For each subdomain save things by topology
+        for top in find_topologies(sd_path):
+            psi_pd_sorted_cols = sort_by_coefs_numbers(psi_pd[top].columns.to_list())
+            pow_diag_dict[f"{sd}_{top}_psi_ps"] = psi_pd[top][psi_pd_sorted_cols]
+
+            kappa_pd_sorted_cols = sort_by_coefs_numbers(
+                kappa_pd[top].columns.to_list()
+            )
+            pow_diag_dict[f"{sd}_{top}_kappa_ps"] = kappa_pd[top][kappa_pd_sorted_cols]
+
+        print(sd_path)
+
+    if return_df:
+        # This can be definitely merged with the stuff above but it's fast enough anyways
+        flat_dict = {}
+        flat_dict["t"] = pow_diag_dict[rc(list(pow_diag_dict.keys()))]["t"]
+        for key, item in pow_diag_dict.items():
+            for col in item.columns:
+                if "t" == col:
+                    continue
+                else:
+                    flat_dict[f"{key}_{col}"] = item[col]
+
+        flat_df = pd.DataFrame(flat_dict)
+        with open(cache_data, "wb") as f:
+            pickle.dump(flat_df, f)
+            print(f"Cached at {cache_data}")
+
+        return flat_df
+
+    return pow_diag_dict
+
+
+def convert_series_to_coeff_df(data, top_num):
+    irr_top_regex = 0
+    match top_num:
+        case 0:
+            irr_top_regex = r"Bf0"  # First top
+        case 1:
+            irr_top_regex = (
+                r"Bf1(S\d|B2R)"  # Second top, S2 for spheres, B2 for filled cylinders
+            )
+        case 2:
+            irr_top_regex = r"((Bf1S2|Bf1B2_)|Bf2)"  # Thrid top S2 for spheres, B2 radial for filled cylinders
+        case _:
+            raise Exception(f"{top_num=} should be one of [0,1,2]")
+
+    indices = set(data.index) - set(["t(M)"])
+    indices = set([i for i in indices if re.search(irr_top_regex, i)])
+
+    subdomains = set([i.split("_")[0] for i in indices])
+    # The coefs are sorted?? Do not assume but they are
+
+    data_dict = {sd: {} for sd in subdomains}
+
+    def coef_number(x):
+        return int(x.split("_")[-1][4:])
+
+    max_coef = 0
+    for sd in subdomains:
+        for idx in indices:
+            if f"{sd}_" in idx:
+                if pd.notna(data[idx]):
+                    data_dict[sd][coef_number(idx)] = data[idx]
+        data_dict[sd] = dict(sorted(data_dict[sd].items()))
+        if len(data_dict[sd]) > max_coef:
+            max_coef = len(data_dict[sd])
+
+    pd_data = pd.DataFrame(data_dict)
+    return pd_data
+
+
+def series_closest_to_time(t, df):
+    time_index = np.where(df["t(M)"] > t)[0][0]
+    time = df["t(M)"][time_index]
+    return time, df.iloc[time_index].copy()
+
+
+# =================================================================================================
+# =================================================================================================
+# PLOTTING
+# =================================================================================================
+# =================================================================================================
+
+# =================================================================================================
+# Constraints
+# =================================================================================================
+
+L15_main_legend = {
+    "high_accuracy_main_L1": "Old Level 1",
+    "high_accuracy_main_L2": "Old Level 2",
+    "high_accuracy_main_L3": "Old Level 3",
+    "high_accuracy_main_L4": "Old Level 4",
+    "high_accuracy_main_L5": "Old Level 5",
 }
-append_to_title = ""
-if "@" in data_file_path:
-    append_to_title = " HorizonBH=" + data_file_path.split("@")[-1]
 
-with plt.style.context("ggplot"):
-    plt.rcParams["figure.figsize"] = (6, 6)
-    plt.rcParams["figure.autolayout"] = True
+L15_main_runs = {
+    "high_accuracy_main_L1": "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35_master/Ev/Lev1_A?/Run/",
+    "high_accuracy_main_L2": "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35_master/Ev/Lev2_A?/Run/",
+    "high_accuracy_main_L3": "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35_master/Ev/Lev3_A?/Run/",
+    "high_accuracy_main_L4": "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35_master/Ev/Lev4_A?/Run/",
+    "high_accuracy_main_L5": "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35_master/Ev/Lev5_A?/Run/",
+}
 
-    y_axis = "Linf(GhCe) on SphereA0"
-    plot_graph_for_runs(
-        runs_data_dict,
-        x_axis,
-        y_axis,
-        minT,
-        maxT,
-        legend_dict=legend_dict,
-        save_path=save_path,
-        moving_avg_len=moving_avg_len,
-        plot_fun=plot_fun,
-        diff_base=diff_base,
-        plot_abs_diff=plot_abs_diff,
-        constant_shift_val_time=constant_shift_val_time,
-        append_to_title=append_to_title,
-    )
-
-    plt.title("")
-    plt.ylabel("Linf(GhCe)")
-    plt.xlabel("t(M)")
-    plt.legend(loc="upper right")
-    #   plt.ylim(1e-8, 1e-5)
-    #   plt.ylim(1e-12, 1e-6)
-
-    plt.tight_layout()
-    save_name = save_folder_path / "L15_main_SphereA0_Linf_GhCe.png"
-    plt.savefig(save_name, dpi=600)
-    plt.clf()
-    print(f"Saved {save_name}!\n")
-
-    y_axis = "Linf(GhCe) on SphereC6"
-    plot_graph_for_runs(
-        runs_data_dict,
-        x_axis,
-        y_axis,
-        minT,
-        maxT,
-        legend_dict=legend_dict,
-        save_path=save_path,
-        moving_avg_len=moving_avg_len,
-        plot_fun=plot_fun,
-        diff_base=diff_base,
-        plot_abs_diff=plot_abs_diff,
-        constant_shift_val_time=constant_shift_val_time,
-        append_to_title=append_to_title,
-    )
-
-    plt.title("")
-    plt.ylabel("Linf(GhCe)")
-    plt.xlabel("t(M)")
-    plt.legend(loc="upper right")
-    #   plt.ylim(1e-8, 1e-5)
-    #   plt.ylim(1e-12, 1e-6)
-
-    plt.tight_layout()
-    save_name = save_folder_path / "L15_main_SphereC6_Linf_GhCe.png"
-    plt.savefig(save_name, dpi=600)
-    print(f"Saved {save_name}!\n")
-    plt.clf()
-
-
-# %%
-runs_to_plot = {}
-runs_to_plot["high_accuracy_L1"] = (
-    "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35/Ev/Lev1_A?/Run/"
-)
-runs_to_plot["high_accuracy_L2"] = (
-    "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35/Ev/Lev2_A?/Run/"
-)
-runs_to_plot["high_accuracy_L3"] = (
-    "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35/Ev/Lev3_A?/Run/"
-)
-runs_to_plot["high_accuracy_L4"] = (
-    "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35/Ev/Lev4_A?/Run/"
-)
-runs_to_plot["high_accuracy_L5"] = (
-    "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35/Ev/Lev5_A?/Run/"
-)
-
-
-data_file_path = "ConstraintNorms/GhCe_Linf.dat"
-column_names, runs_data_dict = load_data_from_levs(runs_to_plot, data_file_path)
-
-moving_avg_len = 0
-save_path = None
-diff_base = None
-constant_shift_val_time = None
-plot_abs_diff = True
-y_axis_list = None
-x_axis = "t(M)"
-
-plot_abs_diff = False
-
-minT = 0
-maxT = 4000
-
-plot_fun = lambda x, y, label: plt.semilogy(x, y, label=label)
-
-legend_dict = {
+L15_ode_fix_legend = {
     "high_accuracy_L1": "Ode Fix Level 1",
     "high_accuracy_L2": "Ode Fix Level 2",
     "high_accuracy_L3": "Ode Fix Level 3",
     "high_accuracy_L4": "Ode Fix Level 4",
     "high_accuracy_L5": "Ode Fix Level 5",
 }
-append_to_title = ""
-if "@" in data_file_path:
-    append_to_title = " HorizonBH=" + data_file_path.split("@")[-1]
+L15_ode_fix_runs = {
+    "high_accuracy_L1": "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35/Ev/Lev1_A?/Run/",
+    "high_accuracy_L2": "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35/Ev/Lev2_A?/Run/",
+    "high_accuracy_L3": "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35/Ev/Lev3_A?/Run/",
+    "high_accuracy_L4": "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35/Ev/Lev4_A?/Run/",
+    "high_accuracy_L5": "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35/Ev/Lev5_A?/Run/",
+}
 
-with plt.style.context("ggplot"):
-    plt.rcParams["figure.figsize"] = (6, 6)
-    plt.rcParams["figure.autolayout"] = True
 
-    y_axis = "Linf(GhCe) on SphereA0"
-    plot_graph_for_runs(
-        runs_data_dict,
-        x_axis,
-        y_axis,
-        minT,
-        maxT,
-        legend_dict=legend_dict,
-        save_path=save_path,
-        moving_avg_len=moving_avg_len,
-        plot_fun=plot_fun,
-        diff_base=diff_base,
-        plot_abs_diff=plot_abs_diff,
-        constant_shift_val_time=constant_shift_val_time,
-        append_to_title=append_to_title,
-    )
+L16_set1_legend = {
+    "6_set1_L6s1": "Set1 Level 1",
+    "6_set1_L6s2": "Set1 Level 2",
+    "6_set1_L6s3": "Set1 Level 3",
+    "6_set1_L6s4": "Set1 Level 4",
+    "6_set1_L6s5": "Set1 Level 5",
+    "6_set1_L6s6": "Set1 Level 6",
+}
+L16_set1_runs = {
+    "6_set1_L6s1": "/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/Ev/Lev1_A?/Run/",
+    "6_set1_L6s2": "/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/Ev/Lev2_A?/Run/",
+    "6_set1_L6s3": "/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/Ev/Lev3_A?/Run/",
+    "6_set1_L6s4": "/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/Ev/Lev4_A?/Run/",
+    "6_set1_L6s5": "/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/Ev/Lev5_A?/Run/",
+    "6_set1_L6s6": "/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/Ev/Lev6_A?/Run/",
+}
 
-    plt.title("")
-    plt.ylabel("Linf(GhCe)")
-    plt.xlabel("t(M)")
-    plt.legend(loc="upper right")
-    #   plt.ylim(1e-8, 1e-5)
-    #   plt.ylim(1e-12, 1e-6)
 
-    plt.tight_layout()
-    save_name = save_folder_path / "L15_ode_fix_SphereA0_Linf_GhCe.png"
-    plt.savefig(save_name, dpi=600)
-    plt.clf()
-    print(f"Saved {save_name}!\n")
+# ==============================================================================
 
-    y_axis = "Linf(GhCe) on SphereC6"
-    plot_graph_for_runs(
-        runs_data_dict,
-        x_axis,
-        y_axis,
-        minT,
-        maxT,
-        legend_dict=legend_dict,
-        save_path=save_path,
-        moving_avg_len=moving_avg_len,
-        plot_fun=plot_fun,
-        diff_base=diff_base,
-        plot_abs_diff=plot_abs_diff,
-        constant_shift_val_time=constant_shift_val_time,
-        append_to_title=append_to_title,
-    )
+SKIP_THIS = False
 
-    plt.title("")
-    plt.ylabel("Linf(GhCe)")
-    plt.xlabel("t(M)")
-    plt.legend(loc="upper right")
-    #   plt.ylim(1e-8, 1e-5)
-    #   plt.ylim(1e-12, 1e-6)
+runs_to_plot_list = [L15_main_runs, L15_ode_fix_runs, L16_set1_runs]
+legend_dict_list = [L15_main_legend, L15_ode_fix_legend, L16_set1_legend]
+runs_set_name_list = ["L15_main", "L15_ode_fix", "L16_set1"]
 
-    plt.tight_layout()
-    save_name = save_folder_path / "L15_ode_fix_SphereC6_Linf_GhCe.png"
-    plt.savefig(save_name, dpi=600)
-    print(f"Saved {save_name}!\n")
-    plt.clf()
+for runs_to_plot, legend_dict, runs_set_name in zip(
+    runs_to_plot_list, legend_dict_list, runs_set_name_list
+):
+    if SKIP_THIS:
+        continue
+
+    data_file_path = "ConstraintNorms/GhCe_Linf.dat"
+    column_names, runs_data_dict = load_data_from_levs(runs_to_plot, data_file_path)
+
+    moving_avg_len = 0
+    save_path = None
+    diff_base = None
+    constant_shift_val_time = None
+    plot_abs_diff = True
+    y_axis_list = None
+    x_axis = "t(M)"
+
+    plot_abs_diff = False
+
+    minT = 1205
+    maxT = 4000
+
+    def plot_fun(x, y, label):
+        return plt.semilogy(x, y, label=label)
+
+    append_to_title = ""
+    if "@" in data_file_path:
+        append_to_title = " HorizonBH=" + data_file_path.split("@")[-1]
+
+    with plt.style.context("ggplot"):
+        plt.rcParams["figure.figsize"] = (6, 6)
+        plt.rcParams["figure.autolayout"] = True
+
+        y_axis = "Linf(GhCe) on SphereA0"
+        plot_graph_for_runs(
+            runs_data_dict,
+            x_axis,
+            y_axis,
+            minT,
+            maxT,
+            legend_dict=legend_dict,
+            save_path=save_path,
+            moving_avg_len=moving_avg_len,
+            plot_fun=plot_fun,
+            diff_base=diff_base,
+            plot_abs_diff=plot_abs_diff,
+            constant_shift_val_time=constant_shift_val_time,
+            append_to_title=append_to_title,
+        )
+
+        plt.title("")
+        plt.ylabel(y_axis)
+        plt.xlabel("t(M)")
+        plt.legend(loc="upper right")
+        #   plt.ylim(1e-8, 1e-5)
+        #   plt.ylim(1e-12, 1e-6)
+
+        plt.tight_layout()
+        save_name = save_folder_path / f"{runs_set_name}_SphereA0_Linf_GhCe.png"
+        plt.savefig(save_name, dpi=300)
+        plt.clf()
+        print(f"Saved {save_name}!\n")
+
+        y_axis = "Linf(GhCe) on SphereC6"
+        plot_graph_for_runs(
+            runs_data_dict,
+            x_axis,
+            y_axis,
+            minT,
+            maxT,
+            legend_dict=legend_dict,
+            save_path=save_path,
+            moving_avg_len=moving_avg_len,
+            plot_fun=plot_fun,
+            diff_base=diff_base,
+            plot_abs_diff=plot_abs_diff,
+            constant_shift_val_time=constant_shift_val_time,
+            append_to_title=append_to_title,
+        )
+
+        plt.title("")
+        plt.ylabel(y_axis)
+        plt.xlabel("t(M)")
+        plt.legend(loc="upper right")
+        #   plt.ylim(1e-8, 1e-5)
+        #   plt.ylim(1e-12, 1e-6)
+
+        plt.tight_layout()
+        save_name = save_folder_path / f"{runs_set_name}_SphereC6_Linf_GhCe.png"
+        plt.savefig(save_name, dpi=300)
+        print(f"Saved {save_name}!\n")
+        plt.clf()
+
+    # ==============================================================================
+
+    data_file_path = "ConstraintNorms/NormalizedGhCe_Linf.dat"
+    column_names, runs_data_dict = load_data_from_levs(runs_to_plot, data_file_path)
+
+    moving_avg_len = 0
+    save_path = None
+    diff_base = None
+    constant_shift_val_time = None
+    plot_abs_diff = True
+    y_axis_list = None
+    x_axis = "t(M)"
+
+    plot_abs_diff = False
+
+    minT = 1205
+    maxT = 4000
+
+    def plot_fun(x, y, label):
+        return plt.semilogy(x, y, label=label)
+
+    append_to_title = ""
+    if "@" in data_file_path:
+        append_to_title = " HorizonBH=" + data_file_path.split("@")[-1]
+
+    with plt.style.context("ggplot"):
+        plt.rcParams["figure.figsize"] = (6, 6)
+        plt.rcParams["figure.autolayout"] = True
+
+        y_axis = "Linf(NormalizedGhCe) on SphereA0"
+        plot_graph_for_runs(
+            runs_data_dict,
+            x_axis,
+            y_axis,
+            minT,
+            maxT,
+            legend_dict=legend_dict,
+            save_path=save_path,
+            moving_avg_len=moving_avg_len,
+            plot_fun=plot_fun,
+            diff_base=diff_base,
+            plot_abs_diff=plot_abs_diff,
+            constant_shift_val_time=constant_shift_val_time,
+            append_to_title=append_to_title,
+        )
+
+        plt.title("")
+        plt.ylabel(y_axis)
+        plt.xlabel("t(M)")
+        plt.legend(loc="upper right")
+        #   plt.ylim(1e-8, 1e-5)
+        #   plt.ylim(1e-12, 1e-6)
+
+        plt.tight_layout()
+        save_name = (
+            save_folder_path / f"{runs_set_name}_SphereA0_Linf_NormalizedGhCe.png"
+        )
+        plt.savefig(save_name, dpi=300)
+        plt.clf()
+        print(f"Saved {save_name}!\n")
+
+        y_axis = "Linf(NormalizedGhCe) on SphereC6"
+        plot_graph_for_runs(
+            runs_data_dict,
+            x_axis,
+            y_axis,
+            minT,
+            maxT,
+            legend_dict=legend_dict,
+            save_path=save_path,
+            moving_avg_len=moving_avg_len,
+            plot_fun=plot_fun,
+            diff_base=diff_base,
+            plot_abs_diff=plot_abs_diff,
+            constant_shift_val_time=constant_shift_val_time,
+            append_to_title=append_to_title,
+        )
+
+        plt.title("")
+        plt.ylabel(y_axis)
+        plt.xlabel("t(M)")
+        plt.legend(loc="upper right")
+        #   plt.ylim(1e-8, 1e-5)
+        #   plt.ylim(1e-12, 1e-6)
+
+        plt.tight_layout()
+        save_name = (
+            save_folder_path / f"{runs_set_name}_SphereC6_Linf_NormalizedGhCe.png"
+        )
+        plt.savefig(save_name, dpi=300)
+        print(f"Saved {save_name}!\n")
+        plt.clf()
+
+    # ==============================================================================
+
+    data_file_path = "ConstraintNorms/GhCe_Norms.dat"
+    column_names, runs_data_dict = load_data_from_levs(runs_to_plot, data_file_path)
+
+    moving_avg_len = 0
+    save_path = None
+    diff_base = None
+    constant_shift_val_time = None
+    plot_abs_diff = True
+    y_axis_list = None
+    x_axis = "t(M)"
+
+    plot_abs_diff = False
+
+    minT = 1205
+    maxT = 4000
+
+    def plot_fun(x, y, label):
+        return plt.semilogy(x, y, label=label)
+
+    append_to_title = ""
+    if "@" in data_file_path:
+        append_to_title = " HorizonBH=" + data_file_path.split("@")[-1]
+
+    with plt.style.context("ggplot"):
+        plt.rcParams["figure.figsize"] = (6, 6)
+        plt.rcParams["figure.autolayout"] = True
+
+        y_axis = "L2(GhCe)"
+        plot_graph_for_runs(
+            runs_data_dict,
+            x_axis,
+            y_axis,
+            minT,
+            maxT,
+            legend_dict=legend_dict,
+            save_path=save_path,
+            moving_avg_len=moving_avg_len,
+            plot_fun=plot_fun,
+            diff_base=diff_base,
+            plot_abs_diff=plot_abs_diff,
+            constant_shift_val_time=constant_shift_val_time,
+            append_to_title=append_to_title,
+        )
+
+        plt.title("")
+        plt.ylabel(y_axis)
+        plt.xlabel("t(M)")
+        plt.legend(loc="upper right")
+        #   plt.ylim(1e-8, 1e-5)
+        #   plt.ylim(1e-12, 1e-6)
+
+        plt.tight_layout()
+        save_name = save_folder_path / f"{runs_set_name}_L2(GhCe).png"
+        plt.savefig(save_name, dpi=300)
+        plt.clf()
+        print(f"Saved {save_name}!\n")
+
+        y_axis = "Linf(GhCe)"
+        plot_graph_for_runs(
+            runs_data_dict,
+            x_axis,
+            y_axis,
+            minT,
+            maxT,
+            legend_dict=legend_dict,
+            save_path=save_path,
+            moving_avg_len=moving_avg_len,
+            plot_fun=plot_fun,
+            diff_base=diff_base,
+            plot_abs_diff=plot_abs_diff,
+            constant_shift_val_time=constant_shift_val_time,
+            append_to_title=append_to_title,
+        )
+
+        plt.title("")
+        plt.ylabel(y_axis)
+        plt.xlabel("t(M)")
+        plt.legend(loc="upper right")
+        #   plt.ylim(1e-8, 1e-5)
+        #   plt.ylim(1e-12, 1e-6)
+
+        plt.tight_layout()
+        save_name = save_folder_path / f"{runs_set_name}_Linf(GhCe).png"
+        plt.savefig(save_name, dpi=300)
+        print(f"Saved {save_name}!\n")
+        plt.clf()
+
+        y_axis = "VolLp(GhCe)"
+        plot_graph_for_runs(
+            runs_data_dict,
+            x_axis,
+            y_axis,
+            minT,
+            maxT,
+            legend_dict=legend_dict,
+            save_path=save_path,
+            moving_avg_len=moving_avg_len,
+            plot_fun=plot_fun,
+            diff_base=diff_base,
+            plot_abs_diff=plot_abs_diff,
+            constant_shift_val_time=constant_shift_val_time,
+            append_to_title=append_to_title,
+        )
+
+        plt.title("")
+        plt.ylabel(y_axis)
+        plt.xlabel("t(M)")
+        plt.legend(loc="upper right")
+        #   plt.ylim(1e-8, 1e-5)
+        #   plt.ylim(1e-12, 1e-6)
+
+        plt.tight_layout()
+        save_name = save_folder_path / f"{runs_set_name}_VolLp(GhCe).png"
+        plt.savefig(save_name, dpi=300)
+        print(f"Saved {save_name}!\n")
+        plt.clf()
+
+    # ==============================================================================
+
+    data_file_path = "ConstraintNorms/NormalizedGhCe_Norms.dat"
+    column_names, runs_data_dict = load_data_from_levs(runs_to_plot, data_file_path)
+
+    moving_avg_len = 0
+    save_path = None
+    diff_base = None
+    constant_shift_val_time = None
+    plot_abs_diff = True
+    y_axis_list = None
+    x_axis = "t(M)"
+
+    plot_abs_diff = False
+
+    minT = 1205
+    maxT = 4000
+
+    def plot_fun(x, y, label):
+        return plt.semilogy(x, y, label=label)
+
+    append_to_title = ""
+    if "@" in data_file_path:
+        append_to_title = " HorizonBH=" + data_file_path.split("@")[-1]
+
+    with plt.style.context("ggplot"):
+        plt.rcParams["figure.figsize"] = (6, 6)
+        plt.rcParams["figure.autolayout"] = True
+
+        y_axis = "L2(NormalizedGhCe)"
+        plot_graph_for_runs(
+            runs_data_dict,
+            x_axis,
+            y_axis,
+            minT,
+            maxT,
+            legend_dict=legend_dict,
+            save_path=save_path,
+            moving_avg_len=moving_avg_len,
+            plot_fun=plot_fun,
+            diff_base=diff_base,
+            plot_abs_diff=plot_abs_diff,
+            constant_shift_val_time=constant_shift_val_time,
+            append_to_title=append_to_title,
+        )
+
+        plt.title("")
+        plt.ylabel(y_axis)
+        plt.xlabel("t(M)")
+        plt.legend(loc="upper right")
+        #   plt.ylim(1e-8, 1e-5)
+        #   plt.ylim(1e-12, 1e-6)
+
+        plt.tight_layout()
+        save_name = save_folder_path / f"{runs_set_name}_L2(NormalizedGhCe).png"
+        plt.savefig(save_name, dpi=300)
+        plt.clf()
+        print(f"Saved {save_name}!\n")
+
+        y_axis = "Linf(NormalizedGhCe)"
+        plot_graph_for_runs(
+            runs_data_dict,
+            x_axis,
+            y_axis,
+            minT,
+            maxT,
+            legend_dict=legend_dict,
+            save_path=save_path,
+            moving_avg_len=moving_avg_len,
+            plot_fun=plot_fun,
+            diff_base=diff_base,
+            plot_abs_diff=plot_abs_diff,
+            constant_shift_val_time=constant_shift_val_time,
+            append_to_title=append_to_title,
+        )
+
+        plt.title("")
+        plt.ylabel(y_axis)
+        plt.xlabel("t(M)")
+        plt.legend(loc="upper right")
+        #   plt.ylim(1e-8, 1e-5)
+        #   plt.ylim(1e-12, 1e-6)
+
+        plt.tight_layout()
+        save_name = save_folder_path / f"{runs_set_name}_Linf(NormalizedGhCe).png"
+        plt.savefig(save_name, dpi=300)
+        print(f"Saved {save_name}!\n")
+        plt.clf()
+
+        y_axis = "VolLp(NormalizedGhCe)"
+        plot_graph_for_runs(
+            runs_data_dict,
+            x_axis,
+            y_axis,
+            minT,
+            maxT,
+            legend_dict=legend_dict,
+            save_path=save_path,
+            moving_avg_len=moving_avg_len,
+            plot_fun=plot_fun,
+            diff_base=diff_base,
+            plot_abs_diff=plot_abs_diff,
+            constant_shift_val_time=constant_shift_val_time,
+            append_to_title=append_to_title,
+        )
+
+        plt.title("")
+        plt.ylabel(y_axis)
+        plt.xlabel("t(M)")
+        plt.legend(loc="upper right")
+        #   plt.ylim(1e-8, 1e-5)
+        #   plt.ylim(1e-12, 1e-6)
+
+        plt.tight_layout()
+        save_name = save_folder_path / f"{runs_set_name}_VolLp(NormalizedGhCe).png"
+        plt.savefig(save_name, dpi=300)
+        print(f"Saved {save_name}!\n")
+        plt.clf()
+
+
+# =================================================================================================
+# Power spectrum
+# =================================================================================================
+
+L15_main_legend = {
+    "high_accuracy_main_L1": "Old Level 1",
+    "high_accuracy_main_L2": "Old Level 2",
+    "high_accuracy_main_L3": "Old Level 3",
+    "high_accuracy_main_L4": "Old Level 4",
+    "high_accuracy_main_L5": "Old Level 5",
+}
+
+L15_main_h5_files = {
+    "high_accuracy_main_L1": Path(
+        "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35_master/h5_files_Lev1"
+    ),
+    "high_accuracy_main_L2": Path(
+        "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35_master/h5_files_Lev2"
+    ),
+    "high_accuracy_main_L3": Path(
+        "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35_master/h5_files_Lev3"
+    ),
+    "high_accuracy_main_L4": Path(
+        "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35_master/h5_files_Lev4"
+    ),
+    "high_accuracy_main_L5": Path(
+        "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35_master/h5_files_Lev5"
+    ),
+}
+
+L15_ode_fix_legend = {
+    "high_accuracy_L1": "Ode Fix Level 1",
+    "high_accuracy_L2": "Ode Fix Level 2",
+    "high_accuracy_L3": "Ode Fix Level 3",
+    "high_accuracy_L4": "Ode Fix Level 4",
+    "high_accuracy_L5": "Ode Fix Level 5",
+}
+
+L15_ode_fix_h5_files = {
+    "high_accuracy_L1": Path(
+        "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35/h5_files_Lev1"
+    ),
+    "high_accuracy_L2": Path(
+        "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35/h5_files_Lev2"
+    ),
+    "high_accuracy_L3": Path(
+        "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35/h5_files_Lev3"
+    ),
+    "high_accuracy_L4": Path(
+        "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35/h5_files_Lev4"
+    ),
+    "high_accuracy_L5": Path(
+        "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35/h5_files_Lev5"
+    ),
+}
+
+L16_set1_legend = {
+    "6_set1_L6s1": "Set1 Level 1",
+    "6_set1_L6s2": "Set1 Level 2",
+    "6_set1_L6s3": "Set1 Level 3",
+    "6_set1_L6s4": "Set1 Level 4",
+    "6_set1_L6s5": "Set1 Level 5",
+    "6_set1_L6s6": "Set1 Level 6",
+}
+
+L16_set1_h5_files = {
+    "6_set1_L6s1": Path(
+        "/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/h5_files_Lev1"
+    ),
+    "6_set1_L6s2": Path(
+        "/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/h5_files_Lev2"
+    ),
+    "6_set1_L6s3": Path(
+        "/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/h5_files_Lev3"
+    ),
+    "6_set1_L6s4": Path(
+        "/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/h5_files_Lev4"
+    ),
+    "6_set1_L6s5": Path(
+        "/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/h5_files_Lev5"
+    ),
+    "6_set1_L6s6": Path(
+        "/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/h5_files_Lev6"
+    ),
+}
+
+
+# ==============================================================================
+
+SKIP_THIS = False
+
+levs_to_plot_list = [5, 6]
+domains_to_plot_list = ["SphereA0", "SphereC6"]
+vars_to_plot_list = ["psi", "kappa"]
+topologies_to_plot_list = [0, 1]
+runs_set_name_list = ["L15_main", "L15_ode_fix", "L16_set1"]
+
+runs_to_plot_list = [L15_main_h5_files, L15_ode_fix_h5_files, L16_set1_h5_files]
+runs_legend_list = [L15_main_legend, L15_ode_fix_legend, L16_set1_legend]
+
+for runs_to_plot, runs_legend, runs_set_name in zip(
+    # runs_to_plot_list, runs_legend_list, runs_set_name_list
+    runs_to_plot_list,
+    runs_legend_list,
+    runs_set_name_list,
+):
+    if SKIP_THIS:
+        continue
+
+    with plt.style.context("ggplot"):
+        plt.rcParams["figure.figsize"] = (6, 6)
+        plt.rcParams["figure.autolayout"] = True
+
+        for h5_path_key, domain, top_num, var in itertools.product(
+            runs_to_plot,
+            domains_to_plot_list,
+            topologies_to_plot_list,
+            vars_to_plot_list,
+        ):
+            h5_path = runs_to_plot[h5_path_key]
+            current_lev = int(str(h5_path)[-1])
+            if current_lev not in levs_to_plot_list:
+                continue
+
+            folder_paths = [
+                Path(
+                    f"{h5_path}/extracted-PowerDiagnostics/{domain}.dir/Power{var}.dir"
+                )
+            ]
+            top_data_dict = {
+                join_str_with_underscore(
+                    str(folder_path).split("/")[-5:-3] + [domain]
+                ): make_mode_dataframe(folder_path)
+                for folder_path in folder_paths
+            }
+
+            top_name = get_top_name_from_number(top_num, domain)
+
+            t_min = 1210
+            t_max = 4000
+
+            min_coef = -1
+            max_coef = 100
+            plot_slice = slice(0, None)
+
+            title = ""
+            has_more_than_one = len(list(top_data_dict.keys())) > 1
+            style_list = ["-", ":", "--", "-."]
+            num_legends = 0
+            single_legend, max_col = True, -1
+            for key_num, A, key in zip(
+                range(100), string.ascii_uppercase, top_data_dict
+            ):
+                plt.gca().set_prop_cycle(None)
+                data = top_data_dict[key][top_name]
+                data = limit_by_col_val(t_min, t_max, "t", data)
+                data = data.dropna(
+                    axis=1, how="all"
+                )  # Some columns will have just nans remove those
+                column_names = data.columns[1:]
+                visual_data = data[column_names]
+
+                cols_to_use = [i for i in data.columns if "t" not in i]
+                # df = np.log10(data[cols_to_use])
+                df = data[cols_to_use]
+                df["row_min"] = df.min(axis=1)
+                df["row_max"] = df.max(axis=1)
+                df["row_mean"] = df.mean(axis=1)
+                df["row_std"] = df.std(axis=1)
+
+                for i in cols_to_use[plot_slice]:
+                    coef_num = int(i[4:])
+                    if coef_num < min_coef or coef_num > max_coef:
+                        continue
+                    # plt.plot(data['t'], df[f'{i}'])
+                    label = f"$a_{{{i[4:]}}}$"
+                    if has_more_than_one:
+                        if max_col < coef_num:
+                            label = f"{A}: {i}"
+                            num_legends = num_legends + 1
+                        else:
+                            label = None
+                        max_col = max(coef_num, max_col)
+                    plt.plot(
+                        data["t"],
+                        df[f"{i}"],
+                        label=label,
+                        linestyle=style_list[key_num % len(style_list)],
+                    )
+
+                if has_more_than_one:
+                    title = title + f"{style_list[key_num % len(style_list)]}  {A}: "
+                title = title + f"{domain} of {runs_legend[h5_path_key]} : {top_name}\n"
+
+            if num_legends > 20:
+                plt.legend(ncol=int(np.ceil(num_legends / 20)))
+            else:
+                plt.legend()
+
+            plt.legend(loc="upper right")
+            plt.title(title[:-1])
+            plt.xlabel("t(M)")
+            plt.ylabel(f"Power {var}")
+            # plt.ylim(-16.5, 0.5)
+            plt.yscale("log")
+            plt.ylim(5e-17, 5)
+            plt.grid(False)
+            plt.tight_layout()
+
+            save_name = (
+                save_folder_path
+                / f"{runs_set_name}_L{current_lev}_PS_{var}_{domain}_{top_num}.png"
+            )
+            plt.savefig(save_name, dpi=300)
+            print(f"Saved {save_name}!\n")
+            plt.clf()
