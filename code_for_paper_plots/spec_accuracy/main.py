@@ -1,5 +1,6 @@
 import glob
 import itertools
+import json
 import os
 import pickle
 import random
@@ -14,7 +15,9 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from scipy.interpolate import CubicSpline
+import scri
+from scipy.interpolate import CubicSpline, interp1d
+from spherical_functions import LM_index as lm
 
 plt.style.use("ggplot")
 plt.rcParams["figure.figsize"] = (12, 10)
@@ -28,6 +31,271 @@ matplotlib.matplotlib_fname()
 # FUNCTION DEFINITIONS
 # =================================================================================================
 # =================================================================================================
+
+# =================================================================================================
+# cce_new.ipynb
+# =================================================================================================
+
+
+def load_and_pickle(
+    data_path: Path,
+    reload_data: bool = False,
+    data_type: str = "abd",
+    options: dict = {},
+):
+    if not data_path.exists():
+        raise Exception(f"{data_path} does not exist!")
+
+    saved_data_path = data_path.parent / "saved.pkl"
+
+    if saved_data_path.exists() and not reload_data:
+        with open(saved_data_path, "rb") as f:
+            saved_data = pickle.load(f)
+            print(f"Saved data loaded: {saved_data_path}")
+    else:
+        saved_data = {}
+        if data_type == "abd":
+            saved_data["abd"] = scri.create_abd_from_h5(
+                file_name=str(data_path), file_format="spectrecce_v1", **options
+            )
+            with open(saved_data_path, "wb") as f:
+                pickle.dump(saved_data, f)
+            print(f"Data loaded and saved at : {saved_data_path}")
+
+    return saved_data
+
+
+def load_bondi_constraints(data_path: Path):
+    if not data_path.exists():
+        raise Exception(f"{data_path} does not exist!")
+    saved_data_path = data_path.parent / "saved.pkl"
+    if not saved_data_path.exists():
+        raise Exception(f"{saved_data_path} does not exist")
+    else:
+        with open(saved_data_path, "rb") as f:
+            saved_data = pickle.load(f)
+            if "bondi_violation_norms" in saved_data:
+                print(f"bondi_violation_norms loaded for {data_path}")
+            else:
+                print(f"Computing bondi_violation_norms for: {data_path}")
+                saved_data["bondi_violation_norms"] = saved_data[
+                    "abd"
+                ].bondi_violation_norms
+                with open(saved_data_path, "wb") as f:
+                    pickle.dump(saved_data, f)
+
+                print(f"Saved bondi_violation_norms for: {data_path}")
+        return saved_data
+
+
+def add_bondi_constraints(abd_data: dict):
+    for key in abd_data:
+        abd_data[key]["bondi_violation_norms"] = abd_data[key][
+            "abd"
+        ].bondi_violation_norms
+        print(f"bondi_violation_norms computed for {key}")
+
+
+def create_diff_dict_cce(
+    WT_data_dict: dict, l: int, m: int, base_key: str, t_interpolate: np.ndarray
+):
+    h = WT_data_dict[base_key]["abd"].h.interpolate(t_interpolate)
+    diff_dict = {"t": h.t}
+    y_base = h.data[:, lm(l, m, h.ell_min)]
+    y_norm = np.linalg.norm(y_base)
+    for key in WT_data_dict:
+        if key == base_key:
+            continue
+        h = WT_data_dict[key]["abd"].h.interpolate(t_interpolate)
+        y_inter = h.data[:, lm(l, m, h.ell_min)]
+        diff_dict[key + "_diff"] = y_inter - y_base
+        diff_dict[key + "_absdiff"] = np.abs(y_inter - y_base)
+        diff_dict[key + "_rel_diff"] = (y_inter - y_base) / y_norm
+        diff_dict[key + "_rel_absdiff"] = np.abs(y_inter - y_base) / y_norm
+    return diff_dict
+
+
+def extract_radii(h5_file_path: Path):
+    radii = set()
+    with h5py.File(h5_file_path, "r") as f:
+        names = []
+        f.visit(names.append)
+    for name in names:
+        if "Version" in name:
+            continue
+        radii.add(name[1:5])
+    radii = list(radii)
+    radii.sort()
+    return radii
+
+
+def generate_columns(num_cols: int, beta_type=False):
+    if beta_type:
+        num_cols = num_cols * 2
+    L_max = int(np.sqrt((num_cols - 1) / 2)) - 1
+    # print(L_max,np.sqrt((num_cols-1)/2)-1)
+    col_names = ["t(M)"]
+    for l in range(0, L_max + 1):
+        for m in range(-l, l + 1):
+            if beta_type:
+                if m == 0:
+                    col_names.append(f"Re({l},{m})")
+                elif m < 0:
+                    continue
+                else:
+                    col_names.append(f"Re({l},{m})")
+                    col_names.append(f"Im({l},{m})")
+            else:
+                col_names.append(f"Re({l},{m})")
+                col_names.append(f"Im({l},{m})")
+    return col_names
+
+
+def WT_to_pandas(horizon_path: Path):
+    assert horizon_path.exists()
+    df_dict = {}
+    beta_type_list = ["Beta.dat", "DuR.dat", "R.dat", "W.dat"]
+    with h5py.File(horizon_path, "r") as hf:
+        # Not all horizon files may have AhC
+        for key in hf.keys():
+            if key == "VersionHist.ver":
+                continue
+            if key in beta_type_list:
+                df_dict[key] = pd.DataFrame(
+                    hf[key], columns=generate_columns(hf[key].shape[1], beta_type=True)
+                )
+            else:
+                df_dict[key] = pd.DataFrame(
+                    hf[key], columns=generate_columns(hf[key].shape[1])
+                )
+
+    return df_dict
+
+
+def create_diff_dict(WT_data_dict: dict, mode: str, variable: str, base_key: str):
+    diff_dict = {"t(M)": WT_data_dict[base_key][variable]["t(M)"]}
+    y_base = WT_data_dict[base_key][variable][mode]
+    y_norm = np.linalg.norm(y_base)
+    for key in WT_data_dict:
+        if key == base_key:
+            continue
+        y = WT_data_dict[key][variable][mode]
+        t = WT_data_dict[key][variable]["t(M)"]
+        y_interpolator = interp1d(t, y, kind="cubic", fill_value="extrapolate")
+        y_inter = y_interpolator(diff_dict["t(M)"])
+        diff_dict[key + "_diff"] = y_inter - y_base
+        diff_dict[key + "_absdiff"] = np.abs(y_inter - y_base)
+        diff_dict[key + "_rel_diff"] = (y_inter - y_base) / y_norm
+        diff_dict[key + "_rel_absdiff"] = np.abs(y_inter - y_base) / y_norm
+    return diff_dict
+
+
+def filter_by_regex(regex, col_list, exclude=False):
+    filtered_set = set()
+    if type(regex) is list:
+        for reg in regex:
+            for i in col_list:
+                if re.search(reg, i):
+                    filtered_set.add(i)
+    else:
+        for i in col_list:
+            if re.search(regex, i):
+                filtered_set.add(i)
+
+    filtered_list = list(filtered_set)
+    if exclude:
+        col_list_copy = list(col_list.copy())
+        for i in filtered_list:
+            if i in col_list_copy:
+                col_list_copy.remove(i)
+        filtered_list = col_list_copy
+
+    # Restore the original order
+    filtered_original_ordered_list = []
+    for i in list(col_list):
+        if i in filtered_list:
+            filtered_original_ordered_list.append(i)
+    return filtered_original_ordered_list
+
+
+def abs_mean_value_upto_l(pd_series, L_max: int):
+    idx = pd_series.index
+    abs_cum_sum = 0
+    num = 0
+    for i in idx:
+        L = int(i.split(",")[0][3:])
+        if L > L_max:
+            continue
+        else:
+            abs_cum_sum = abs_cum_sum + abs(pd_series[i])
+            num = num + 1
+    return abs_cum_sum / num
+
+
+def get_mode(name):
+    return int(name.split("(")[-1].split(")")[0])
+
+
+def get_radii(name):
+    if name[-5] == "R":
+        # R0257 -> 0257load_and_pickle
+        return int(name.split("_")[-1][1:])
+    else:
+        return int(name.split("_")[-1])
+
+
+def sort_by_power_modes(col_names):
+    col_name_copy = list(col_names).copy()
+    return sorted(col_name_copy, key=lambda x: int(get_mode(x)))
+
+
+def add_L_mode_power(df: pd.DataFrame, L: int, ReOrIm: str):
+    column_names = df.columns
+    n = 0
+    power = 0
+    for m in range(-L, L + 1):
+        col_name = f"{ReOrIm}({L},{m})"
+        # print(col_name)
+        if col_name in column_names:
+            power = power + df[col_name] * df[col_name]
+            n = n + 1
+    if n != 0:
+        power = power / n
+        df[f"pow_{ReOrIm}({L})"] = power
+    return power
+
+
+def add_all_L_mode_power(df: pd.DataFrame, L_max: int):
+    local_df = df.copy()
+    total_power_Re = 0
+    total_power_Im = 0
+    for l in range(0, L_max + 1):
+        total_power_Re = total_power_Re + add_L_mode_power(local_df, l, "Re")
+        total_power_Im = total_power_Im + add_L_mode_power(local_df, l, "Im")
+        local_df[f"pow_cum_Re({l})"] = total_power_Re
+        local_df[f"pow_cum_Im({l})"] = total_power_Im
+    return local_df
+
+
+def create_power_diff_dict(
+    power_dict: dict, pow_mode: str, variable: str, base_key: str
+):
+    diff_dict = {"t(M)": power_dict[base_key]["t(M)"]}
+    y_base = power_dict[base_key][variable][pow_mode]
+    y_norm = np.linalg.norm(y_base)
+    for key in power_dict:
+        if key == base_key:
+            continue
+        y = power_dict[key][variable][pow_mode]
+        t = power_dict[key]["t(M)"]
+        y_interpolator = interp1d(t, y, kind="cubic", fill_value="extrapolate")
+        y_inter = y_interpolator(diff_dict["t(M)"])
+        diff_dict[key + "_diff"] = y_inter - y_base
+        diff_dict[key + "_absdiff"] = np.abs(y_inter - y_base)
+        diff_dict[key + "_rel_diff"] = (y_inter - y_base) / y_norm
+        diff_dict[key + "_rel_absdiff"] = np.abs(y_inter - y_base) / y_norm
+    return diff_dict
+
 
 # =================================================================================================
 # make_report_and_plots.ipynb
@@ -1356,7 +1624,7 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         append_to_title = " HorizonBH=" + data_file_path.split("@")[-1]
 
     with plt.style.context("ggplot"):
-        plt.rcParams["figure.figsize"] = (6, 6)
+        plt.rcParams["figure.figsize"] = (5, 5)
         plt.rcParams["figure.autolayout"] = True
 
         y_axis = "Linf(GhCe) on SphereA0"
@@ -1384,7 +1652,7 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         #   plt.ylim(1e-12, 1e-6)
 
         plt.tight_layout()
-        save_name = save_folder_path / f"{runs_set_name}_SphereA0_Linf_GhCe.png"
+        save_name = save_folder_path / f"{runs_set_name}_SphereA0_Linf_GhCe.pdf"
         plt.savefig(save_name, dpi=300)
         plt.clf()
         print(f"Saved {save_name}!\n")
@@ -1414,7 +1682,7 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         #   plt.ylim(1e-12, 1e-6)
 
         plt.tight_layout()
-        save_name = save_folder_path / f"{runs_set_name}_SphereC6_Linf_GhCe.png"
+        save_name = save_folder_path / f"{runs_set_name}_SphereC6_Linf_GhCe.pdf"
         plt.savefig(save_name, dpi=300)
         print(f"Saved {save_name}!\n")
         plt.clf()
@@ -1445,7 +1713,7 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         append_to_title = " HorizonBH=" + data_file_path.split("@")[-1]
 
     with plt.style.context("ggplot"):
-        plt.rcParams["figure.figsize"] = (6, 6)
+        plt.rcParams["figure.figsize"] = (5, 5)
         plt.rcParams["figure.autolayout"] = True
 
         y_axis = "Linf(NormalizedGhCe) on SphereA0"
@@ -1474,7 +1742,7 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
 
         plt.tight_layout()
         save_name = (
-            save_folder_path / f"{runs_set_name}_SphereA0_Linf_NormalizedGhCe.png"
+            save_folder_path / f"{runs_set_name}_SphereA0_Linf_NormalizedGhCe.pdf"
         )
         plt.savefig(save_name, dpi=300)
         plt.clf()
@@ -1506,7 +1774,7 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
 
         plt.tight_layout()
         save_name = (
-            save_folder_path / f"{runs_set_name}_SphereC6_Linf_NormalizedGhCe.png"
+            save_folder_path / f"{runs_set_name}_SphereC6_Linf_NormalizedGhCe.pdf"
         )
         plt.savefig(save_name, dpi=300)
         print(f"Saved {save_name}!\n")
@@ -1538,7 +1806,7 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         append_to_title = " HorizonBH=" + data_file_path.split("@")[-1]
 
     with plt.style.context("ggplot"):
-        plt.rcParams["figure.figsize"] = (6, 6)
+        plt.rcParams["figure.figsize"] = (5, 5)
         plt.rcParams["figure.autolayout"] = True
 
         y_axis = "L2(GhCe)"
@@ -1566,7 +1834,7 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         #   plt.ylim(1e-12, 1e-6)
 
         plt.tight_layout()
-        save_name = save_folder_path / f"{runs_set_name}_L2(GhCe).png"
+        save_name = save_folder_path / f"{runs_set_name}_L2(GhCe).pdf"
         plt.savefig(save_name, dpi=300)
         plt.clf()
         print(f"Saved {save_name}!\n")
@@ -1596,7 +1864,7 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         #   plt.ylim(1e-12, 1e-6)
 
         plt.tight_layout()
-        save_name = save_folder_path / f"{runs_set_name}_Linf(GhCe).png"
+        save_name = save_folder_path / f"{runs_set_name}_Linf(GhCe).pdf"
         plt.savefig(save_name, dpi=300)
         print(f"Saved {save_name}!\n")
         plt.clf()
@@ -1626,7 +1894,7 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         #   plt.ylim(1e-12, 1e-6)
 
         plt.tight_layout()
-        save_name = save_folder_path / f"{runs_set_name}_VolLp(GhCe).png"
+        save_name = save_folder_path / f"{runs_set_name}_VolLp(GhCe).pdf"
         plt.savefig(save_name, dpi=300)
         print(f"Saved {save_name}!\n")
         plt.clf()
@@ -1657,7 +1925,7 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         append_to_title = " HorizonBH=" + data_file_path.split("@")[-1]
 
     with plt.style.context("ggplot"):
-        plt.rcParams["figure.figsize"] = (6, 6)
+        plt.rcParams["figure.figsize"] = (5, 5)
         plt.rcParams["figure.autolayout"] = True
 
         y_axis = "L2(NormalizedGhCe)"
@@ -1685,7 +1953,7 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         #   plt.ylim(1e-12, 1e-6)
 
         plt.tight_layout()
-        save_name = save_folder_path / f"{runs_set_name}_L2(NormalizedGhCe).png"
+        save_name = save_folder_path / f"{runs_set_name}_L2(NormalizedGhCe).pdf"
         plt.savefig(save_name, dpi=300)
         plt.clf()
         print(f"Saved {save_name}!\n")
@@ -1715,7 +1983,7 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         #   plt.ylim(1e-12, 1e-6)
 
         plt.tight_layout()
-        save_name = save_folder_path / f"{runs_set_name}_Linf(NormalizedGhCe).png"
+        save_name = save_folder_path / f"{runs_set_name}_Linf(NormalizedGhCe).pdf"
         plt.savefig(save_name, dpi=300)
         print(f"Saved {save_name}!\n")
         plt.clf()
@@ -1745,7 +2013,7 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         #   plt.ylim(1e-12, 1e-6)
 
         plt.tight_layout()
-        save_name = save_folder_path / f"{runs_set_name}_VolLp(NormalizedGhCe).png"
+        save_name = save_folder_path / f"{runs_set_name}_VolLp(NormalizedGhCe).pdf"
         plt.savefig(save_name, dpi=300)
         print(f"Saved {save_name}!\n")
         plt.clf()
@@ -1861,7 +2129,7 @@ for runs_to_plot, runs_legend, runs_set_name in zip(
         continue
 
     with plt.style.context("ggplot"):
-        plt.rcParams["figure.figsize"] = (6, 6)
+        plt.rcParams["figure.figsize"] = (5, 5)
         plt.rcParams["figure.autolayout"] = True
 
         for h5_path_key, domain, top_num, var in itertools.product(
@@ -1962,7 +2230,130 @@ for runs_to_plot, runs_legend, runs_set_name in zip(
 
             save_name = (
                 save_folder_path
-                / f"{runs_set_name}_L{current_lev}_PS_{var}_{domain}_{top_num}.png"
+                / f"{runs_set_name}_L{current_lev}_PS_{var}_{domain}_{top_num}.pdf"
+            )
+            plt.savefig(save_name, dpi=300)
+            print(f"Saved {save_name}!\n")
+            plt.clf()
+
+
+# =================================================================================================
+# CCE bondi constraints
+# =================================================================================================
+
+L15_ode_fix_legend = {
+    "high_accuracy_L1": "Ode Fix Level 1",
+    "high_accuracy_L2": "Ode Fix Level 2",
+    "high_accuracy_L3": "Ode Fix Level 3",
+    "high_accuracy_L4": "Ode Fix Level 4",
+    "high_accuracy_L5": "Ode Fix Level 5",
+}
+
+L15_ode_fix_cce_files = {
+    "high_accuracy_main_L1": Path(
+        "/groups/sxs/hchaudha/spec_runs/Lev01_test/new_ode_tol/high_accuracy_L35/Ev/GW_data_lev1/BondiCceR0257/red_cce.h5"
+    ),
+    "high_accuracy_main_L2": Path(
+        "/groups/sxs/hchaudha/spec_runs/Lev01_test/new_ode_tol/high_accuracy_L35/Ev/GW_data_lev2/BondiCceR0257/red_cce.h5"
+    ),
+    "high_accuracy_main_L3": Path(
+        "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35/Ev/GW_data_lev3/BondiCceR0258/red_cce.h5"
+    ),
+    "high_accuracy_main_L4": Path(
+        "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35/Ev/GW_data_lev4/BondiCceR0258/red_cce.h5"
+    ),
+    "high_accuracy_main_L5": Path(
+        "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35/Ev/GW_data_lev5/BondiCceR0258/red_cce.h5"
+    ),
+}
+
+L16_set1_legend = {
+    "6_set1_L6s1": "Set1 Level 1",
+    "6_set1_L6s2": "Set1 Level 2",
+    "6_set1_L6s3": "Set1 Level 3",
+    "6_set1_L6s4": "Set1 Level 4",
+    "6_set1_L6s5": "Set1 Level 5",
+    "6_set1_L6s6": "Set1 Level 6",
+}
+
+L16_set1_cce_files = {
+    "6_set1_L6s1": Path(
+        "/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/GW_data_lev1/BondiCceR0250/red_cce.h5"
+    ),
+    "6_set1_L6s2": Path(
+        "/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/GW_data_lev2/BondiCceR0250/red_cce.h5"
+    ),
+    "6_set1_L6s3": Path(
+        "/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/GW_data_lev3/BondiCceR0250/red_cce.h5"
+    ),
+    "6_set1_L6s4": Path(
+        "/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/GW_data_lev4/BondiCceR0250/red_cce.h5"
+    ),
+    "6_set1_L6s5": Path(
+        "/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/GW_data_lev5/BondiCceR0250/red_cce.h5"
+    ),
+    "6_set1_L6s6": Path(
+        "/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/GW_data_lev6/BondiCceR0250/red_cce.h5"
+    ),
+}
+
+
+# ==============================================================================
+
+SKIP_THIS = False
+
+bondi_norms_to_plot = [2]
+runs_set_name_list = ["L15_ode_fix", "L16_set1"]
+
+runs_to_plot_list = [L15_ode_fix_cce_files, L16_set1_cce_files]
+runs_legend_list = [L15_ode_fix_legend, L16_set1_legend]
+
+for runs_to_plot, runs_legend, runs_set_name in zip(
+    runs_to_plot_list,
+    runs_legend_list,
+    runs_set_name_list,
+):
+    if SKIP_THIS:
+        continue
+
+    t_interpolate = np.linspace(-1000, 100000, num=2000)
+    abd_data = {}
+    for key in runs_to_plot_list:
+        abd_data[key] = load_and_pickle(
+            runs_to_plot_list[key], options={"t_interpolate": t_interpolate}
+        )
+        abd_data[key] = load_bondi_constraints(runs_to_plot_list[key])
+    print(abd_data.keys())
+
+    with plt.style.context("ggplot"):
+        plt.rcParams["figure.figsize"] = (5, 5)
+        plt.rcParams["figure.autolayout"] = True
+
+        for bondi_norm in bondi_norms_to_plot:
+            t_min = 1210 - 260
+            t_max = 4000 - 260
+
+            for key in abd_data:
+                violation_dict = abd_data[key]["bondi_violation_norms"]
+
+                t_arr = abd_data[key]["abd"].t
+                trimmed_indices = (t_arr > t_min) & (t_arr < t_max)
+                t_arr = t_arr[trimmed_indices]
+
+                plt.semilogy(
+                    t_arr,
+                    violation_dict[bondi_norm][trimmed_indices],
+                    label=f"{runs_legend_list[key]}",
+                )
+
+            plt.legend(loc="upper right")
+            plt.xlabel("t(M)")
+            plt.ylabel(f"bondi violations {bondi_norms_to_plot}")
+            # plt.grid(False)
+            plt.tight_layout()
+
+            save_name = (
+                save_folder_path / f"{runs_set_name}_cce_boncon_{bondi_norm}.pdf"
             )
             plt.savefig(save_name, dpi=300)
             print(f"Saved {save_name}!\n")
