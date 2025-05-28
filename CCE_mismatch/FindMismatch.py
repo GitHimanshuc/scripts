@@ -26,36 +26,44 @@ class SplineArray:
         return yprime
 
 
-def SquaredError(W1, W2, t1, t2, mode=None):
+def SquaredError(W1, W2, t1, t2, modes=None, return_h1h2_h1h1=False):
     """
     Calculate the residue of W1 and W2 between t1 and t2.
     """
     W2_spline = SplineArray(W2.t, W2.data)
-    matchingt = W1.t[(W1.t >= t1) & (W1.t <= t2)]
-    h1h2 = np.sum(
-        sp.integrate.simpson(
-            abs(W2_spline(matchingt) - W1.data[(W1.t >= t1) & (W1.t <= t2), :]) ** 2.0,
-            matchingt,
-            axis=0,
-        )
-    )
-    h1h1 = np.sum(
-        sp.integrate.simpson(
-            abs(W1.data[(W1.t >= t1) & (W1.t <= t2), :]) ** 2.0, matchingt, axis=0
-        )
-    )
-    if type(mode) != type(None):
+    t_filter = (W1.t >= t1) & (W1.t <= t2)
+    filtered_time = W1.t[t_filter]
+
+    if modes is None:
         h1h2 = np.sum(
             sp.integrate.simpson(
-                abs(W2_spline(matchingt) - W1.data[(W1.t >= t1) & (W1.t <= t2), :])[
-                    :, mode
-                ]
-                ** 2.0,
-                matchingt,
+                abs(W2_spline(filtered_time) - W1.data[t_filter, :]) ** 2.0,
+                filtered_time,
                 axis=0,
             )
         )
-    return 0.5 * h1h2 / h1h1
+        h1h1 = np.sum(
+            sp.integrate.simpson(
+                abs(W1.data[t_filter, :]) ** 2.0, filtered_time, axis=0
+            )
+        )
+    else:
+        h1h2 = np.sum(
+            sp.integrate.simpson(
+                abs(W2_spline(filtered_time) - W1.data[t_filter, :])[:, modes] ** 2.0,
+                filtered_time,
+                axis=0,
+            )
+        )
+        h1h1 = np.sum(
+            sp.integrate.simpson(
+                abs(W1.data[t_filter, :][:, modes]) ** 2.0, filtered_time, axis=0
+            )
+        )
+    if return_h1h2_h1h1:
+        return h1h2 , h1h1
+    else:
+        return 0.5 * h1h2 / h1h1
 
 
 def abd_to_WM(abd, lmin=2):
@@ -231,17 +239,17 @@ def align2d(
         for L in range(2, ell_max + 1):
             for M in range(-L, L + 1):
                 if not (L, M) in include_modes:
-                    h_A_copy.data[:, LM(L, M, h_A_copy.ell_min)] *= 0
-                    h_B_copy.data[:, LM(L, M, h_B_copy.ell_min)] *= 0
+                    h_A_copy.data[:, LM_index(L, M, h_A_copy.ell_min)] *= 0
+                    h_B_copy.data[:, LM_index(L, M, h_B_copy.ell_min)] *= 0
 
     # Define the cost function
-    modes_A = sp.integrate.CubicSpline(h_A_copy.t, h_A_copy[:, 2 : ell_max + 1].data)
-    modes_B = sp.integrate.CubicSpline(h_B_copy.t, h_B_copy[:, 2 : ell_max + 1].data)(
+    modes_A = sp.interpolate.CubicSpline(h_A_copy.t, h_A_copy[:, 2 : ell_max + 1].data)
+    modes_B = sp.interpolate.CubicSpline(h_B_copy.t, h_B_copy[:, 2 : ell_max + 1].data)(
         t_reference
     )
 
     normalization = sp.integrate.trapezoid(
-        sp.integrate.CubicSpline(h_B_copy.t, h_B_copy[:, 2 : ell_max + 1].norm())(
+        sp.interpolate.CubicSpline(h_B_copy.t, h_B_copy[:, 2 : ell_max + 1].norm())(
             t_reference
         ),
         t_reference,
@@ -294,12 +302,24 @@ def align2d(
 
     return optimums[idx].cost, h_A_primes[idx], optimums[idx]
 
+
 def cost(δt_δϕ, args):
     modes_A, modes_B, t_reference, δϕ_factor, δΨ_factor, normalization = args
-    
+
     # Take the sqrt because least_squares squares the inputs...
-    diff = sp.integrate.trapezoid(np.sum(abs(modes_A(t_reference + δt_δϕ[0]) * np.exp(1j * δt_δϕ[1]) ** δϕ_factor * δΨ_factor -\
-                                modes_B)**2, axis=1), t_reference)
+    diff = sp.integrate.trapezoid(
+        np.sum(
+            abs(
+                modes_A(t_reference + δt_δϕ[0])
+                * np.exp(1j * δt_δϕ[1]) ** δϕ_factor
+                * δΨ_factor
+                - modes_B
+            )
+            ** 2,
+            axis=1,
+        ),
+        t_reference,
+    )
     return np.sqrt(diff / normalization)
 
 
@@ -317,6 +337,7 @@ def PN_BMS_w_time_phase(abd, h_PN, PsiM_PN, t1, t2, include_modes, N=4, write_di
     # abd_primes = []
     trans_and_convs = []
     for itr in range(N):
+        print(f"Iteration {itr}")
         abd_prime, trans, abd_err = abd_prime.map_to_superrest_frame(
             t_0=t1 + (t2 - t1) / 2,
             target_strain_input=h_PN,
@@ -336,6 +357,7 @@ def PN_BMS_w_time_phase(abd, h_PN, PsiM_PN, t1, t2, include_modes, N=4, write_di
             include_modes=include_modes,
             nprocs=5,
         )
+        print(f"{itr} error: {error}")
 
         # abd_prime = time_translation(abd_prime, res.x[0])
 
@@ -366,5 +388,15 @@ def fix_BMS_NRNR(abd, abd2, hyb, PN):
     tp1, W_NR2, tp2, idx = PN_BMS_w_time_phase(
         abd2, W_NR, Psi_M, hyb.t_start, hyb.t_start + hyb.length, None
     )
+
+    return W_NR, W_NR2
+
+
+def fix_BMS_NRNR_t12(abd, abd2, t1, t2):
+    abd_prime, trans, abd_err = abd.map_to_superrest_frame(t_0=(t1 + t2) / 2)
+    W_NR = abd_to_WM(abd_prime)
+
+    Psi_M = MT_to_WM(abd_prime.supermomentum("Moreschi"), False, dataType=scri.psi2)
+    tp1, W_NR2, tp2, idx = PN_BMS_w_time_phase(abd2, W_NR, Psi_M, t1, t2, None)
 
     return W_NR, W_NR2
