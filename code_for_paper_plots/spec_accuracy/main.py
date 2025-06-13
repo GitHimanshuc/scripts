@@ -1,3 +1,4 @@
+import copy
 import glob
 import itertools
 import json
@@ -15,6 +16,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import scipy as sp
 import scri
 from scipy.interpolate import CubicSpline, interp1d
 from spherical_functions import LM_index as lm
@@ -649,7 +651,10 @@ def add_diff_columns(runs_data_dict, x_axis, y_axis, diff_base):
     )
     # sorted_indices = np.sort(unique_indices)
     unique_y_data = runs_data_dict[diff_base][y_axis].iloc[unique_indices]
-    interpolated_data = CubicSpline(unique_x_data, unique_y_data, extrapolate=False)
+    interpolated_data = sp.interpolate.CubicSpline(
+        unique_x_data, unique_y_data, extrapolate=False
+    )
+    # interpolated_data = sp.interpolate.PchipInterpolator(unique_x_data, unique_y_data, extrapolate=False)
 
     for key in runs_data_dict:
         if key == diff_base:
@@ -675,6 +680,8 @@ def plot_graph_for_runs_wrapper(
     append_to_title="",
     plot_abs_diff=False,
     constant_shift_val_time=None,
+    modification_function=None,
+    take_abs=False,
 ):
     # Do this better using columns of a pandas dataframe
     for y_axis in y_axis_list[:-1]:
@@ -697,6 +704,8 @@ def plot_graph_for_runs_wrapper(
             append_to_title=append_to_title,
             plot_abs_diff=plot_abs_diff,
             constant_shift_val_time=constant_shift_val_time,
+            modification_function=modification_function,
+            take_abs=take_abs,
         )
 
     # Save when plotting the last y_axis.
@@ -720,6 +729,8 @@ def plot_graph_for_runs_wrapper(
         append_to_title=append_to_title,
         plot_abs_diff=plot_abs_diff,
         constant_shift_val_time=constant_shift_val_time,
+        modification_function=modification_function,
+        take_abs=take_abs,
     )
 
     plt.ylabel("")
@@ -748,7 +759,7 @@ def plot_graph_for_runs_wrapper(
 
 
 def plot_graph_for_runs(
-    runs_data_dict,
+    runs_data_dict_original,
     x_axis,
     y_axis,
     minT,
@@ -763,7 +774,23 @@ def plot_graph_for_runs(
     append_to_title="",
     plot_abs_diff=False,
     constant_shift_val_time=None,
+    modification_function=None,
+    take_abs=False,
 ):
+    runs_data_dict = runs_data_dict_original
+    if modification_function is not None:
+        runs_data_dict = copy.deepcopy(runs_data_dict_original)
+        for key in runs_data_dict:
+            new_x, new_y, new_y_axis = modification_function(
+                runs_data_dict[key][x_axis],
+                runs_data_dict[key][y_axis],
+                runs_data_dict[key],
+                y_axis,
+            )
+            runs_data_dict[key][new_y_axis] = new_y
+            runs_data_dict[key][x_axis] = new_x
+        y_axis = new_y_axis
+
     sort_run_data_dict(runs_data_dict, sort_by=sort_by)
     current_runs_data_dict_keys = list(runs_data_dict.keys())
 
@@ -822,6 +849,8 @@ def plot_graph_for_runs(
                 except Exception as e:
                     print(run_name, unique_y_data)
                 y_data = y_data - interpolated_data(constant_shift_val_time)
+                if plot_abs_diff:
+                    y_data = np.abs(y_data)
 
             #   print(f"{len(x_data)=},{len(y_data)=},{len(np.argsort(x_data))=},{type(x_data)=}")
 
@@ -831,6 +860,8 @@ def plot_graph_for_runs(
             legend = legend_dict[run_name]
             if legend is None:
                 legend = run_name
+            if take_abs:
+                y_data = np.abs(y_data)
             plot_fun(x_data, y_data, legend)
 
             if constant_shift_val_time is not None:
@@ -852,6 +883,8 @@ def plot_graph_for_runs(
                 title = title + f" constant_shift_val_time={constant_shift_val_time}"
             if diff_base is not None:
                 title = title + f" diff_base={diff_base}"
+            if plot_abs_diff:
+                title = title + " (abs_diff)"
         plt.title(title + append_to_title)
         plt.legend()
 
@@ -883,6 +916,8 @@ def plot_graph_for_runs(
                     unique_x_data, unique_y_data, extrapolate=False
                 )
                 y_data = y_data - interpolated_data(constant_shift_val_time)
+                if plot_abs_diff:
+                    y_data = np.abs(y_data)
 
             #   sorted_indices = np.argsort(x_data)
             #   x_data = x_data[sorted_indices]
@@ -890,6 +925,8 @@ def plot_graph_for_runs(
             legend = legend_dict[run_name]
             if legend is None:
                 legend = run_name
+            if take_abs:
+                y_data = np.abs(y_data)
             plot_fun(x_data, y_data, legend)
 
             if constant_shift_val_time is not None:
@@ -918,6 +955,8 @@ def plot_graph_for_runs(
                 title = title + f" constant_shift_val_time={constant_shift_val_time}"
             if diff_base is not None:
                 title = title + f" diff_base={diff_base}"
+            if plot_abs_diff:
+                title = title + " (abs_diff)"
         plt.title(title + append_to_title)
         plt.legend()
 
@@ -1039,11 +1078,6 @@ def sort_run_data_dict(runs_data_dict: dict, sort_by=None):
         if sort_by is None:
             sort_by = run_df.keys()[0]
         runs_data_dict[run_name] = run_df.sort_values(by=sort_by)
-
-
-save_folder_path = Path("./plots/").resolve()
-if not save_folder_path.exists():
-    raise Exception(f"Save folder {save_folder_path} does not exist")
 
 
 # =================================================================================================
@@ -1532,6 +1566,11 @@ def series_closest_to_time(t, df):
 # =================================================================================================
 # =================================================================================================
 
+
+save_folder_path = Path("./plots/").resolve()
+if not save_folder_path.exists():
+    raise Exception(f"Save folder {save_folder_path} does not exist")
+
 # =================================================================================================
 # Constraints
 # =================================================================================================
@@ -1588,7 +1627,7 @@ L16_set1_runs = {
 
 # ==============================================================================
 
-SKIP_THIS = False
+SKIP_THIS = True
 
 runs_to_plot_list = [L15_main_runs, L15_ode_fix_runs, L16_set1_runs]
 legend_dict_list = [L15_main_legend, L15_ode_fix_legend, L16_set1_legend]
@@ -2108,7 +2147,7 @@ L16_set1_h5_files = {
 
 # ==============================================================================
 
-SKIP_THIS = False
+SKIP_THIS = True
 
 levs_to_plot_list = [5, 6]
 domains_to_plot_list = ["SphereA0", "SphereC6"]
@@ -2250,19 +2289,19 @@ L15_ode_fix_legend = {
 }
 
 L15_ode_fix_cce_files = {
-    "high_accuracy_main_L1": Path(
+    "high_accuracy_L1": Path(
         "/groups/sxs/hchaudha/spec_runs/Lev01_test/new_ode_tol/high_accuracy_L35/Ev/GW_data_lev1/BondiCceR0257/red_cce.h5"
     ),
-    "high_accuracy_main_L2": Path(
+    "high_accuracy_L2": Path(
         "/groups/sxs/hchaudha/spec_runs/Lev01_test/new_ode_tol/high_accuracy_L35/Ev/GW_data_lev2/BondiCceR0257/red_cce.h5"
     ),
-    "high_accuracy_main_L3": Path(
+    "high_accuracy_L3": Path(
         "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35/Ev/GW_data_lev3/BondiCceR0258/red_cce.h5"
     ),
-    "high_accuracy_main_L4": Path(
+    "high_accuracy_L4": Path(
         "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35/Ev/GW_data_lev4/BondiCceR0258/red_cce.h5"
     ),
-    "high_accuracy_main_L5": Path(
+    "high_accuracy_L5": Path(
         "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35/Ev/GW_data_lev5/BondiCceR0258/red_cce.h5"
     ),
 }
@@ -2302,7 +2341,7 @@ L16_set1_cce_files = {
 
 SKIP_THIS = False
 
-bondi_norms_to_plot = [2]
+bondi_norms_to_plot = [2, 4, 5]
 runs_set_name_list = ["L15_ode_fix", "L16_set1"]
 
 runs_to_plot_list = [L15_ode_fix_cce_files, L16_set1_cce_files]
@@ -2318,11 +2357,11 @@ for runs_to_plot, runs_legend, runs_set_name in zip(
 
     t_interpolate = np.linspace(-1000, 100000, num=2000)
     abd_data = {}
-    for key in runs_to_plot_list:
+    for key in runs_to_plot:
         abd_data[key] = load_and_pickle(
-            runs_to_plot_list[key], options={"t_interpolate": t_interpolate}
+            runs_to_plot[key], options={"t_interpolate": t_interpolate}
         )
-        abd_data[key] = load_bondi_constraints(runs_to_plot_list[key])
+        abd_data[key] = load_bondi_constraints(runs_to_plot[key])
     print(abd_data.keys())
 
     with plt.style.context("ggplot"):
@@ -2343,12 +2382,101 @@ for runs_to_plot, runs_legend, runs_set_name in zip(
                 plt.semilogy(
                     t_arr,
                     violation_dict[bondi_norm][trimmed_indices],
-                    label=f"{runs_legend_list[key]}",
+                    label=f"{runs_legend[key]}",
                 )
 
             plt.legend(loc="upper right")
             plt.xlabel("t(M)")
-            plt.ylabel(f"bondi violations {bondi_norms_to_plot}")
+            plt.ylabel(f"Bondi violations {bondi_norm}")
+            # plt.grid(False)
+            plt.tight_layout()
+
+            save_name = (
+                save_folder_path / f"{runs_set_name}_cce_boncon_{bondi_norm}.pdf"
+            )
+            plt.savefig(save_name, dpi=300)
+            print(f"Saved {save_name}!\n")
+            plt.clf()
+
+
+# =================================================================================================
+# CCE bondi constraints radius dependence
+# =================================================================================================
+cce_data = {}
+levs = [6]
+# levs = [0,1,2,3]
+# levs = [5]
+# levs = [5,6]
+run_sets = [1]
+# radius = [250]
+radius = [100, 150, 200, 250, 300, 350, 500, 700, 900]
+# radius = [150,200,250,300,350,500,700]
+# radius = [200,250,300,350,500]
+for l, s, r in itertools.product(levs, run_sets, radius):
+    if s == 2 and (l == 0 or l == 1):
+        continue
+    if l <= 3:
+        if s == 1:
+            cce_data[f"6_set{s}_L6s{l}_{r}"] = Path(
+                f"/groups/sxs/hchaudha/spec_runs/6_segs/6_set{s}_L6/GW_data_lev{l}/BondiCceR0{r}/red_cce.h5"
+            )
+        # cce_data[f"6_set{s}_L3s{l}_{r}"] = Path(f"/groups/sxs/hchaudha/spec_runs/6_segs/6_set{s}_L3/GW_data_lev{l}/BondiCceR0{r}/red_cce.h5")
+    else:
+        cce_data[f"6_set{s}_L6s{l}_{r}"] = Path(
+            f"/groups/sxs/hchaudha/spec_runs/6_segs/6_set{s}_L6/GW_data_lev{l}/BondiCceR0{r}/red_cce.h5"
+        )
+        pass
+# ==============================================================================
+
+SKIP_THIS = False
+
+bondi_norms_to_plot = [2, 4, 5]
+runs_set_name_list = ["L15_ode_fix", "L16_set1"]
+
+runs_to_plot_list = [L15_ode_fix_cce_files, L16_set1_cce_files]
+runs_legend_list = [L15_ode_fix_legend, L16_set1_legend]
+
+for runs_to_plot, runs_legend, runs_set_name in zip(
+    runs_to_plot_list,
+    runs_legend_list,
+    runs_set_name_list,
+):
+    if SKIP_THIS:
+        continue
+
+    t_interpolate = np.linspace(-1000, 100000, num=2000)
+    abd_data = {}
+    for key in runs_to_plot:
+        abd_data[key] = load_and_pickle(
+            runs_to_plot[key], options={"t_interpolate": t_interpolate}
+        )
+        abd_data[key] = load_bondi_constraints(runs_to_plot[key])
+    print(abd_data.keys())
+
+    with plt.style.context("ggplot"):
+        plt.rcParams["figure.figsize"] = (5, 5)
+        plt.rcParams["figure.autolayout"] = True
+
+        for bondi_norm in bondi_norms_to_plot:
+            t_min = 1210 - 260
+            t_max = 4000 - 260
+
+            for key in abd_data:
+                violation_dict = abd_data[key]["bondi_violation_norms"]
+
+                t_arr = abd_data[key]["abd"].t
+                trimmed_indices = (t_arr > t_min) & (t_arr < t_max)
+                t_arr = t_arr[trimmed_indices]
+
+                plt.semilogy(
+                    t_arr,
+                    violation_dict[bondi_norm][trimmed_indices],
+                    label=f"{runs_legend[key]}",
+                )
+
+            plt.legend(loc="upper right")
+            plt.xlabel("t(M)")
+            plt.ylabel(f"Bondi violations {bondi_norm}")
             # plt.grid(False)
             plt.tight_layout()
 
