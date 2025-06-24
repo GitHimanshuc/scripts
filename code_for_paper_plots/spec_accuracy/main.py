@@ -1624,6 +1624,8 @@ L16_set1_runs = {
     "6_set1_L6s6": "/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/Ev/Lev6_A?/Run/",
 }
 
+joined_runs = {**L15_main_runs, **L15_ode_fix_runs, **L16_set1_runs}
+joined_legend = {**L15_main_legend, **L15_ode_fix_legend, **L16_set1_legend}
 
 # ==============================================================================
 
@@ -2057,6 +2059,223 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         print(f"Saved {save_name}!\n")
         plt.clf()
 
+# =================================================================================================
+# Individual plots
+# =================================================================================================
+
+SKIP_THIS = False
+
+if not SKIP_THIS:
+    data_file_path = "ConstraintNorms/NormalizedGhCe_Linf.dat"
+    runs_to_plot = {}
+    runs_to_plot["high_accuracy_L5"] = joined_runs["high_accuracy_L5"]
+    runs_to_plot["6_set1_L6s5"] = joined_runs["6_set1_L6s5"]
+    column_names, runs_data_dict = load_data_from_levs(runs_to_plot, data_file_path)
+
+    moving_avg_len = 0
+    save_path = None
+    diff_base = None
+    constant_shift_val_time = None
+    plot_abs_diff = True
+    y_axis_list = None
+    x_axis = "t(M)"
+
+    plot_abs_diff = False
+
+    minT = 1205
+    maxT = 8000
+
+    def plot_fun(x, y, label):
+        return plt.semilogy(x, y, label=label)
+
+    append_to_title = ""
+    if "@" in data_file_path:
+        append_to_title = " HorizonBH=" + data_file_path.split("@")[-1]
+
+    with plt.style.context("ggplot"):
+        plt.rcParams["figure.figsize"] = (8, 5)
+        plt.rcParams["figure.autolayout"] = True
+
+        y_axis = "Linf(NormalizedGhCe) on SphereC28"
+        plot_graph_for_runs(
+            runs_data_dict,
+            x_axis,
+            y_axis,
+            minT,
+            maxT,
+            legend_dict=joined_legend,
+            save_path=save_path,
+            moving_avg_len=moving_avg_len,
+            plot_fun=plot_fun,
+            diff_base=diff_base,
+            plot_abs_diff=plot_abs_diff,
+            constant_shift_val_time=constant_shift_val_time,
+            append_to_title=append_to_title,
+        )
+
+        plt.title("")
+        plt.ylabel(y_axis)
+        plt.xlabel("t(M)")
+        plt.legend(loc="upper right")
+        #   plt.ylim(1e-8, 1e-5)
+        #   plt.ylim(1e-12, 1e-6)
+
+        plt.tight_layout()
+        save_name = (
+            save_folder_path / "joined_ML_5_S1_L5_SphereC28_Linf_NormalizedGhCe.pdf"
+        )
+        plt.savefig(save_name, dpi=300)
+        print(f"Saved {save_name}!\n")
+        plt.clf()
+
+    # ==============================================================================
+
+    minT = 1205
+    maxT = 4000
+
+    def plot_fun(x, y, label):
+        return plt.semilogy(x, y, label=label)
+
+    append_to_title = ""
+    if "@" in data_file_path:
+        append_to_title = " HorizonBH=" + data_file_path.split("@")[-1]
+
+    with plt.style.context("ggplot"):
+        plt.rcParams["figure.figsize"] = (5, 5)
+        plt.rcParams["figure.autolayout"] = True
+
+        y_axis = "Linf(NormalizedGhCe) on SphereC0"
+        plot_graph_for_runs(
+            runs_data_dict,
+            x_axis,
+            y_axis,
+            minT,
+            maxT,
+            legend_dict=joined_legend,
+            save_path=save_path,
+            moving_avg_len=moving_avg_len,
+            plot_fun=plot_fun,
+            diff_base=diff_base,
+            plot_abs_diff=plot_abs_diff,
+            constant_shift_val_time=constant_shift_val_time,
+            append_to_title=append_to_title,
+        )
+
+        plt.title("")
+        plt.ylabel(y_axis)
+        plt.xlabel("t(M)")
+        plt.legend(loc="upper right")
+        #   plt.ylim(1e-8, 1e-5)
+        #   plt.ylim(1e-12, 1e-6)
+
+        plt.tight_layout()
+        save_name = (
+            save_folder_path / "joined_ML_5_S1_L5_SphereC0_Linf_NormalizedGhCe.pdf"
+        )
+        plt.savefig(save_name, dpi=300)
+        print(f"Saved {save_name}!\n")
+        plt.clf()
+
+    # ==============================================================================
+
+    with plt.style.context("ggplot"):
+        plt.rcParams["figure.figsize"] = (5, 5)
+        plt.rcParams["figure.autolayout"] = True
+
+        y_axis = "Linf(NormalizedGhCe) on SphereC1"
+        plot_graph_for_runs(
+            runs_data_dict,
+            x_axis,
+            y_axis,
+            minT,
+            maxT,
+            legend_dict=joined_legend,
+            save_path=save_path,
+            moving_avg_len=moving_avg_len,
+            plot_fun=plot_fun,
+            diff_base=diff_base,
+            plot_abs_diff=plot_abs_diff,
+            constant_shift_val_time=constant_shift_val_time,
+            append_to_title=append_to_title,
+        )
+
+        plt.title("")
+        plt.ylabel(y_axis)
+        plt.xlabel("t(M)")
+        plt.legend(loc="upper right")
+        #   plt.ylim(1e-8, 1e-5)
+        #   plt.ylim(1e-12, 1e-6)
+
+        plt.tight_layout()
+        save_name = (
+            save_folder_path / "joined_ML_5_S1_L5_SphereC1_Linf_NormalizedGhCe.pdf"
+        )
+        plt.savefig(save_name, dpi=300)
+        print(f"Saved {save_name}!\n")
+        plt.clf()
+
+    # ==============================================================================
+
+    data_file_path = "ConstraintNorms/GhCe_Linf.dat"
+    runs_to_plot = {}
+    runs_to_plot["high_accuracy_L5"] = joined_runs["high_accuracy_L5"]
+    runs_to_plot["6_set1_L6s5"] = joined_runs["6_set1_L6s5"]
+    column_names, runs_data_dict = load_data_from_levs(runs_to_plot, data_file_path)
+
+    moving_avg_len = 0
+    save_path = None
+    diff_base = None
+    constant_shift_val_time = None
+    plot_abs_diff = True
+    y_axis_list = None
+    x_axis = "t(M)"
+
+    plot_abs_diff = False
+
+    minT = 1205
+    maxT = 8000
+
+    def plot_fun(x, y, label):
+        return plt.semilogy(x, y, label=label)
+
+    append_to_title = ""
+    if "@" in data_file_path:
+        append_to_title = " HorizonBH=" + data_file_path.split("@")[-1]
+
+    with plt.style.context("ggplot"):
+        plt.rcParams["figure.figsize"] = (8, 5)
+        plt.rcParams["figure.autolayout"] = True
+
+        y_axis = "Linf(GhCe) on SphereC28"
+        plot_graph_for_runs(
+            runs_data_dict,
+            x_axis,
+            y_axis,
+            minT,
+            maxT,
+            legend_dict=joined_legend,
+            save_path=save_path,
+            moving_avg_len=moving_avg_len,
+            plot_fun=plot_fun,
+            diff_base=diff_base,
+            plot_abs_diff=plot_abs_diff,
+            constant_shift_val_time=constant_shift_val_time,
+            append_to_title=append_to_title,
+        )
+
+        plt.title("")
+        plt.ylabel(y_axis)
+        plt.xlabel("t(M)")
+        plt.legend(loc="upper right")
+        #   plt.ylim(1e-8, 1e-5)
+        #   plt.ylim(1e-12, 1e-6)
+
+        plt.tight_layout()
+        save_name = save_folder_path / "joined_ML_5_S1_L5_SphereC28_Linf_GhCe.pdf"
+        plt.savefig(save_name, dpi=300)
+        print(f"Saved {save_name}!\n")
+        plt.clf()
+
 
 # =================================================================================================
 # Power spectrum
@@ -2339,7 +2558,7 @@ L16_set1_cce_files = {
 
 # ==============================================================================
 
-SKIP_THIS = False
+SKIP_THIS = True
 
 bondi_norms_to_plot = [2, 4, 5]
 runs_set_name_list = ["L15_ode_fix", "L16_set1"]
@@ -2428,7 +2647,7 @@ for l, s, r in itertools.product(levs, run_sets, radius):
         pass
 # ==============================================================================
 
-SKIP_THIS = False
+SKIP_THIS = True
 
 bondi_norms_to_plot = [2, 4, 5]
 runs_set_name_list = ["L15_ode_fix", "L16_set1"]

@@ -628,8 +628,9 @@ print("Hello World!\n\n")
 #         print(f"\n\nFailed to load and pickle data in {i.stem}: {e}\n\n")
 #         continue
 
-# main_folder = Path("/resnick/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/")
-# for i in main_folder.glob("GW_data_lev?/BondiCceR????/red_cce.h5"):
+
+# main_folder = Path("/resnick/groups/sxs/hchaudha/spec_runs/29_set1_L3_ID_diff_4/")
+# for i in main_folder.glob("GW_data_lev?/BondiCceR0250/red_cce.h5"):
 #     try:
 #         load_and_pickle(i, reload_data=True)
 #         load_bondi_constraints(i)
@@ -637,44 +638,8 @@ print("Hello World!\n\n")
 #         print(f"\n\nFailed to load and pickle data in {i.stem}: {e}\n\n")
 #         continue
 
-# main_folder = Path("/resnick/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/")
-# for i in main_folder.glob("GW_data_lev?_6/BondiCceR????/red_cce.h5"):
-#     try:
-#         load_and_pickle(i, reload_data=True)
-#         load_bondi_constraints(i)
-#     except Exception as e:
-#         print(f"\n\nFailed to load and pickle data in {i.stem}: {e}\n\n")
-#         continue
-
-# main_folder = Path("/resnick/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/")
-# for i in main_folder.glob("GW_data_lev?_9/BondiCceR????/red_cce.h5"):
-#     try:
-#         load_and_pickle(i, reload_data=True)
-#         load_bondi_constraints(i)
-#     except Exception as e:
-#         print(f"\n\nFailed to load and pickle data in {i.stem}: {e}\n\n")
-#         continue
-
-# main_folder = Path("/resnick/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/")
-# for i in main_folder.glob("GW_data_lev?_7/BondiCceR????/red_cce.h5"):
-#     try:
-#         load_and_pickle(i, reload_data=True)
-#         load_bondi_constraints(i)
-#     except Exception as e:
-#         print(f"\n\nFailed to load and pickle data in {i.stem}: {e}\n\n")
-#         continue
-
-# main_folder = Path("/resnick/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/")
-# for i in main_folder.glob("GW_data_lev?_10/BondiCceR????/red_cce.h5"):
-#     try:
-#         load_and_pickle(i, reload_data=True)
-#         load_bondi_constraints(i)
-#     except Exception as e:
-#         print(f"\n\nFailed to load and pickle data in {i.stem}: {e}\n\n")
-#         continue
-
-# main_folder = Path("/resnick/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/")
-# for i in main_folder.glob("GW_data_lev?_12/BondiCceR????/red_cce.h5"):
+# main_folder = Path("/resnick/groups/sxs/hchaudha/spec_runs/29_set1_L3_ID_diff_4_2/")
+# for i in main_folder.glob("GW_data_lev?/BondiCceR0250/red_cce.h5"):
 #     try:
 #         load_and_pickle(i, reload_data=True)
 #         load_bondi_constraints(i)
@@ -683,8 +648,8 @@ print("Hello World!\n\n")
 #         continue
 
 
-# main_folder = Path("/resnick/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/")
-# for i in main_folder.glob("GW_data_lev?_4/BondiCceR????/red_cce.h5"):
+# main_folder = Path("/resnick/groups/sxs/hchaudha/spec_runs/29_set1_L3_ID_diff_5/")
+# for i in main_folder.glob("GW_data_lev?/BondiCceR0250/red_cce.h5"):
 #     try:
 #         load_and_pickle(i, reload_data=True)
 #         load_bondi_constraints(i)
@@ -693,11 +658,59 @@ print("Hello World!\n\n")
 #         continue
 
 
-# main_folder = Path("/resnick/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/")
-# for i in main_folder.glob("GW_data_lev?_5/BondiCceR????/red_cce.h5"):
+# main_folder = Path("/resnick/groups/sxs/hchaudha/spec_runs/29_set1_L3_ID_diff_6/")
+# for i in main_folder.glob("GW_data_lev?/BondiCceR0250/red_cce.h5"):
 #     try:
 #         load_and_pickle(i, reload_data=True)
 #         load_bondi_constraints(i)
 #     except Exception as e:
 #         print(f"\n\nFailed to load and pickle data in {i.stem}: {e}\n\n")
 #         continue
+
+
+# main_folder = Path("/resnick/groups/sxs/hchaudha/spec_runs/29_set1_L3_ID_diff_7/")
+# for i in main_folder.glob("GW_data_lev?/BondiCceR0250/red_cce.h5"):
+#     try:
+#         load_and_pickle(i, reload_data=True)
+#         load_bondi_constraints(i)
+#     except Exception as e:
+#         print(f"\n\nFailed to load and pickle data in {i.stem}: {e}\n\n")
+#         continue
+
+
+# main_folder = Path("/resnick/groups/sxs/hchaudha/spec_runs/29_set1_L3_ID_diff_8/")
+# for i in main_folder.glob("GW_data_lev?/BondiCceR0250/red_cce.h5"):
+#     try:
+#         load_and_pickle(i, reload_data=True)
+#         load_bondi_constraints(i)
+#     except Exception as e:
+#         print(f"\n\nFailed to load and pickle data in {i.stem}: {e}\n\n")
+#         continue
+
+# main_folder = Path("/resnick/groups/sxs/hchaudha/spec_runs/29_set1_L3_ID_diff_12/")
+# for i in main_folder.glob("GW_data_lev?/BondiCceR0250/red_cce.h5"):
+#     try:
+#         load_and_pickle(i, reload_data=True)
+#         load_bondi_constraints(i)
+#     except Exception as e:
+#         print(f"\n\nFailed to load and pickle data in {i.stem}: {e}\n\n")
+#         continue
+
+# main_folder = Path("/resnick/groups/sxs/hchaudha/spec_runs/CCE_stuff/Lev4_061CCE")
+# for i in main_folder.glob("BondiCceR????/red_cce.h5"):
+#     try:
+#         load_and_pickle(i, reload_data=True)
+#         load_bondi_constraints(i)
+#     except Exception as e:
+#         print(f"\n\nFailed to load and pickle data in {i.stem}: {e}\n\n")
+#         continue
+
+t_interpolate = np.linspace(-2000, 20000, num=20000)
+main_folder = Path("/resnick/groups/sxs/hchaudha/spec_runs/CCE_stuff/Lev4_061CCE")
+for i in main_folder.glob("BondiCceR????/red_cce.h5"):
+    try:
+        load_and_pickle(i, reload_data=True,options = {'t_interpolate':t_interpolate}, )
+        load_bondi_constraints(i)
+    except Exception as e:
+        print(f"\n\nFailed to load and pickle data in {i.stem}: {e}\n\n")
+        continue
