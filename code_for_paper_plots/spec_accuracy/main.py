@@ -21,9 +21,6 @@ import scri
 from scipy.interpolate import CubicSpline, interp1d
 from spherical_functions import LM_index as lm
 
-plt.style.use("ggplot")
-plt.rcParams["figure.figsize"] = (12, 10)
-
 spec_home = "/home/himanshu/spec/my_spec"
 matplotlib.matplotlib_fname()
 
@@ -1629,7 +1626,7 @@ joined_legend = {**L15_main_legend, **L15_ode_fix_legend, **L16_set1_legend}
 
 # ==============================================================================
 
-SKIP_THIS = True
+SKIP_THIS = False
 
 runs_to_plot_list = [L15_main_runs, L15_ode_fix_runs, L16_set1_runs]
 legend_dict_list = [L15_main_legend, L15_ode_fix_legend, L16_set1_legend]
@@ -1664,8 +1661,8 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
     if "@" in data_file_path:
         append_to_title = " HorizonBH=" + data_file_path.split("@")[-1]
 
-    with plt.style.context("ggplot"):
-        plt.rcParams["figure.figsize"] = (5, 5)
+    with plt.style.context("seaborn-v0_8-paper"):
+        plt.rcParams["figure.figsize"] = (5, 3.5)
         plt.rcParams["figure.autolayout"] = True
 
         y_axis = "Linf(GhCe) on SphereA0"
@@ -1753,8 +1750,8 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
     if "@" in data_file_path:
         append_to_title = " HorizonBH=" + data_file_path.split("@")[-1]
 
-    with plt.style.context("ggplot"):
-        plt.rcParams["figure.figsize"] = (5, 5)
+    with plt.style.context("seaborn-v0_8-paper"):
+        plt.rcParams["figure.figsize"] = (5, 3.5)
         plt.rcParams["figure.autolayout"] = True
 
         y_axis = "Linf(NormalizedGhCe) on SphereA0"
@@ -1846,8 +1843,8 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
     if "@" in data_file_path:
         append_to_title = " HorizonBH=" + data_file_path.split("@")[-1]
 
-    with plt.style.context("ggplot"):
-        plt.rcParams["figure.figsize"] = (5, 5)
+    with plt.style.context("seaborn-v0_8-paper"):
+        plt.rcParams["figure.figsize"] = (5, 3.5)
         plt.rcParams["figure.autolayout"] = True
 
         y_axis = "L2(GhCe)"
@@ -1965,8 +1962,8 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
     if "@" in data_file_path:
         append_to_title = " HorizonBH=" + data_file_path.split("@")[-1]
 
-    with plt.style.context("ggplot"):
-        plt.rcParams["figure.figsize"] = (5, 5)
+    with plt.style.context("seaborn-v0_8-paper"):
+        plt.rcParams["figure.figsize"] = (5, 3.5)
         plt.rcParams["figure.autolayout"] = True
 
         y_axis = "L2(NormalizedGhCe)"
@@ -2092,7 +2089,7 @@ if not SKIP_THIS:
     if "@" in data_file_path:
         append_to_title = " HorizonBH=" + data_file_path.split("@")[-1]
 
-    with plt.style.context("ggplot"):
+    with plt.style.context("seaborn-v0_8-paper"):
         plt.rcParams["figure.figsize"] = (8, 5)
         plt.rcParams["figure.autolayout"] = True
 
@@ -2140,8 +2137,8 @@ if not SKIP_THIS:
     if "@" in data_file_path:
         append_to_title = " HorizonBH=" + data_file_path.split("@")[-1]
 
-    with plt.style.context("ggplot"):
-        plt.rcParams["figure.figsize"] = (5, 5)
+    with plt.style.context("seaborn-v0_8-paper"):
+        plt.rcParams["figure.figsize"] = (5, 3.5)
         plt.rcParams["figure.autolayout"] = True
 
         y_axis = "Linf(NormalizedGhCe) on SphereC0"
@@ -2178,8 +2175,8 @@ if not SKIP_THIS:
 
     # ==============================================================================
 
-    with plt.style.context("ggplot"):
-        plt.rcParams["figure.figsize"] = (5, 5)
+    with plt.style.context("seaborn-v0_8-paper"):
+        plt.rcParams["figure.figsize"] = (5, 3.5)
         plt.rcParams["figure.autolayout"] = True
 
         y_axis = "Linf(NormalizedGhCe) on SphereC1"
@@ -2242,7 +2239,7 @@ if not SKIP_THIS:
     if "@" in data_file_path:
         append_to_title = " HorizonBH=" + data_file_path.split("@")[-1]
 
-    with plt.style.context("ggplot"):
+    with plt.style.context("seaborn-v0_8-paper"):
         plt.rcParams["figure.figsize"] = (8, 5)
         plt.rcParams["figure.autolayout"] = True
 
@@ -2366,7 +2363,7 @@ L16_set1_h5_files = {
 
 # ==============================================================================
 
-SKIP_THIS = True
+SKIP_THIS = False
 
 levs_to_plot_list = [5, 6]
 domains_to_plot_list = ["SphereA0", "SphereC6"]
@@ -2386,8 +2383,8 @@ for runs_to_plot, runs_legend, runs_set_name in zip(
     if SKIP_THIS:
         continue
 
-    with plt.style.context("ggplot"):
-        plt.rcParams["figure.figsize"] = (5, 5)
+    with plt.style.context("seaborn-v0_8-paper"):
+        plt.rcParams["figure.figsize"] = (5, 3.5)
         plt.rcParams["figure.autolayout"] = True
 
         for h5_path_key, domain, top_num, var in itertools.product(
@@ -2456,10 +2453,10 @@ for runs_to_plot, runs_legend, runs_set_name in zip(
                     if has_more_than_one:
                         if max_col < coef_num:
                             label = f"{A}: {i}"
-                            num_legends = num_legends + 1
                         else:
                             label = None
                         max_col = max(coef_num, max_col)
+                    num_legends = num_legends + 1
                     plt.plot(
                         data["t"],
                         df[f"{i}"],
@@ -2471,12 +2468,11 @@ for runs_to_plot, runs_legend, runs_set_name in zip(
                     title = title + f"{style_list[key_num % len(style_list)]}  {A}: "
                 title = title + f"{domain} of {runs_legend[h5_path_key]} : {top_name}\n"
 
-            if num_legends > 20:
-                plt.legend(ncol=int(np.ceil(num_legends / 20)))
+            if num_legends > 15:
+                plt.legend(ncol=int(np.ceil(num_legends / 15)),loc="upper right")
             else:
-                plt.legend()
+                plt.legend(loc="upper right")
 
-            plt.legend(loc="upper right")
             plt.title(title[:-1])
             plt.xlabel("t(M)")
             plt.ylabel(f"Power {var}")
@@ -2493,6 +2489,7 @@ for runs_to_plot, runs_legend, runs_set_name in zip(
             plt.savefig(save_name, dpi=300)
             print(f"Saved {save_name}!\n")
             plt.clf()
+            plt.close("all")
 
 
 # =================================================================================================
@@ -2558,7 +2555,7 @@ L16_set1_cce_files = {
 
 # ==============================================================================
 
-SKIP_THIS = True
+SKIP_THIS = False
 
 bondi_norms_to_plot = [2, 4, 5]
 runs_set_name_list = ["L15_ode_fix", "L16_set1"]
@@ -2583,8 +2580,8 @@ for runs_to_plot, runs_legend, runs_set_name in zip(
         abd_data[key] = load_bondi_constraints(runs_to_plot[key])
     print(abd_data.keys())
 
-    with plt.style.context("ggplot"):
-        plt.rcParams["figure.figsize"] = (5, 5)
+    with plt.style.context("seaborn-v0_8-paper"):
+        plt.rcParams["figure.figsize"] = (5, 3.5)
         plt.rcParams["figure.autolayout"] = True
 
         for bondi_norm in bondi_norms_to_plot:
@@ -2647,7 +2644,7 @@ for l, s, r in itertools.product(levs, run_sets, radius):
         pass
 # ==============================================================================
 
-SKIP_THIS = True
+SKIP_THIS = False
 
 bondi_norms_to_plot = [2, 4, 5]
 runs_set_name_list = ["L15_ode_fix", "L16_set1"]
@@ -2672,8 +2669,8 @@ for runs_to_plot, runs_legend, runs_set_name in zip(
         abd_data[key] = load_bondi_constraints(runs_to_plot[key])
     print(abd_data.keys())
 
-    with plt.style.context("ggplot"):
-        plt.rcParams["figure.figsize"] = (5, 5)
+    with plt.style.context("seaborn-v0_8-paper"):
+        plt.rcParams["figure.figsize"] = (5, 3.5)
         plt.rcParams["figure.autolayout"] = True
 
         for bondi_norm in bondi_norms_to_plot:
