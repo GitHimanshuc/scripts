@@ -31,6 +31,8 @@ matplotlib.matplotlib_fname()
 # =================================================================================================
 # =================================================================================================
 
+#%%
+
 # =================================================================================================
 # cce_new.ipynb
 # =================================================================================================
@@ -295,6 +297,7 @@ def create_power_diff_dict(
         diff_dict[key + "_rel_absdiff"] = np.abs(y_inter - y_base) / y_norm
     return diff_dict
 
+#%%
 
 # =================================================================================================
 # make_report_and_plots.ipynb
@@ -449,6 +452,16 @@ def read_profiler(file_name):
                 dict_list.append(curr_dict)
     return pd.DataFrame(dict_list)
 
+def get_top_name_from_number(top_number: int, subdomain_name: str) -> str:
+    if re.match(r"Sphere", subdomain_name):
+        return ["Bf0I1", "Bf1S2", "Bf1S2"][top_number]
+    elif re.match(r"Cylinder", subdomain_name):
+        return ["Bf0I1", "Bf1S1", "Bf2I1"][top_number]
+    elif re.match(r"FilledCylinder", subdomain_name):
+        return ["Bf0I1", "Bf1B2Radial", "Bf1B2"][top_number]
+    else:
+        raise Exception(f"{subdomain_name=} not recognized!")
+
 
 def read_dat_file(file_name):
     cols_names = []
@@ -505,28 +518,144 @@ def hist_files_to_dataframe(file_path):
 # Files like AhACoefs.dat have unequal number of columns
 def read_dat_file_uneq_cols(file_name):
     cols_names = []
-
-    temp_file = "./temp.csv"
-    col_length = 0
     with open(file_name, "r") as f:
-        with open(temp_file, "w") as w:
-            lines = f.readlines()
-            for line in lines:
-                if line[0] != "#":  # This is data
-                    w.writelines(" ".join(line.split()[:col_length]) + "\n")
-                if (
-                    line[0:3] == "# [" or line[0:4] == "#  ["
-                ):  # Some dat files have comments on the top
-                    cols_names.append(line.split("=")[-1][1:-1].strip())
-                    col_length = col_length + 1
+        lines = f.readlines()
+        max_col_num = 0
+        for line in lines:
+            max_col_num = max(max_col_num, len(line.split()))
+    maxL = np.sqrt(max_col_num-4)-1
+    for l in range(int(maxL)+1):
+        for m in range(-l, l+1):
+            cols_names.append(f"{l},{m}")
+    cols_names = ['t(M)','Center-x','Center-y','Center-z'] + cols_names
 
-    return pd.read_csv(temp_file, delim_whitespace=True, names=cols_names)
+    return pd.read_csv(file_name, comment='#', sep="\s+", names=cols_names)
+
+
+def read_power_diagnostics_non_power_spectrum(
+    file_path, dat_file_name, psi_or_kappa, top_num
+):
+    top_num = int(top_num)
+    with h5py.File(file_path, "r") as f:
+        data_dict = {}
+        if psi_or_kappa == "psi":
+            data_index = 1
+        else:
+            data_index = 2
+        for sd_name in f.keys():
+            top_name = get_top_name_from_number(top_num, sd_name)
+            data_dict[
+                f"{psi_or_kappa}_{dat_file_name.split('.')[0]}_{top_name} on {sd_name[:-4]}"
+            ] = f[sd_name][f"{top_name}_{dat_file_name}"][:, data_index]
+
+        # get time var
+        any_subdomain = next(iter(f.keys()))
+        top_name = get_top_name_from_number(top_num, any_subdomain)
+        data_dict["t(M)"] = f[any_subdomain][f"{top_name}_{dat_file_name}"][:, 0]
+
+        df = pd.DataFrame(data_dict)
+
+    return df
+
+
+def GetWTDataExtracRadii(folder_path: Path):
+    extraction_radii_list = []
+    for WT_data in folder_path.glob("BondiCceR*.h5"):
+        extraction_radii_list.append(WT_data.name.split("BondiCceR")[1].split(".")[0])
+    return sorted(extraction_radii_list)
+
+
+def GetFiniteRadiiDataVars(folder_path: Path):
+    finite_radii_files = []
+    for file in folder_path.glob("*_CodeUnits.h5"):
+        finite_radii_files.append(file.name.split("_")[0])
+    return sorted(finite_radii_files)
+
+
+def GetFiniteRadiusExtractionList(file_path: Path):
+    with h5py.File(file_path, "r") as f:
+        extraction_radii_list = []
+        for radius_dir in f.keys():
+            if "Version" in radius_dir:
+                continue
+            extraction_radii_list.append(radius_dir[1:5])
+    return sorted(extraction_radii_list)
+
+
+def FindMinMaxL(keys):
+    "Finds the minimum and maximum L from the dat files in the finite radius H5 files."
+    minL = 10000
+    maxL = -10000
+    for key in keys:
+        if "Y_l" not in key:
+            continue
+        l = int(key.split("_")[1][1:])
+        minL = min(minL, l)
+        maxL = max(maxL, l)
+    return minL, maxL
+
+
+def read_finite_radius_quantaties(file_path, radius):
+    with h5py.File(file_path, "r") as f:
+        if f"R{radius}.dir" not in f.keys():
+            raise Exception(f"R{radius}.dir not found in {file_path}\n{f.keys()=}")
+        rad_data = f[f"R{radius}.dir"]
+        minL, maxL = FindMinMaxL(rad_data.keys())
+
+        data = {"t(M)": rad_data["Y_l2_m0.dat"][:, 0]}
+        for l in range(minL, maxL + 1):
+            for m in range(-l, l + 1):
+                data[f"{l},{m}"] = (
+                    rad_data[f"Y_l{l}_m{m}.dat"][:, 1]
+                    + 1j * rad_data[f"Y_l{l}_m{m}.dat"][:, 1]
+                )
+
+        return pd.DataFrame(data)
+
+
+def read_WT_data(file_path: Path, var: str):
+    with h5py.File(file_path, "r") as f:
+        # all_m = ['DrJ.dat', 'H.dat', 'J.dat', 'Q.dat', 'U.dat', ]
+        # some_m = ['Beta.dat', 'DuR.dat',  'R.dat', 'W.dat']
+
+        col_names = list(f[var].attrs["Legend"])
+        col_names[0] = "t(M)"
+        name_to_index_dict = {name: i for i, name in enumerate(col_names)}
+
+        data = {"t(M)": f[var][:, name_to_index_dict["t(M)"]]}
+
+        maxL = int(col_names[-1].split(",")[0][3:])
+        for L in range(maxL + 1):
+            for m in range(-L, L + 1):
+                real_key = f"Re({L},{m})"
+                img_key = f"Im({L},{m})"
+                if real_key in name_to_index_dict:
+                    data[f"{L},{m}"] = np.array(
+                        f[var][:, name_to_index_dict[real_key]], dtype=np.complex128
+                    )
+                if img_key in name_to_index_dict:
+                    data[f"{L},{m}"] += 1j * np.array(
+                        f[var][:, name_to_index_dict[img_key]], dtype=np.complex128
+                    )
+
+        # df1 = pd.DataFrame(f[var][:], columns=col_names)
+        return pd.DataFrame(data)
 
 
 def read_dat_file_across_AA(file_pattern):
     # ApparentHorizons/Horizons.h5@AhA
     if "Horizons.h5@" in file_pattern:
         file_pattern, h5_key = file_pattern.split("@")
+    if "PowerDiagnostics" in file_pattern:
+        file_pattern, dat_file_name, psi_or_kappa, top_num = file_pattern.split("@")
+    if "BondiCceR" in file_pattern:
+        file_pattern, WT_var = file_pattern.split("@")
+        if "Index:" in file_pattern:
+            raise Exception("Not Implemented yet!")
+    if "_FiniteRadii_CodeUnits" in file_pattern:
+        file_pattern, radius = file_pattern.split("@")
+        if "Index:" in file_pattern:
+            raise Exception("Not Implemented yet!")
 
     path_pattern = file_pattern
     path_collection = []
@@ -550,6 +679,20 @@ def read_dat_file_across_AA(file_pattern):
             returned_data = read_horizonh5(path, h5_key)
             if returned_data is not None:
                 read_data_collection.append(returned_data)
+        elif "PowerDiagnostics" in path:
+            returned_data = read_power_diagnostics_non_power_spectrum(
+                path, dat_file_name, psi_or_kappa, top_num
+            )
+            if returned_data is not None:
+                read_data_collection.append(returned_data)
+        elif "BondiCceR" in path:
+            returned_data = read_WT_data(path, WT_var)
+            if returned_data is not None:
+                read_data_collection.append(returned_data)
+        elif "_FiniteRadii_CodeUnits" in path:
+            returned_data = read_finite_radius_quantaties(path, radius)
+            if returned_data is not None:
+                read_data_collection.append(returned_data)
         else:
             read_data_collection.append(read_dat_file(path))
 
@@ -561,6 +704,7 @@ def read_dat_file_across_AA(file_pattern):
         "time after step": "t(M)",
     }
     data.rename(columns=rename_dict, inplace=True)
+
     # print(data.columns)
     return data
 
@@ -622,6 +766,55 @@ def moving_average(array, avg_len):
 def moving_average_valid(array, avg_len):
     return np.convolve(array, np.ones(avg_len), "valid") / avg_len
 
+def moving_median_valid(array, avg_len):
+    from scipy import ndimage
+    # Apply median filter to full array, then trim to 'valid' size
+    filtered = ndimage.median_filter(array, size=avg_len)
+    # Trim edges to match 'valid' convolution behavior
+    trim = (avg_len - 1) // 2
+    if avg_len % 2 == 0:  # even window size
+        return filtered[trim:-trim-1]
+    else:  # odd window size
+        return filtered[trim:-trim] if trim > 0 else filtered
+
+def moving_percentile_valid(array, avg_len, percentile=50):
+    from scipy import ndimage
+    filtered = ndimage.percentile_filter(array, percentile=percentile, size=avg_len)
+    trim = (avg_len - 1) // 2
+    if avg_len % 2 == 0:
+        return filtered[trim:-trim-1]
+    else:
+        return filtered[trim:-trim] if trim > 0 else filtered
+
+def moving_trimmed_mean_valid(array, avg_len, trim_percent=0.2):
+    from scipy import stats
+    import pandas as pd
+    # Use pandas rolling with trimmed mean
+    result = pd.Series(array).rolling(avg_len).apply(
+        lambda x: stats.trim_mean(x, trim_percent)
+    ).dropna().values
+    return result
+
+def moving_robust_mean_valid(array, avg_len, mad_threshold=3):
+    """Moving average that excludes outliers based on MAD"""
+    import pandas as pd
+    from scipy import stats
+
+    def robust_mean(window):
+        median = np.median(window)
+        mad = stats.median_abs_deviation(window)
+        mask = np.abs(window - median) <= mad_threshold * mad
+        return np.mean(window[mask]) if np.any(mask) else median
+
+    result = pd.Series(array).rolling(avg_len).apply(robust_mean).dropna().values
+    return result
+
+
+# def moving_average_valid(array, avg_len):
+#     # return moving_median_valid(array, avg_len)
+#     return moving_percentile_valid(array, avg_len, percentile=5)
+#     # return moving_trimmed_mean_valid(array, avg_len, trim_percent=0.005)
+#     # return moving_robust_mean_valid(array, avg_len, mad_threshold=3)
 
 def path_to_folder_name(folder_name):
     return folder_name.replace("/", "_")
@@ -732,6 +925,10 @@ def plot_graph_for_runs_wrapper(
 
     plt.ylabel("")
     plt.title("" + append_to_title)
+    if moving_avg_len > 0:
+        plt.title(
+            f"{title} (moving avg len = {moving_avg_len})" + append_to_title,
+        )
 
     if save_path is not None:
         fig_x_label = ""
@@ -859,6 +1056,12 @@ def plot_graph_for_runs(
                 legend = run_name
             if take_abs:
                 y_data = np.abs(y_data)
+
+            if np.all(np.isnan(y_data)):
+                print(
+                    f"Warning: {run_name} has no data {y_axis=} for {x_axis}={minT} to {maxT}. Skipping."
+                )
+                continue
             plot_fun(x_data, y_data, legend)
 
             if constant_shift_val_time is not None:
@@ -882,6 +1085,8 @@ def plot_graph_for_runs(
                 title = title + f" diff_base={diff_base}"
             if plot_abs_diff:
                 title = title + " (abs_diff)"
+            if take_abs:
+                title = title + " (abs)"
         plt.title(title + append_to_title)
         plt.legend()
 
@@ -924,6 +1129,12 @@ def plot_graph_for_runs(
                 legend = run_name
             if take_abs:
                 y_data = np.abs(y_data)
+
+            if np.all(np.isnan(y_data)):
+                print(
+                    f"Warning: {run_name} has no data {y_axis=} for {x_axis}={minT} to {maxT}. Skipping."
+                )
+                continue
             plot_fun(x_data, y_data, legend)
 
             if constant_shift_val_time is not None:
@@ -954,6 +1165,8 @@ def plot_graph_for_runs(
                 title = title + f" diff_base={diff_base}"
             if plot_abs_diff:
                 title = title + " (abs_diff)"
+            if take_abs:
+                title = title + " (abs)"
         plt.title(title + append_to_title)
         plt.legend()
 
@@ -1073,9 +1286,14 @@ def sort_run_data_dict(runs_data_dict: dict, sort_by=None):
     for run_name in runs_data_dict.keys():
         run_df = runs_data_dict[run_name]
         if sort_by is None:
-            sort_by = run_df.keys()[0]
+            if "t(M)" in run_df.keys():
+                sort_by = "t(M)"
+            else:
+                sort_by = run_df.keys()[0]
         runs_data_dict[run_name] = run_df.sort_values(by=sort_by)
 
+
+#%%
 
 # =================================================================================================
 # power_diag.ipynb
@@ -1556,6 +1774,7 @@ def series_closest_to_time(t, df):
     time = df["t(M)"][time_index]
     return time, df.iloc[time_index].copy()
 
+#%%
 
 # =================================================================================================
 # =================================================================================================
@@ -1567,6 +1786,8 @@ def series_closest_to_time(t, df):
 save_folder_path = Path("./plots/").resolve()
 if not save_folder_path.exists():
     raise Exception(f"Save folder {save_folder_path} does not exist")
+
+#%%
 
 # =================================================================================================
 # Constraints
@@ -1818,6 +2039,38 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         print(f"Saved {save_name}!\n")
         plt.clf()
 
+        y_axis = "Linf(NormalizedGhCe) on SphereC21"
+        plot_graph_for_runs(
+            runs_data_dict,
+            x_axis,
+            y_axis,
+            minT,
+            maxT,
+            legend_dict=legend_dict,
+            save_path=save_path,
+            moving_avg_len=moving_avg_len,
+            plot_fun=plot_fun,
+            diff_base=diff_base,
+            plot_abs_diff=plot_abs_diff,
+            constant_shift_val_time=constant_shift_val_time,
+            append_to_title=append_to_title,
+        )
+
+        plt.title("")
+        plt.ylabel(y_axis)
+        plt.xlabel("t(M)")
+        plt.legend(loc="upper right")
+        #   plt.ylim(1e-8, 1e-5)
+        #   plt.ylim(1e-12, 1e-6)
+
+        plt.tight_layout()
+        save_name = (
+            save_folder_path / f"{runs_set_name}_SphereC21_Linf_NormalizedGhCe.pdf"
+        )
+        plt.savefig(save_name, dpi=300)
+        print(f"Saved {save_name}!\n")
+        plt.clf()
+
     # ==============================================================================
 
     data_file_path = "ConstraintNorms/GhCe_Norms.dat"
@@ -2056,6 +2309,8 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         print(f"Saved {save_name}!\n")
         plt.clf()
 
+#%%
+
 # =================================================================================================
 # Individual plots
 # =================================================================================================
@@ -2273,6 +2528,7 @@ if not SKIP_THIS:
         print(f"Saved {save_name}!\n")
         plt.clf()
 
+#%%
 
 # =================================================================================================
 # Power spectrum
@@ -2491,6 +2747,7 @@ for runs_to_plot, runs_legend, runs_set_name in zip(
             plt.clf()
             plt.close("all")
 
+#%%
 
 # =================================================================================================
 # CCE bondi constraints
@@ -2614,6 +2871,7 @@ for runs_to_plot, runs_legend, runs_set_name in zip(
             print(f"Saved {save_name}!\n")
             plt.clf()
 
+#%%
 
 # =================================================================================================
 # CCE bondi constraints radius dependence
