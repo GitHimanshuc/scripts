@@ -65,6 +65,12 @@ def prepare_f128_run_from_checkpoint(
         symlinks=False,
     )
 
+    # add write permission
+    cmd = f"chmod -R u+w {Ev_path / source_segment_path.name}"
+    res = subprocess.run(cmd, shell=True)
+    if res.returncode != 0:
+        raise ValueError(f"{cmd} failed with return code {res.returncode}")
+
     # new segment path
     base_segment_path = Ev_path / source_segment_path.name
 
@@ -95,7 +101,7 @@ def prepare_f128_run_from_checkpoint(
     print(
         f"Converting latest checkpoint {latest_checkpoint_dir} to float128 and saving in {new_checkpoint_path}"
     )
-    cmd = f"python {checkpointer_converter_script_path} {latest_checkpoint_dir} {base_segment_path / 'Run' / 'Checkpoints'}"
+    cmd = f"python {checkpointer_converter_script_path} {latest_checkpoint_dir} {new_checkpoint_path / latest_checkpoint_dir.name}"
     print(cmd)
 
     res = subprocess.run(cmd, shell=True)
@@ -122,14 +128,14 @@ def prepare_f128_run_from_checkpoint(
     replace_current_file(
         new_segment_path / "Evolution.input",
         r"(TensorYlmDataBaseDir\s*=\s*)[^\n]*",
-        r"\1;",
+        r"TensorYlmDataBaseDir = ;",
     )
 
     # change to FromStep restart
     replace_current_file(
         new_segment_path / "Evolution.input",
         r"(Restart    =\s*)[^\n]*",
-        f"FromStep(FilenamePrefix={new_checkpoint_path};Step={latest_checkpoint_dir.stem};)",
+        f"Restart=FromStep(FilenamePrefix={new_checkpoint_path};Step={latest_checkpoint_dir.stem};);",
     )
 
     # set final time
@@ -190,7 +196,7 @@ def prepare_f128_run_from_checkpoint(
             replace_current_file(
                 input_file,
                 r"EveryDeltaT\(DeltaT=[0-9.]+\)",
-                f"EveryNSteps = {observe_delta_N};",
+                f"EveryNSteps(NSteps = {observe_delta_N};)",
             )
         else:
             with open(input_file, "r") as f:
@@ -200,7 +206,7 @@ def prepare_f128_run_from_checkpoint(
             replace_current_file(
                 input_file,
                 r"EveryDeltaT\(.*?\)",
-                f"EveryNSteps = {observe_delta_N}",
+                f"EveryNSteps(NSteps = {observe_delta_N};)",
             )
             # append at __DeltaTObserve__ ,__TstartObserve__ at the end of the file to keep DoMultipleRuns happy
             with open(input_file, "a") as f:
@@ -210,20 +216,114 @@ def prepare_f128_run_from_checkpoint(
 
 
 spec_home = Path("/home/hchaudha/spec")
-
-final_time = 20000.0
-observe_delta_N = 25
-
 checkpointer_converter_script_path = spec_home / "convert_double_to_dd.py"
 MakeNextSegmentScript_path = spec_home / "Support/bin/MakeNextSegment"
 
+final_time = 5000
+observe_delta_N = 25
 
-source_segment_path = Path(
-    "/resnick/groups/sxs/hchaudha/spec_runs/42_f128_from_check/L3/Ev/Lev3_AE"
-)
-target_Ev_parent_dir_path = Path(
-    "/resnick/groups/sxs/hchaudha/spec_runs/42_f128_from_check"
-)
+
+
+# source_segment_path = Path(
+#     "/resnick/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/Ev/Lev1_AD"
+# )
+# target_Ev_parent_dir_path = Path(
+#     "/resnick/groups/sxs/hchaudha/spec_runs/42_f128_from_check/set1L6s1"
+# )
+# target_Ev_parent_dir_path.mkdir(exist_ok=False)
+
+# prepare_f128_run_from_checkpoint(
+#     source_segment_path,
+#     target_Ev_parent_dir_path,
+#     final_time,
+#     observe_delta_N,
+#     spec_home,
+#     checkpointer_converter_script_path,
+#     MakeNextSegmentScript_path,
+# )
+
+
+# source_segment_path = Path(
+#     "/resnick/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/Ev/Lev2_AD"
+# )
+# target_Ev_parent_dir_path = Path(
+#     "/resnick/groups/sxs/hchaudha/spec_runs/42_f128_from_check/set1L6s2"
+# )
+# target_Ev_parent_dir_path.mkdir(exist_ok=False)
+
+# prepare_f128_run_from_checkpoint(
+#     source_segment_path,
+#     target_Ev_parent_dir_path,
+#     final_time,
+#     observe_delta_N,
+#     spec_home,
+#     checkpointer_converter_script_path,
+#     MakeNextSegmentScript_path,
+# )
+
+# source_segment_path = Path(
+#     "/resnick/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/Ev/Lev3_AD"
+# )
+# target_Ev_parent_dir_path = Path(
+#     "/resnick/groups/sxs/hchaudha/spec_runs/42_f128_from_check/set1L6s3"
+# )
+# target_Ev_parent_dir_path.mkdir(exist_ok=False)
+
+# prepare_f128_run_from_checkpoint(
+#     source_segment_path,
+#     target_Ev_parent_dir_path,
+#     final_time,
+#     observe_delta_N,
+#     spec_home,
+#     checkpointer_converter_script_path,
+#     MakeNextSegmentScript_path,
+# )
+
+# source_segment_path = Path(
+#     "/resnick/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/Ev/Lev4_AE"
+# )
+# target_Ev_parent_dir_path = Path(
+#     "/resnick/groups/sxs/hchaudha/spec_runs/42_f128_from_check/set1L6s4"
+# )
+# target_Ev_parent_dir_path.mkdir(exist_ok=False)
+
+# prepare_f128_run_from_checkpoint(
+#     source_segment_path,
+#     target_Ev_parent_dir_path,
+#     final_time,
+#     observe_delta_N,
+#     spec_home,
+#     checkpointer_converter_script_path,
+#     MakeNextSegmentScript_path,
+# )
+
+
+# source_segment_path = Path(
+#     "/resnick/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/Ev/Lev5_AE"
+# )
+# target_Ev_parent_dir_path = Path(
+#     "/resnick/groups/sxs/hchaudha/spec_runs/42_f128_from_check/set1L6s5"
+# )
+# target_Ev_parent_dir_path.mkdir(exist_ok=False)
+
+# prepare_f128_run_from_checkpoint(
+#     source_segment_path,
+#     target_Ev_parent_dir_path,
+#     final_time,
+#     observe_delta_N,
+#     spec_home,
+#     checkpointer_converter_script_path,
+#     MakeNextSegmentScript_path,
+# )
+
+
+# source_segment_path = Path(
+#     "/resnick/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/Ev/Lev6_AF"
+# )
+# target_Ev_parent_dir_path = Path(
+#     "/resnick/groups/sxs/hchaudha/spec_runs/42_f128_from_check/set1L6s6"
+# )
+# target_Ev_parent_dir_path.mkdir(exist_ok=False)
 
 # prepare_f128_run_from_checkpoint(
 #     source_segment_path,
