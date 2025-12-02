@@ -42,7 +42,8 @@ for sim_folder in dirs_to_plot:
     runs_to_plot = {}
     for lev in range(2, 7):
         # !!!! TODO note that we are using Ecc0 here, change if needed
-        runs_to_plot[f"{sim_folder.name}_{lev}"] = (
+        # Eventaully we need to clean up and add path support, for now convert to str
+        runs_to_plot[f"{sim_folder.name}_{lev}"] = str(
             sim_folder/f"Ecc0/Ev/Lev{lev}_??/Run/"
         )
 
@@ -282,7 +283,8 @@ for sim_folder in dirs_to_plot:
     runs_to_plot = {}
     for lev in range(2, 7):
         # !!!! TODO note that we are using Ecc0 here, change if needed
-        runs_to_plot[f"{sim_folder.name}_{lev}"] = (
+        # Eventaully we need to clean up and add path support, for now convert to str
+        runs_to_plot[f"{sim_folder.name}_{lev}"] = str(
             sim_folder/f"Ecc0/Ev/Lev{lev}_??/Run/"
         )
 
@@ -532,7 +534,8 @@ for sim_folder in dirs_to_plot:
     runs_to_plot = {}
     for lev in range(2, 7):
         # !!!! TODO note that we are using Ecc0 here, change if needed
-        runs_to_plot[f"{sim_folder.name}_{lev}"] = (
+        # Eventaully we need to clean up and add path support, for now convert to str
+        runs_to_plot[f"{sim_folder.name}_{lev}"] = str(
             sim_folder/f"Ecc0/Ev/Lev{lev}_??/Run/"
         )
 
@@ -782,7 +785,8 @@ for sim_folder in dirs_to_plot:
     runs_to_plot = {}
     for lev in range(2, 7):
         # !!!! TODO note that we are using Ecc0 here, change if needed
-        runs_to_plot[f"{sim_folder.name}_{lev}"] = (
+        # Eventaully we need to clean up and add path support, for now convert to str
+        runs_to_plot[f"{sim_folder.name}_{lev}"] = str(
             sim_folder/f"Ecc0/Ev/Lev{lev}_??/Run/"
         )
 
