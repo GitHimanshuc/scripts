@@ -33,7 +33,7 @@ for sim_folder in dirs_to_plot:
 
     print("---- Plotting dt/dT vs t(M)\n")
 
-    save_name = "dt/dT.png"
+    save_name = "dt_over_dT.png"
     base_save_folder = save_report_base_folder / sim_folder.name
     if not base_save_folder.exists():
         base_save_folder.mkdir(parents=False, exist_ok=True)
