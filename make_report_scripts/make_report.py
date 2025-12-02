@@ -46,6 +46,11 @@ for sim_folder in dirs_to_plot:
     runs_to_plot = {}
     for lev in range(2, 7):
         # !!!! TODO note that we are using Ecc0 here, change if needed
+        # Only add levs that exist
+        if not (sim_folder / f"Ecc0/Ev/Lev{lev}_AA/Run/").exists():
+            print(f"Skipping Lev{lev} as it does not exist")
+            continue
+
         # Eventaully we need to clean up and add path support, for now convert to str
         runs_to_plot[f"{sim_folder.name}_{lev}"] = str(
             sim_folder / f"Ecc0/Ev/Lev{lev}_??/Run/"
@@ -270,6 +275,7 @@ for sim_folder in dirs_to_plot:
 
         plt.tight_layout()
         plt.savefig(save_name, dpi=300)
+        plt.close()
         # plt.show()
 
     # %%
@@ -286,6 +292,10 @@ for sim_folder in dirs_to_plot:
     runs_to_plot = {}
     for lev in range(2, 7):
         # !!!! TODO note that we are using Ecc0 here, change if needed
+        # Only add levs that exist
+        if not (sim_folder / f"Ecc0/Ev/Lev{lev}_AA/Run/").exists():
+            print(f"Skipping Lev{lev} as it does not exist")
+            continue
         # Eventaully we need to clean up and add path support, for now convert to str
         runs_to_plot[f"{sim_folder.name}_{lev}"] = str(
             sim_folder / f"Ecc0/Ev/Lev{lev}_??/Run/"
@@ -510,6 +520,7 @@ for sim_folder in dirs_to_plot:
 
         plt.tight_layout()
         plt.savefig(save_name, dpi=300)
+        plt.close()
         # plt.show()
 
     # %%
@@ -534,6 +545,10 @@ for sim_folder in dirs_to_plot:
     runs_to_plot = {}
     for lev in range(2, 7):
         # !!!! TODO note that we are using Ecc0 here, change if needed
+        # Only add levs that exist
+        if not (sim_folder / f"Ecc0/Ev/Lev{lev}_AA/Run/").exists():
+            print(f"Skipping Lev{lev} as it does not exist")
+            continue
         # Eventaully we need to clean up and add path support, for now convert to str
         runs_to_plot[f"{sim_folder.name}_{lev}"] = str(
             sim_folder / f"Ecc0/Ev/Lev{lev}_??/Run/"
@@ -744,6 +759,7 @@ for sim_folder in dirs_to_plot:
 
         plt.tight_layout()
         plt.savefig(save_name, dpi=300)
+        plt.close()
         # plt.show()
 
     # %%
@@ -768,6 +784,10 @@ for sim_folder in dirs_to_plot:
     runs_to_plot = {}
     for lev in range(2, 7):
         # !!!! TODO note that we are using Ecc0 here, change if needed
+        # Only add levs that exist
+        if not (sim_folder / f"Ecc0/Ev/Lev{lev}_AA/Run/").exists():
+            print(f"Skipping Lev{lev} as it does not exist")
+            continue
         # Eventaully we need to clean up and add path support, for now convert to str
         runs_to_plot[f"{sim_folder.name}_{lev}"] = str(
             sim_folder / f"Ecc0/Ev/Lev{lev}_??/Run/"
@@ -978,4 +998,5 @@ for sim_folder in dirs_to_plot:
 
         plt.tight_layout()
         plt.savefig(save_name, dpi=300)
+        plt.close()
         # plt.show()
