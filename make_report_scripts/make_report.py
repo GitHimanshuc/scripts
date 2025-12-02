@@ -59,8 +59,8 @@ for sim_folder in dirs_to_plot:
     psi_or_kappa = "both"
     top_number = 0
 
-    # data_file_path = "TStepperDiag.dat"
-    data_file_path = "TimeInfo.dat"
+    # data_file_path = "/TStepperDiag.dat"
+    data_file_path = "/TimeInfo.dat"
 
     runs_data_dict = {}
     if psi_or_kappa == "both" and "PowerDiagnostics" in data_file_path:
@@ -300,8 +300,8 @@ for sim_folder in dirs_to_plot:
     psi_or_kappa = "both"
     top_number = 0
 
-    # data_file_path = "TStepperDiag.dat"
-    data_file_path = "ApparentHorizons/HorizonSepMeasures.dat"
+    # data_file_path = "/TStepperDiag.dat"
+    data_file_path = "/ApparentHorizons/HorizonSepMeasures.dat"
 
     runs_data_dict = {}
     if psi_or_kappa == "both" and "PowerDiagnostics" in data_file_path:
@@ -517,7 +517,7 @@ for sim_folder in dirs_to_plot:
     print("---- Plotting Linf(GhCe) on SphereB0 vs t(M)\n")
 
 
-    data_file_path = "ConstraintNorms/GhCe_Linf.dat"
+    data_file_path = "/ConstraintNorms/GhCe_Linf.dat"
 
     x_axis = "t(M)"
     y_axis = "Linf(GhCe) on SphereB0"
@@ -768,7 +768,7 @@ for sim_folder in dirs_to_plot:
     print("---- Plotting Linf(GhCe) on SphereC6 vs t(M)\n")
 
 
-    data_file_path = "ConstraintNorms/GhCe_Linf.dat"
+    data_file_path = "/ConstraintNorms/GhCe_Linf.dat"
 
     x_axis = "t(M)"
     y_axis = "Linf(GhCe) on SphereC6"
