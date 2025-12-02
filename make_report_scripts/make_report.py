@@ -1,5 +1,3 @@
-# %%
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -7,13 +5,19 @@ from matplotlib import cycler
 from pathlib import Path
 
 from helper_functions import add_norm_constraints, num_points_per_subdomain
-from main_plot_functions import load_data_from_levs, plot_graph_for_runs, plot_graph_for_runs_wrapper
+from main_plot_functions import (
+    load_data_from_levs,
+    plot_graph_for_runs,
+    plot_graph_for_runs_wrapper,
+)
 
 # =========================================================================================================================================================
 # ==================================================== GENERAL CONFIG ==========================================================
 # =========================================================================================================================================================
 
-save_report_base_folder = Path("/work2/08330/tg876294/stampede3/reports/HighAccuracy1025/")
+save_report_base_folder = Path(
+    "/work2/08330/tg876294/stampede3/reports/HighAccuracy1025/"
+)
 BFI_main_folder = Path("/work2/08330/tg876294/stampede3/HighAccuracy1025/")
 
 dirs_to_plot = []
@@ -26,9 +30,9 @@ if dirs_to_plot == []:
 # ==================================================== Load data and plot ==========================================================
 
 for sim_folder in dirs_to_plot:
-
     print(f"Simulation folder: {sim_folder}\n")
 
+    # %%
     # =========================================== Copy the part below for each plot type ===========================================
 
     print("---- Plotting dt/dT vs t(M)\n")
@@ -44,7 +48,7 @@ for sim_folder in dirs_to_plot:
         # !!!! TODO note that we are using Ecc0 here, change if needed
         # Eventaully we need to clean up and add path support, for now convert to str
         runs_to_plot[f"{sim_folder.name}_{lev}"] = str(
-            sim_folder/f"Ecc0/Ev/Lev{lev}_??/Run/"
+            sim_folder / f"Ecc0/Ev/Lev{lev}_??/Run/"
         )
 
     ringdown_as_well = True
@@ -52,7 +56,6 @@ for sim_folder in dirs_to_plot:
     if ringdown_as_well:
         for key in list(runs_to_plot.keys()):
             runs_to_plot[key] = runs_to_plot[key].replace("/Ev/", "/Ev/**/")
-
 
     # psi_or_kappa = "psi"
     psi_or_kappa = "kappa"
@@ -73,7 +76,10 @@ for sim_folder in dirs_to_plot:
 
         for key in runs_data_dict_psi:
             runs_data_dict[key] = pd.merge(
-                runs_data_dict_kappa[key], runs_data_dict_psi[key], on="t(M)", how="outer"
+                runs_data_dict_kappa[key],
+                runs_data_dict_psi[key],
+                on="t(M)",
+                how="outer",
             )
         column_names = runs_data_dict[key].columns.tolist()
 
@@ -90,13 +96,16 @@ for sim_folder in dirs_to_plot:
             mA = bhA_df["ChristodoulouMass"]
             mB = bhB_df["ChristodoulouMass"]
             com_x = (
-                mA * bhA_df["CoordCenterInertial_0"] + mB * bhB_df["CoordCenterInertial_0"]
+                mA * bhA_df["CoordCenterInertial_0"]
+                + mB * bhB_df["CoordCenterInertial_0"]
             ) / (mA + mB)
             com_y = (
-                mA * bhA_df["CoordCenterInertial_1"] + mB * bhB_df["CoordCenterInertial_1"]
+                mA * bhA_df["CoordCenterInertial_1"]
+                + mB * bhB_df["CoordCenterInertial_1"]
             ) / (mA + mB)
             com_z = (
-                mA * bhA_df["CoordCenterInertial_2"] + mB * bhB_df["CoordCenterInertial_2"]
+                mA * bhA_df["CoordCenterInertial_2"]
+                + mB * bhB_df["CoordCenterInertial_2"]
             ) / (mA + mB)
             com_df = pd.DataFrame(
                 {"t(M)": bhA_df["t(M)"], "COM_X": com_x, "COM_Y": com_y, "COM_Z": com_z}
@@ -113,7 +122,6 @@ for sim_folder in dirs_to_plot:
     # print(column_names)
     # print(runs_data_dict.keys())
 
-    # %%
     vars = set()
     domains = set()
     for run in runs_data_dict:
@@ -122,10 +130,8 @@ for sim_folder in dirs_to_plot:
             domains.add(col.split(" on ")[1] if " on " in col else "All Domains")
     # list(sorted(vars)),list(sorted(domains))
 
-    # %% [markdown]
     # #### Modify dict
 
-    # %%
     if "Constraints_Linf" in data_file_path:
         new_indices, runs_data_dict = add_norm_constraints(
             runs_data_dict,
@@ -147,16 +153,15 @@ for sim_folder in dirs_to_plot:
     if "ComputeCOM" in data_file_path:
         for key in runs_data_dict:
             df = runs_data_dict[key]
-            df["COM_mag"] = np.sqrt(df["COM_X"] ** 2 + df["COM_Y"] ** 2 + df["COM_Z"] ** 2)
+            df["COM_mag"] = np.sqrt(
+                df["COM_X"] ** 2 + df["COM_Y"] ** 2 + df["COM_Z"] ** 2
+            )
             runs_data_dict[key] = df
         print(runs_data_dict.keys())
         print(new_indices)
 
-
-    # %% [markdown]
     # ### dat files plot
 
-    # %%
     moving_avg_len = 0
     save_path = None
     diff_base = None
@@ -168,7 +173,7 @@ for sim_folder in dirs_to_plot:
     x_axis = "t(M)"
     take_abs = False
 
-    take_abs = True
+    # take_abs = True
 
     # y_axis = 'MPI::MPwait_cum'
     # x_axis = 't'
@@ -176,7 +181,6 @@ for sim_folder in dirs_to_plot:
     y_axis = "dt/dT"
 
     # y_axis = 'dt'
-
 
     minT = -1000
 
@@ -195,7 +199,6 @@ for sim_folder in dirs_to_plot:
         append_to_title += " AhA"
     if "AhB" in data_file_path:
         append_to_title += " AhB"
-
 
     # with plt.style.context('default'):
     with plt.style.context("ggplot"):
@@ -269,7 +272,7 @@ for sim_folder in dirs_to_plot:
         plt.savefig(save_name, dpi=300)
         # plt.show()
 
-
+    # %%
     # =========================================== Copy the part below for each plot type ===========================================
 
     print("---- Plotting ProperSepHorizons vs t(M)\n")
@@ -285,7 +288,7 @@ for sim_folder in dirs_to_plot:
         # !!!! TODO note that we are using Ecc0 here, change if needed
         # Eventaully we need to clean up and add path support, for now convert to str
         runs_to_plot[f"{sim_folder.name}_{lev}"] = str(
-            sim_folder/f"Ecc0/Ev/Lev{lev}_??/Run/"
+            sim_folder / f"Ecc0/Ev/Lev{lev}_??/Run/"
         )
 
     ringdown_as_well = True
@@ -293,7 +296,6 @@ for sim_folder in dirs_to_plot:
     if ringdown_as_well:
         for key in list(runs_to_plot.keys()):
             runs_to_plot[key] = runs_to_plot[key].replace("/Ev/", "/Ev/**/")
-
 
     # psi_or_kappa = "psi"
     psi_or_kappa = "kappa"
@@ -314,7 +316,10 @@ for sim_folder in dirs_to_plot:
 
         for key in runs_data_dict_psi:
             runs_data_dict[key] = pd.merge(
-                runs_data_dict_kappa[key], runs_data_dict_psi[key], on="t(M)", how="outer"
+                runs_data_dict_kappa[key],
+                runs_data_dict_psi[key],
+                on="t(M)",
+                how="outer",
             )
         column_names = runs_data_dict[key].columns.tolist()
 
@@ -331,13 +336,16 @@ for sim_folder in dirs_to_plot:
             mA = bhA_df["ChristodoulouMass"]
             mB = bhB_df["ChristodoulouMass"]
             com_x = (
-                mA * bhA_df["CoordCenterInertial_0"] + mB * bhB_df["CoordCenterInertial_0"]
+                mA * bhA_df["CoordCenterInertial_0"]
+                + mB * bhB_df["CoordCenterInertial_0"]
             ) / (mA + mB)
             com_y = (
-                mA * bhA_df["CoordCenterInertial_1"] + mB * bhB_df["CoordCenterInertial_1"]
+                mA * bhA_df["CoordCenterInertial_1"]
+                + mB * bhB_df["CoordCenterInertial_1"]
             ) / (mA + mB)
             com_z = (
-                mA * bhA_df["CoordCenterInertial_2"] + mB * bhB_df["CoordCenterInertial_2"]
+                mA * bhA_df["CoordCenterInertial_2"]
+                + mB * bhB_df["CoordCenterInertial_2"]
             ) / (mA + mB)
             com_df = pd.DataFrame(
                 {"t(M)": bhA_df["t(M)"], "COM_X": com_x, "COM_Y": com_y, "COM_Z": com_z}
@@ -354,7 +362,6 @@ for sim_folder in dirs_to_plot:
     # print(column_names)
     # print(runs_data_dict.keys())
 
-    # %%
     vars = set()
     domains = set()
     for run in runs_data_dict:
@@ -363,10 +370,8 @@ for sim_folder in dirs_to_plot:
             domains.add(col.split(" on ")[1] if " on " in col else "All Domains")
     # list(sorted(vars)),list(sorted(domains))
 
-    # %% [markdown]
     # #### Modify dict
 
-    # %%
     if "Constraints_Linf" in data_file_path:
         new_indices, runs_data_dict = add_norm_constraints(
             runs_data_dict,
@@ -388,16 +393,15 @@ for sim_folder in dirs_to_plot:
     if "ComputeCOM" in data_file_path:
         for key in runs_data_dict:
             df = runs_data_dict[key]
-            df["COM_mag"] = np.sqrt(df["COM_X"] ** 2 + df["COM_Y"] ** 2 + df["COM_Z"] ** 2)
+            df["COM_mag"] = np.sqrt(
+                df["COM_X"] ** 2 + df["COM_Y"] ** 2 + df["COM_Z"] ** 2
+            )
             runs_data_dict[key] = df
         print(runs_data_dict.keys())
         print(new_indices)
 
-
-    # %% [markdown]
     # ### dat files plot
 
-    # %%
     moving_avg_len = 0
     save_path = None
     diff_base = None
@@ -409,7 +413,7 @@ for sim_folder in dirs_to_plot:
     x_axis = "t(M)"
     take_abs = False
 
-    take_abs = True
+    # take_abs = True
 
     # y_axis = 'MPI::MPwait_cum'
     # x_axis = 't'
@@ -417,7 +421,6 @@ for sim_folder in dirs_to_plot:
     y_axis = "ProperSepHorizons"
 
     # y_axis = 'dt'
-
 
     minT = -1000
 
@@ -436,7 +439,6 @@ for sim_folder in dirs_to_plot:
         append_to_title += " AhA"
     if "AhB" in data_file_path:
         append_to_title += " AhB"
-
 
     # with plt.style.context('default'):
     with plt.style.context("ggplot"):
@@ -510,12 +512,10 @@ for sim_folder in dirs_to_plot:
         plt.savefig(save_name, dpi=300)
         # plt.show()
 
-
-
+    # %%
     # =========================================== Copy the part below for each plot type ===========================================
 
     print("---- Plotting Linf(GhCe) on SphereB0 vs t(M)\n")
-
 
     data_file_path = "/ConstraintNorms/GhCe_Linf.dat"
 
@@ -536,7 +536,7 @@ for sim_folder in dirs_to_plot:
         # !!!! TODO note that we are using Ecc0 here, change if needed
         # Eventaully we need to clean up and add path support, for now convert to str
         runs_to_plot[f"{sim_folder.name}_{lev}"] = str(
-            sim_folder/f"Ecc0/Ev/Lev{lev}_??/Run/"
+            sim_folder / f"Ecc0/Ev/Lev{lev}_??/Run/"
         )
 
     ringdown_as_well = True
@@ -545,13 +545,10 @@ for sim_folder in dirs_to_plot:
         for key in list(runs_to_plot.keys()):
             runs_to_plot[key] = runs_to_plot[key].replace("/Ev/", "/Ev/**/")
 
-
     # psi_or_kappa = "psi"
     psi_or_kappa = "kappa"
     psi_or_kappa = "both"
     top_number = 0
-
-
 
     runs_data_dict = {}
     if psi_or_kappa == "both" and "PowerDiagnostics" in data_file_path:
@@ -564,7 +561,10 @@ for sim_folder in dirs_to_plot:
 
         for key in runs_data_dict_psi:
             runs_data_dict[key] = pd.merge(
-                runs_data_dict_kappa[key], runs_data_dict_psi[key], on="t(M)", how="outer"
+                runs_data_dict_kappa[key],
+                runs_data_dict_psi[key],
+                on="t(M)",
+                how="outer",
             )
         column_names = runs_data_dict[key].columns.tolist()
 
@@ -581,13 +581,16 @@ for sim_folder in dirs_to_plot:
             mA = bhA_df["ChristodoulouMass"]
             mB = bhB_df["ChristodoulouMass"]
             com_x = (
-                mA * bhA_df["CoordCenterInertial_0"] + mB * bhB_df["CoordCenterInertial_0"]
+                mA * bhA_df["CoordCenterInertial_0"]
+                + mB * bhB_df["CoordCenterInertial_0"]
             ) / (mA + mB)
             com_y = (
-                mA * bhA_df["CoordCenterInertial_1"] + mB * bhB_df["CoordCenterInertial_1"]
+                mA * bhA_df["CoordCenterInertial_1"]
+                + mB * bhB_df["CoordCenterInertial_1"]
             ) / (mA + mB)
             com_z = (
-                mA * bhA_df["CoordCenterInertial_2"] + mB * bhB_df["CoordCenterInertial_2"]
+                mA * bhA_df["CoordCenterInertial_2"]
+                + mB * bhB_df["CoordCenterInertial_2"]
             ) / (mA + mB)
             com_df = pd.DataFrame(
                 {"t(M)": bhA_df["t(M)"], "COM_X": com_x, "COM_Y": com_y, "COM_Z": com_z}
@@ -604,7 +607,6 @@ for sim_folder in dirs_to_plot:
     # print(column_names)
     # print(runs_data_dict.keys())
 
-    # %%
     vars = set()
     domains = set()
     for run in runs_data_dict:
@@ -613,10 +615,8 @@ for sim_folder in dirs_to_plot:
             domains.add(col.split(" on ")[1] if " on " in col else "All Domains")
     # list(sorted(vars)),list(sorted(domains))
 
-    # %% [markdown]
     # #### Modify dict
 
-    # %%
     if "Constraints_Linf" in data_file_path:
         new_indices, runs_data_dict = add_norm_constraints(
             runs_data_dict,
@@ -638,16 +638,15 @@ for sim_folder in dirs_to_plot:
     if "ComputeCOM" in data_file_path:
         for key in runs_data_dict:
             df = runs_data_dict[key]
-            df["COM_mag"] = np.sqrt(df["COM_X"] ** 2 + df["COM_Y"] ** 2 + df["COM_Z"] ** 2)
+            df["COM_mag"] = np.sqrt(
+                df["COM_X"] ** 2 + df["COM_Y"] ** 2 + df["COM_Z"] ** 2
+            )
             runs_data_dict[key] = df
         print(runs_data_dict.keys())
         print(new_indices)
 
-
-    # %% [markdown]
     # ### dat files plot
 
-    # %%
     moving_avg_len = 0
     save_path = None
     diff_base = None
@@ -656,18 +655,6 @@ for sim_folder in dirs_to_plot:
     modification_function = None
     append_to_title = ""
     y_axis_list = None
-    x_axis = "t(M)"
-    take_abs = False
-
-    # take_abs = True
-
-    # y_axis = 'MPI::MPwait_cum'
-    # x_axis = 't'
-    # y_axis = 'T [hours]'
-    y_axis = "ProperSepHorizons"
-
-    # y_axis = 'dt'
-
 
     minT = -1000
 
@@ -686,7 +673,6 @@ for sim_folder in dirs_to_plot:
         append_to_title += " AhA"
     if "AhB" in data_file_path:
         append_to_title += " AhB"
-
 
     # with plt.style.context('default'):
     with plt.style.context("ggplot"):
@@ -754,19 +740,16 @@ for sim_folder in dirs_to_plot:
         # plt.yscale('symlog',linthresh=1e-12)
         # plt.yscale('symlog',linthresh=1e-6)
         # plt.yscale('symlog',linthresh=1e-10)
-        # plt.yscale('log')
+        plt.yscale('log')
 
         plt.tight_layout()
         plt.savefig(save_name, dpi=300)
         # plt.show()
 
-
-
-
+    # %%
     # =========================================== Copy the part below for each plot type ===========================================
 
     print("---- Plotting Linf(GhCe) on SphereC6 vs t(M)\n")
-
 
     data_file_path = "/ConstraintNorms/GhCe_Linf.dat"
 
@@ -787,7 +770,7 @@ for sim_folder in dirs_to_plot:
         # !!!! TODO note that we are using Ecc0 here, change if needed
         # Eventaully we need to clean up and add path support, for now convert to str
         runs_to_plot[f"{sim_folder.name}_{lev}"] = str(
-            sim_folder/f"Ecc0/Ev/Lev{lev}_??/Run/"
+            sim_folder / f"Ecc0/Ev/Lev{lev}_??/Run/"
         )
 
     ringdown_as_well = True
@@ -796,13 +779,10 @@ for sim_folder in dirs_to_plot:
         for key in list(runs_to_plot.keys()):
             runs_to_plot[key] = runs_to_plot[key].replace("/Ev/", "/Ev/**/")
 
-
     # psi_or_kappa = "psi"
     psi_or_kappa = "kappa"
     psi_or_kappa = "both"
     top_number = 0
-
-
 
     runs_data_dict = {}
     if psi_or_kappa == "both" and "PowerDiagnostics" in data_file_path:
@@ -815,7 +795,10 @@ for sim_folder in dirs_to_plot:
 
         for key in runs_data_dict_psi:
             runs_data_dict[key] = pd.merge(
-                runs_data_dict_kappa[key], runs_data_dict_psi[key], on="t(M)", how="outer"
+                runs_data_dict_kappa[key],
+                runs_data_dict_psi[key],
+                on="t(M)",
+                how="outer",
             )
         column_names = runs_data_dict[key].columns.tolist()
 
@@ -832,13 +815,16 @@ for sim_folder in dirs_to_plot:
             mA = bhA_df["ChristodoulouMass"]
             mB = bhB_df["ChristodoulouMass"]
             com_x = (
-                mA * bhA_df["CoordCenterInertial_0"] + mB * bhB_df["CoordCenterInertial_0"]
+                mA * bhA_df["CoordCenterInertial_0"]
+                + mB * bhB_df["CoordCenterInertial_0"]
             ) / (mA + mB)
             com_y = (
-                mA * bhA_df["CoordCenterInertial_1"] + mB * bhB_df["CoordCenterInertial_1"]
+                mA * bhA_df["CoordCenterInertial_1"]
+                + mB * bhB_df["CoordCenterInertial_1"]
             ) / (mA + mB)
             com_z = (
-                mA * bhA_df["CoordCenterInertial_2"] + mB * bhB_df["CoordCenterInertial_2"]
+                mA * bhA_df["CoordCenterInertial_2"]
+                + mB * bhB_df["CoordCenterInertial_2"]
             ) / (mA + mB)
             com_df = pd.DataFrame(
                 {"t(M)": bhA_df["t(M)"], "COM_X": com_x, "COM_Y": com_y, "COM_Z": com_z}
@@ -855,7 +841,6 @@ for sim_folder in dirs_to_plot:
     # print(column_names)
     # print(runs_data_dict.keys())
 
-    # %%
     vars = set()
     domains = set()
     for run in runs_data_dict:
@@ -864,10 +849,8 @@ for sim_folder in dirs_to_plot:
             domains.add(col.split(" on ")[1] if " on " in col else "All Domains")
     # list(sorted(vars)),list(sorted(domains))
 
-    # %% [markdown]
     # #### Modify dict
 
-    # %%
     if "Constraints_Linf" in data_file_path:
         new_indices, runs_data_dict = add_norm_constraints(
             runs_data_dict,
@@ -889,16 +872,15 @@ for sim_folder in dirs_to_plot:
     if "ComputeCOM" in data_file_path:
         for key in runs_data_dict:
             df = runs_data_dict[key]
-            df["COM_mag"] = np.sqrt(df["COM_X"] ** 2 + df["COM_Y"] ** 2 + df["COM_Z"] ** 2)
+            df["COM_mag"] = np.sqrt(
+                df["COM_X"] ** 2 + df["COM_Y"] ** 2 + df["COM_Z"] ** 2
+            )
             runs_data_dict[key] = df
         print(runs_data_dict.keys())
         print(new_indices)
 
-
-    # %% [markdown]
     # ### dat files plot
 
-    # %%
     moving_avg_len = 0
     save_path = None
     diff_base = None
@@ -907,18 +889,6 @@ for sim_folder in dirs_to_plot:
     modification_function = None
     append_to_title = ""
     y_axis_list = None
-    x_axis = "t(M)"
-    take_abs = False
-
-    # take_abs = True
-
-    # y_axis = 'MPI::MPwait_cum'
-    # x_axis = 't'
-    # y_axis = 'T [hours]'
-    y_axis = "ProperSepHorizons"
-
-    # y_axis = 'dt'
-
 
     minT = -1000
 
@@ -937,7 +907,6 @@ for sim_folder in dirs_to_plot:
         append_to_title += " AhA"
     if "AhB" in data_file_path:
         append_to_title += " AhB"
-
 
     # with plt.style.context('default'):
     with plt.style.context("ggplot"):
@@ -1005,7 +974,7 @@ for sim_folder in dirs_to_plot:
         # plt.yscale('symlog',linthresh=1e-12)
         # plt.yscale('symlog',linthresh=1e-6)
         # plt.yscale('symlog',linthresh=1e-10)
-        # plt.yscale('log')
+        plt.yscale('log')
 
         plt.tight_layout()
         plt.savefig(save_name, dpi=300)
