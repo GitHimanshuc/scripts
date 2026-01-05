@@ -24,8 +24,15 @@ from make_report_scripts.heatmap_related_functions import return_sorted_domain_n
 save_report_base_folder = Path(
     "/work2/08330/tg876294/stampede3/reports/HighAccuracy1025/"
 )
-BFI_main_folder = Path("/work2/08330/tg876294/stampede3/HighAccuracy1025/")
 dirs_to_plot = []
+
+# My BFI main folder
+BFI_main_folder = Path("/work2/08330/tg876294/stampede3/HighAccuracy1025/")
+dirs_to_plot = [d for d in BFI_main_folder.iterdir() if d.is_dir()]
+
+# Nils BFI main folder
+BFI_main_folder = Path("/work2/06739/nfischer/stampede3/HighAccuracy1025/")
+dirs_to_plot += [d for d in BFI_main_folder.iterdir() if d.is_dir()]
 
 # for testing change paths if we are on caltech hpc
 if Path("/resnick/groups/sxs/hchaudha/scripts/make_report_scripts").exists():
@@ -1026,11 +1033,9 @@ for sim_folder in dirs_to_plot:
 
     data_file_path = "/ConstraintNorms/GhCe_Linf.dat"
 
-    save_name = "HeatMap_Linf(GhCe).png"
     base_save_folder = save_report_base_folder / sim_folder.name
     if not base_save_folder.exists():
         base_save_folder.mkdir(parents=False, exist_ok=True)
-    save_name = Path(f"{base_save_folder}/{save_name}")
 
     # =========================== PLOT CONFIGURATION ===========================
 
@@ -1155,7 +1160,7 @@ for sim_folder in dirs_to_plot:
     # ### dat files plot
 
     minT = -1000
-    minT = 2000 # skip initial junk
+    minT = 2000  # skip initial junk
 
     maxT = 400000
 
@@ -1168,6 +1173,9 @@ for sim_folder in dirs_to_plot:
     # One plot per lev
     for key in runs_data_dict_ghce.keys():
         print(f"Plotting HeatMap for {key}")
+
+        save_name = Path(f"{base_save_folder}/HeatMap_Linf(GhCe){key[:-2]}.png")
+
         data = limit_by_col_val(minT, maxT, "t(M)", runs_data_dict_ghce[key])
         if data.empty:
             print(f"No data in time range({minT}, {maxT}) for {key}, skipping")
@@ -1262,7 +1270,7 @@ for sim_folder in dirs_to_plot:
         plt.title(f"{key}")
         plt.tight_layout()
 
-        plt.savefig(save_name+key[:-2], dpi=300)
+        plt.savefig(save_name, dpi=300)
         plt.grid(False)
         plt.show()
         plt.close()
