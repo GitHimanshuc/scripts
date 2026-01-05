@@ -26,14 +26,6 @@ save_report_base_folder = Path(
 )
 dirs_to_plot = []
 
-# My BFI main folder
-BFI_main_folder = Path("/work2/08330/tg876294/stampede3/HighAccuracy1025/")
-dirs_to_plot = [d for d in BFI_main_folder.iterdir() if d.is_dir()]
-
-# Nils BFI main folder
-BFI_main_folder = Path("/work2/06739/nfischer/stampede3/HighAccuracy1025/")
-dirs_to_plot += [d for d in BFI_main_folder.iterdir() if d.is_dir()]
-
 # for testing change paths if we are on caltech hpc
 if Path("/resnick/groups/sxs/hchaudha/scripts/make_report_scripts").exists():
     print("Running on Caltech HPC, changing paths for testing")
@@ -46,11 +38,14 @@ if Path("/resnick/groups/sxs/hchaudha/scripts/make_report_scripts").exists():
         Path("/resnick/groups/sxs/hchaudha/HighAccuracy1025/HighAccuracy102501")
     ]
 
-
-# All folders in the BFI_main_folder will be plotted if dirs_to_plot is empty
-if dirs_to_plot == []:
+else:
+    # My BFI main folder
+    BFI_main_folder = Path("/work2/08330/tg876294/stampede3/HighAccuracy1025/")
     dirs_to_plot = [d for d in BFI_main_folder.iterdir() if d.is_dir()]
 
+    # Nils BFI main folder
+    BFI_main_folder = Path("/work2/06739/nfischer/stampede3/HighAccuracy1025/")
+    dirs_to_plot += [d for d in BFI_main_folder.iterdir() if d.is_dir()]
 
 # ==================================================== Load data and plot ==========================================================
 
@@ -1051,8 +1046,9 @@ for sim_folder in dirs_to_plot:
             sim_folder / f"Ecc0/Ev/Lev{lev}_??/Run/"
         )
 
-    ringdown_as_well = True
-    # ringdown_as_well = False
+    # ringdown_as_well = True
+    # Heatmaps can't nicely handle inspiral + ringdown on the same plot
+    ringdown_as_well = False
     if ringdown_as_well:
         for key in list(runs_to_plot.keys()):
             runs_to_plot[key] = runs_to_plot[key].replace("/Ev/", "/Ev/**/")
@@ -1174,7 +1170,7 @@ for sim_folder in dirs_to_plot:
     for key in runs_data_dict_ghce.keys():
         print(f"Plotting HeatMap for {key}")
 
-        save_name = Path(f"{base_save_folder}/HeatMap_Linf(GhCe){key[:-2]}.png")
+        save_name = Path(f"{base_save_folder}/HeatMap_Linf(GhCe){key[-2:]}.png")
 
         data = limit_by_col_val(minT, maxT, "t(M)", runs_data_dict_ghce[key])
         if data.empty:
@@ -1194,7 +1190,7 @@ for sim_folder in dirs_to_plot:
         # domain_col_list = filter_by_regex(regex=["SphereC[4-9]"],col_list=domain_col_list)
         # domain_col_list = filter_by_regex(regex=["SphereC[2][0-9]"],col_list=data.columns)
         # domain_col_list = filter_by_regex(regex=["SphereC"],col_list=domain_col_list,exclude=True)
-        # domain_col_list = filter_by_regex(regex=["GhCe"],col_list=domain_col_list)
+        domain_col_list = filter_by_regex(regex=["GhCe"],col_list=domain_col_list)
         # domain_col_list = filter_by_regex(regex=["1Con"],col_list=domain_col_list)
         # domain_col_list = filter_by_regex(regex=["2Con"],col_list=domain_col_list)
         # domain_col_list = filter_by_regex(regex=["3Con"],col_list=domain_col_list)
@@ -1270,7 +1266,7 @@ for sim_folder in dirs_to_plot:
         plt.title(f"{key}")
         plt.tight_layout()
 
-        plt.savefig(save_name, dpi=300)
+        plt.savefig(save_name, dpi=150)
         plt.grid(False)
         plt.show()
         plt.close()
