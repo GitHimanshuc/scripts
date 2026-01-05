@@ -1,10 +1,8 @@
-from .data_readers import load_data_from_levs
 from .helper_functions import add_norm_constraints, num_points_per_subdomain
 from .main_plot_functions import plot_graph_for_runs, plot_graph_for_runs_wrapper
 from .heatmap_related_functions import return_sorted_domain_names, BBH_domain_sym_ploy, scalar_to_color
 
 __all__ = [
-    'load_data_from_levs',
     'add_norm_constraints',
     'num_points_per_subdomain',
     'plot_graph_for_runs',

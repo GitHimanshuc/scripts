@@ -10,3 +10,4 @@ del_*
 report/figures
 code_for_paper_plots/spec_accuracy/plots/*
 pow_diff_WT_set16
+__pycache__/
