@@ -1274,7 +1274,7 @@ for sim_folder in dirs_to_plot:
 
     print("---- Plotting Linf(NormalizedGhCe) vs t(M)\n")
 
-    data_file_path = "ConstraintNorms/NormalizedGhCe_Norms.dat"
+    data_file_path = "/ConstraintNorms/NormalizedGhCe_Norms.dat"
 
     x_axis = "t(M)"
     y_axis = 'Linf(NormalizedGhCe)'
