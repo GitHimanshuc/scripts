@@ -40,11 +40,11 @@ if Path("/resnick/groups/sxs/hchaudha/scripts/make_report_scripts").exists():
 
 else:
     # My BFI main folder
-    BFI_main_folder = Path("/work2/08330/tg876294/stampede3/HighAccuracy1025/")
+    BFI_main_folder = Path("/scratch/projects/sxs/hchaudha/HighAccuracy1025/")
     dirs_to_plot = [d for d in BFI_main_folder.iterdir() if d.is_dir()]
 
     # Nils BFI main folder
-    BFI_main_folder = Path("/work2/06739/nfischer/stampede3/HighAccuracy1025/")
+    BFI_main_folder = Path("/scratch/projects/sxs/nfischer/HighAccuracy1025/")
     dirs_to_plot += [d for d in BFI_main_folder.iterdir() if d.is_dir()]
 
 # ==================================================== Load data and plot ==========================================================
