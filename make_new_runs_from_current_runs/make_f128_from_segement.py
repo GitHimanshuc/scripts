@@ -4,7 +4,7 @@ import subprocess
 import re
 
 
-def replace_current_file(file_path, original_str, replaced_str):
+def replace_current_file(file_path, original_str, replaced_str, allow_fail=False):
     matched_strings = []
 
     def callback(match):
@@ -25,7 +25,16 @@ Replaced String: {replaced_str}
 Matched Strings: {matched_strings}
 """)
     else:
-        raise Exception(f"""
+        if allow_fail:
+            print(f"""
+!!~~ ALLOWED TO FAIL ~~!!
+Replaced in File: {file_path}
+Original String: {original_str}
+Replaced String: {replaced_str}
+Matched Strings: {matched_strings}
+""")
+        else:
+            raise Exception(f"""
 !!!!FAILED TO REPLACE!!!!
 File path: {file_path}
 Original String: {original_str}
@@ -155,6 +164,7 @@ def prepare_f128_run_from_checkpoint(
         new_segment_path / "GrWaveExtraction.input",
         r"(OutputCceTensors\s*=\s*)[^\n]*",
         "",
+        allow_fail=True,
     )
     replace_current_file(
         new_segment_path / "GrWaveExtraction.input",
@@ -215,14 +225,12 @@ def prepare_f128_run_from_checkpoint(
 
 
 
-spec_home = Path("/home/hchaudha/spec")
+spec_home = Path("/resnick/groups/sxs/hchaudha/specs/f128")
 checkpointer_converter_script_path = spec_home / "convert_double_to_dd.py"
 MakeNextSegmentScript_path = spec_home / "Support/bin/MakeNextSegment"
 
-final_time = 5000
-observe_delta_N = 25
-
-
+# final_time = 5000
+# observe_delta_N = 25
 
 # source_segment_path = Path(
 #     "/resnick/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/Ev/Lev1_AD"
@@ -334,3 +342,392 @@ observe_delta_N = 25
 #     checkpointer_converter_script_path,
 #     MakeNextSegmentScript_path,
 # )
+
+
+# final_time = 10000
+# observe_delta_N = 25
+
+# source_segment_path = Path(
+#     "/resnick/groups/sxs/hchaudha/spec_runs/36_segs/L15/Ev/Lev6_AG"
+# )
+# target_Ev_parent_dir_path = Path(
+#     "/resnick/groups/sxs/hchaudha/spec_runs/42_f128_from_check/36_L6_cd100_nAMR"
+# )
+# target_Ev_parent_dir_path.mkdir(exist_ok=False)
+
+# prepare_f128_run_from_checkpoint(
+#     source_segment_path,
+#     target_Ev_parent_dir_path,
+#     final_time,
+#     observe_delta_N,
+#     spec_home,
+#     checkpointer_converter_script_path,
+#     MakeNextSegmentScript_path,
+# )
+
+
+# final_time = 9000
+# observe_delta_N = 25
+
+# source_segment_path = Path(
+#     "/resnick/groups/sxs/hchaudha/spec_runs/36_segs/L15/Ev/Lev6_AG"
+# )
+# target_Ev_parent_dir_path = Path(
+#     "/resnick/groups/sxs/hchaudha/spec_runs/42_f128_from_check/36_L6_cd100_less_sds"
+# )
+# target_Ev_parent_dir_path.mkdir(exist_ok=False)
+
+# prepare_f128_run_from_checkpoint(
+#     source_segment_path,
+#     target_Ev_parent_dir_path,
+#     final_time,
+#     observe_delta_N,
+#     spec_home,
+#     checkpointer_converter_script_path,
+#     MakeNextSegmentScript_path,
+# )
+
+
+# final_time = 4500
+# observe_delta_N = 25
+
+# source_segment_path = Path(
+#     "/resnick/groups/sxs/hchaudha/spec_runs/17_set1_99_18_L3/Ev/Lev3_AS"
+# )
+# target_Ev_parent_dir_path = Path(
+#     "/resnick/groups/sxs/hchaudha/spec_runs/42_f128_from_check/17_set1_99_18_L3_cd100"
+# )
+# target_Ev_parent_dir_path.mkdir(exist_ok=False)
+
+# prepare_f128_run_from_checkpoint(
+#     source_segment_path,
+#     target_Ev_parent_dir_path,
+#     final_time,
+#     observe_delta_N,
+#     spec_home,
+#     checkpointer_converter_script_path,
+#     MakeNextSegmentScript_path,
+# )
+
+
+# final_time = 5500
+# observe_delta_N = 25
+
+# source_segment_path = Path(
+#     "/resnick/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/Ev/Lev2_AD"
+# )
+# target_Ev_parent_dir_path = Path(
+#     "/resnick/groups/sxs/hchaudha/spec_runs/42_f128_from_check/set1L6s2_nAMR"
+# )
+# target_Ev_parent_dir_path.mkdir(exist_ok=False)
+
+# prepare_f128_run_from_checkpoint(
+#     source_segment_path,
+#     target_Ev_parent_dir_path,
+#     final_time,
+#     observe_delta_N,
+#     spec_home,
+#     checkpointer_converter_script_path,
+#     MakeNextSegmentScript_path,
+# )
+
+
+# source_segment_path = Path(
+#     "/resnick/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/Ev/Lev4_AE"
+# )
+# target_Ev_parent_dir_path = Path(
+#     "/resnick/groups/sxs/hchaudha/spec_runs/42_f128_from_check/set1L6s4_nAMR"
+# )
+# target_Ev_parent_dir_path.mkdir(exist_ok=False)
+
+# prepare_f128_run_from_checkpoint(
+#     source_segment_path,
+#     target_Ev_parent_dir_path,
+#     final_time,
+#     observe_delta_N,
+#     spec_home,
+#     checkpointer_converter_script_path,
+#     MakeNextSegmentScript_path,
+# )
+
+
+# final_time = 10000
+# observe_delta_N = 25
+
+# source_segment_path = Path(
+#     "/resnick/groups/sxs/hchaudha/spec_runs/36_segs/L15/Ev/Lev6_AG"
+# )
+# target_Ev_parent_dir_path = Path(
+#     "/resnick/groups/sxs/hchaudha/spec_runs/42_f128_from_check/36_L6_nAMR"
+# )
+# target_Ev_parent_dir_path.mkdir(exist_ok=False)
+
+# prepare_f128_run_from_checkpoint(
+#     source_segment_path,
+#     target_Ev_parent_dir_path,
+#     final_time,
+#     observe_delta_N,
+#     spec_home,
+#     checkpointer_converter_script_path,
+#     MakeNextSegmentScript_path,
+# )
+
+# final_time = 10100
+# observe_delta_N = 25
+
+# source_segment_path = Path(
+#     "/resnick/groups/sxs/hchaudha/spec_runs/22_segs/L3_AC_L6/Ev/Lev6_AE"
+# )
+# target_Ev_parent_dir_path = Path(
+#     "/resnick/groups/sxs/hchaudha/spec_runs/43_128_L68_test/L3_AC_L6"
+# )
+# target_Ev_parent_dir_path.mkdir(exist_ok=False)
+
+# prepare_f128_run_from_checkpoint(
+#     source_segment_path,
+#     target_Ev_parent_dir_path,
+#     final_time,
+#     observe_delta_N,
+#     spec_home,
+#     checkpointer_converter_script_path,
+#     MakeNextSegmentScript_path,
+# )
+
+# source_segment_path = Path(
+#     "/resnick/groups/sxs/hchaudha/spec_runs/22_segs/L3_AC_L7/Ev/Lev7_AF"
+# )
+# target_Ev_parent_dir_path = Path(
+#     "/resnick/groups/sxs/hchaudha/spec_runs/43_128_L68_test/L3_AC_L7"
+# )
+# target_Ev_parent_dir_path.mkdir(exist_ok=False)
+
+# prepare_f128_run_from_checkpoint(
+#     source_segment_path,
+#     target_Ev_parent_dir_path,
+#     final_time,
+#     observe_delta_N,
+#     spec_home,
+#     checkpointer_converter_script_path,
+#     MakeNextSegmentScript_path,
+# )
+
+# source_segment_path = Path(
+#     "/resnick/groups/sxs/hchaudha/spec_runs/22_segs/L3_AC_L8/Ev/Lev8_AH"
+# )
+# target_Ev_parent_dir_path = Path(
+#     "/resnick/groups/sxs/hchaudha/spec_runs/43_128_L68_test/L3_AC_L8"
+# )
+# target_Ev_parent_dir_path.mkdir(exist_ok=False)
+
+# prepare_f128_run_from_checkpoint(
+#     source_segment_path,
+#     target_Ev_parent_dir_path,
+#     final_time,
+#     observe_delta_N,
+#     spec_home,
+#     checkpointer_converter_script_path,
+#     MakeNextSegmentScript_path,
+# )
+
+
+
+
+# final_time = 5000
+# observe_delta_N = 25
+
+# source_segment_path = Path(
+#     "/resnick/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/Ev/Lev1_AD"
+# )
+# target_Ev_parent_dir_path = Path(
+#     "/resnick/groups/sxs/hchaudha/spec_runs/45_128_set1L16_more_cd1_moreL/set1L6s1"
+# )
+# target_Ev_parent_dir_path.mkdir(exist_ok=False)
+
+# prepare_f128_run_from_checkpoint(
+#     source_segment_path,
+#     target_Ev_parent_dir_path,
+#     final_time,
+#     observe_delta_N,
+#     spec_home,
+#     checkpointer_converter_script_path,
+#     MakeNextSegmentScript_path,
+# )
+
+
+# source_segment_path = Path(
+#     "/resnick/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/Ev/Lev2_AD"
+# )
+# target_Ev_parent_dir_path = Path(
+#     "/resnick/groups/sxs/hchaudha/spec_runs/45_128_set1L16_more_cd1_moreL/set1L6s2"
+# )
+# target_Ev_parent_dir_path.mkdir(exist_ok=False)
+
+# prepare_f128_run_from_checkpoint(
+#     source_segment_path,
+#     target_Ev_parent_dir_path,
+#     final_time,
+#     observe_delta_N,
+#     spec_home,
+#     checkpointer_converter_script_path,
+#     MakeNextSegmentScript_path,
+# )
+
+# source_segment_path = Path(
+#     "/resnick/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/Ev/Lev3_AD"
+# )
+# target_Ev_parent_dir_path = Path(
+#     "/resnick/groups/sxs/hchaudha/spec_runs/45_128_set1L16_more_cd1_moreL/set1L6s3"
+# )
+# target_Ev_parent_dir_path.mkdir(exist_ok=False)
+
+# prepare_f128_run_from_checkpoint(
+#     source_segment_path,
+#     target_Ev_parent_dir_path,
+#     final_time,
+#     observe_delta_N,
+#     spec_home,
+#     checkpointer_converter_script_path,
+#     MakeNextSegmentScript_path,
+# )
+
+# source_segment_path = Path(
+#     "/resnick/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/Ev/Lev4_AE"
+# )
+# target_Ev_parent_dir_path = Path(
+#     "/resnick/groups/sxs/hchaudha/spec_runs/45_128_set1L16_more_cd1_moreL/set1L6s4"
+# )
+# target_Ev_parent_dir_path.mkdir(exist_ok=False)
+
+# prepare_f128_run_from_checkpoint(
+#     source_segment_path,
+#     target_Ev_parent_dir_path,
+#     final_time,
+#     observe_delta_N,
+#     spec_home,
+#     checkpointer_converter_script_path,
+#     MakeNextSegmentScript_path,
+# )
+
+
+# source_segment_path = Path(
+#     "/resnick/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/Ev/Lev5_AE"
+# )
+# target_Ev_parent_dir_path = Path(
+#     "/resnick/groups/sxs/hchaudha/spec_runs/45_128_set1L16_more_cd1_moreL/set1L6s5"
+# )
+# target_Ev_parent_dir_path.mkdir(exist_ok=False)
+
+# prepare_f128_run_from_checkpoint(
+#     source_segment_path,
+#     target_Ev_parent_dir_path,
+#     final_time,
+#     observe_delta_N,
+#     spec_home,
+#     checkpointer_converter_script_path,
+#     MakeNextSegmentScript_path,
+# )
+
+
+# source_segment_path = Path(
+#     "/resnick/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/Ev/Lev6_AF"
+# )
+# target_Ev_parent_dir_path = Path(
+#     "/resnick/groups/sxs/hchaudha/spec_runs/45_128_set1L16_more_cd1_moreL/set1L6s6"
+# )
+# target_Ev_parent_dir_path.mkdir(exist_ok=False)
+
+# prepare_f128_run_from_checkpoint(
+#     source_segment_path,
+#     target_Ev_parent_dir_path,
+#     final_time,
+#     observe_delta_N,
+#     spec_home,
+#     checkpointer_converter_script_path,
+#     MakeNextSegmentScript_path,
+# )
+
+
+# -----------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------
+
+
+
+final_time = 12000
+observe_delta_N = 25
+
+source_segment_path = Path(
+    "/resnick/groups/sxs/hchaudha/spec_runs/53_large_ext_boundary_less_sds/q1_n8_8_3000M_lsds_var1/Ecc0/Ev/Lev4_AJ"
+)
+target_Ev_parent_dir_path = Path(
+    "/resnick/groups/sxs/hchaudha/spec_runs/55_f128_large_ob_lsds/q1_n8_8_3000M_lsds_var1"
+)
+target_Ev_parent_dir_path.mkdir(exist_ok=False)
+
+prepare_f128_run_from_checkpoint(
+    source_segment_path,
+    target_Ev_parent_dir_path,
+    final_time,
+    observe_delta_N,
+    spec_home,
+    checkpointer_converter_script_path,
+    MakeNextSegmentScript_path,
+)
+
+
+source_segment_path = Path(
+    "/resnick/groups/sxs/hchaudha/spec_runs/53_large_ext_boundary_less_sds/q1_ns_2000M_lsds/Ecc0/Ev/Lev4_AE"
+)
+target_Ev_parent_dir_path = Path(
+    "/resnick/groups/sxs/hchaudha/spec_runs/55_f128_large_ob_lsds/q1_ns_2000M_lsds"
+)
+target_Ev_parent_dir_path.mkdir(exist_ok=False)
+
+prepare_f128_run_from_checkpoint(
+    source_segment_path,
+    target_Ev_parent_dir_path,
+    final_time,
+    observe_delta_N,
+    spec_home,
+    checkpointer_converter_script_path,
+    MakeNextSegmentScript_path,
+)
+
+
+
+source_segment_path = Path(
+    "/resnick/groups/sxs/hchaudha/spec_runs/53_large_ext_boundary_less_sds/q1_ns_3000M_lsds/Ecc0/Ev/Lev4_AE"
+)
+target_Ev_parent_dir_path = Path(
+    "/resnick/groups/sxs/hchaudha/spec_runs/55_f128_large_ob_lsds/q1_ns_3000M_lsds"
+)
+target_Ev_parent_dir_path.mkdir(exist_ok=False)
+
+prepare_f128_run_from_checkpoint(
+    source_segment_path,
+    target_Ev_parent_dir_path,
+    final_time,
+    observe_delta_N,
+    spec_home,
+    checkpointer_converter_script_path,
+    MakeNextSegmentScript_path,
+)
+
+
+source_segment_path = Path(
+    "/resnick/groups/sxs/hchaudha/spec_runs/53_large_ext_boundary_less_sds/q1_ns_10000M_lsds/Ecc0/Ev/Lev4_AF"
+)
+target_Ev_parent_dir_path = Path(
+    "/resnick/groups/sxs/hchaudha/spec_runs/55_f128_large_ob_lsds/q1_ns_10000M_lsds"
+)
+target_Ev_parent_dir_path.mkdir(exist_ok=False)
+
+prepare_f128_run_from_checkpoint(
+    source_segment_path,
+    target_Ev_parent_dir_path,
+    final_time,
+    observe_delta_N,
+    spec_home,
+    checkpointer_converter_script_path,
+    MakeNextSegmentScript_path,
+)
+

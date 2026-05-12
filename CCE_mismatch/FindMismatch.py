@@ -26,7 +26,7 @@ class SplineArray:
         return yprime
 
 
-def SquaredError(W1, W2, t1, t2, modes=None, return_h1h2_h1h1=False):
+def SquaredError(W1, W2, t1, t2, modes=None, return_h1h2_h1h1=False, return_min_max_time=False):
     """
     Calculate the residue of W1 and W2 between t1 and t2.
     """
@@ -61,8 +61,12 @@ def SquaredError(W1, W2, t1, t2, modes=None, return_h1h2_h1h1=False):
             )
         )
     if return_h1h2_h1h1:
+        if return_min_max_time:
+            return h1h2, h1h1, filtered_time[0], filtered_time[-1]
         return h1h2 , h1h1
     else:
+        if return_min_max_time:
+            return 0.5 * h1h2 / h1h1, filtered_time[0], filtered_time[-1]
         return 0.5 * h1h2 / h1h1
 
 

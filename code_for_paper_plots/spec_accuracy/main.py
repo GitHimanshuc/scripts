@@ -20,6 +20,7 @@ import scipy as sp
 import scri
 from scipy.interpolate import CubicSpline, interp1d
 from spherical_functions import LM_index as lm
+import scienceplots
 
 spec_home = "/home/himanshu/spec/my_spec"
 matplotlib.matplotlib_fname()
@@ -1882,9 +1883,9 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
     if "@" in data_file_path:
         append_to_title = " HorizonBH=" + data_file_path.split("@")[-1]
 
-    with plt.style.context("seaborn-v0_8-paper"):
-        plt.rcParams["figure.figsize"] = (5, 3.5)
-        plt.rcParams["figure.autolayout"] = True
+    with plt.style.context(["ggplot"]):
+        plt.rcParams["figure.figsize"] = (5, 4)
+        # plt.rcParams["figure.autolayout"] = True
 
         y_axis = "Linf(GhCe) on SphereA0"
         plot_graph_for_runs(
@@ -1906,11 +1907,13 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         plt.title("")
         plt.ylabel(y_axis)
         plt.xlabel("t(M)")
-        plt.legend(loc="upper right")
+        # plt.legend(loc="upper right")
+        plt.legend()
         #   plt.ylim(1e-8, 1e-5)
         #   plt.ylim(1e-12, 1e-6)
 
         plt.tight_layout()
+        plt.grid(False)
         save_name = save_folder_path / f"{runs_set_name}_SphereA0_Linf_GhCe.pdf"
         plt.savefig(save_name, dpi=300)
         plt.clf()
@@ -1936,11 +1939,13 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         plt.title("")
         plt.ylabel(y_axis)
         plt.xlabel("t(M)")
-        plt.legend(loc="upper right")
+        # plt.legend(loc="upper right")
+        plt.legend()
         #   plt.ylim(1e-8, 1e-5)
         #   plt.ylim(1e-12, 1e-6)
 
         plt.tight_layout()
+        plt.grid(False)
         save_name = save_folder_path / f"{runs_set_name}_SphereC6_Linf_GhCe.pdf"
         plt.savefig(save_name, dpi=300)
         print(f"Saved {save_name}!\n")
@@ -1971,9 +1976,9 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
     if "@" in data_file_path:
         append_to_title = " HorizonBH=" + data_file_path.split("@")[-1]
 
-    with plt.style.context("seaborn-v0_8-paper"):
-        plt.rcParams["figure.figsize"] = (5, 3.5)
-        plt.rcParams["figure.autolayout"] = True
+    with plt.style.context(["ggplot"]):
+        plt.rcParams["figure.figsize"] = (5, 4)
+        # plt.rcParams["figure.autolayout"] = True
 
         y_axis = "Linf(NormalizedGhCe) on SphereA0"
         plot_graph_for_runs(
@@ -1995,11 +2000,13 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         plt.title("")
         plt.ylabel(y_axis)
         plt.xlabel("t(M)")
-        plt.legend(loc="upper right")
+        # plt.legend(loc="upper right")
+        plt.legend()
         #   plt.ylim(1e-8, 1e-5)
         #   plt.ylim(1e-12, 1e-6)
 
         plt.tight_layout()
+        plt.grid(False)
         save_name = (
             save_folder_path / f"{runs_set_name}_SphereA0_Linf_NormalizedGhCe.pdf"
         )
@@ -2027,45 +2034,15 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         plt.title("")
         plt.ylabel(y_axis)
         plt.xlabel("t(M)")
-        plt.legend(loc="upper right")
+        # plt.legend(loc="upper right")
+        plt.legend()
         #   plt.ylim(1e-8, 1e-5)
         #   plt.ylim(1e-12, 1e-6)
 
         plt.tight_layout()
+        plt.grid(False)
         save_name = (
             save_folder_path / f"{runs_set_name}_SphereC6_Linf_NormalizedGhCe.pdf"
-        )
-        plt.savefig(save_name, dpi=300)
-        print(f"Saved {save_name}!\n")
-        plt.clf()
-
-        y_axis = "Linf(NormalizedGhCe) on SphereC21"
-        plot_graph_for_runs(
-            runs_data_dict,
-            x_axis,
-            y_axis,
-            minT,
-            maxT,
-            legend_dict=legend_dict,
-            save_path=save_path,
-            moving_avg_len=moving_avg_len,
-            plot_fun=plot_fun,
-            diff_base=diff_base,
-            plot_abs_diff=plot_abs_diff,
-            constant_shift_val_time=constant_shift_val_time,
-            append_to_title=append_to_title,
-        )
-
-        plt.title("")
-        plt.ylabel(y_axis)
-        plt.xlabel("t(M)")
-        plt.legend(loc="upper right")
-        #   plt.ylim(1e-8, 1e-5)
-        #   plt.ylim(1e-12, 1e-6)
-
-        plt.tight_layout()
-        save_name = (
-            save_folder_path / f"{runs_set_name}_SphereC21_Linf_NormalizedGhCe.pdf"
         )
         plt.savefig(save_name, dpi=300)
         print(f"Saved {save_name}!\n")
@@ -2096,9 +2073,9 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
     if "@" in data_file_path:
         append_to_title = " HorizonBH=" + data_file_path.split("@")[-1]
 
-    with plt.style.context("seaborn-v0_8-paper"):
-        plt.rcParams["figure.figsize"] = (5, 3.5)
-        plt.rcParams["figure.autolayout"] = True
+    with plt.style.context(["ggplot"]):
+        plt.rcParams["figure.figsize"] = (5, 4)
+        # plt.rcParams["figure.autolayout"] = True
 
         y_axis = "L2(GhCe)"
         plot_graph_for_runs(
@@ -2120,11 +2097,13 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         plt.title("")
         plt.ylabel(y_axis)
         plt.xlabel("t(M)")
-        plt.legend(loc="upper right")
+        # plt.legend(loc="upper right")
+        plt.legend()
         #   plt.ylim(1e-8, 1e-5)
         #   plt.ylim(1e-12, 1e-6)
 
         plt.tight_layout()
+        plt.grid(False)
         save_name = save_folder_path / f"{runs_set_name}_L2(GhCe).pdf"
         plt.savefig(save_name, dpi=300)
         plt.clf()
@@ -2150,11 +2129,13 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         plt.title("")
         plt.ylabel(y_axis)
         plt.xlabel("t(M)")
-        plt.legend(loc="upper right")
+        # plt.legend(loc="upper right")
+        plt.legend()
         #   plt.ylim(1e-8, 1e-5)
         #   plt.ylim(1e-12, 1e-6)
 
         plt.tight_layout()
+        plt.grid(False)
         save_name = save_folder_path / f"{runs_set_name}_Linf(GhCe).pdf"
         plt.savefig(save_name, dpi=300)
         print(f"Saved {save_name}!\n")
@@ -2180,11 +2161,13 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         plt.title("")
         plt.ylabel(y_axis)
         plt.xlabel("t(M)")
-        plt.legend(loc="upper right")
+        # plt.legend(loc="upper right")
+        plt.legend()
         #   plt.ylim(1e-8, 1e-5)
         #   plt.ylim(1e-12, 1e-6)
 
         plt.tight_layout()
+        plt.grid(False)
         save_name = save_folder_path / f"{runs_set_name}_VolLp(GhCe).pdf"
         plt.savefig(save_name, dpi=300)
         print(f"Saved {save_name}!\n")
@@ -2215,9 +2198,9 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
     if "@" in data_file_path:
         append_to_title = " HorizonBH=" + data_file_path.split("@")[-1]
 
-    with plt.style.context("seaborn-v0_8-paper"):
-        plt.rcParams["figure.figsize"] = (5, 3.5)
-        plt.rcParams["figure.autolayout"] = True
+    with plt.style.context(["ggplot"]):
+        plt.rcParams["figure.figsize"] = (5, 4)
+        # plt.rcParams["figure.autolayout"] = True
 
         y_axis = "L2(NormalizedGhCe)"
         plot_graph_for_runs(
@@ -2239,11 +2222,13 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         plt.title("")
         plt.ylabel(y_axis)
         plt.xlabel("t(M)")
-        plt.legend(loc="upper right")
+        # plt.legend(loc="upper right")
+        plt.legend()
         #   plt.ylim(1e-8, 1e-5)
         #   plt.ylim(1e-12, 1e-6)
 
         plt.tight_layout()
+        plt.grid(False)
         save_name = save_folder_path / f"{runs_set_name}_L2(NormalizedGhCe).pdf"
         plt.savefig(save_name, dpi=300)
         plt.clf()
@@ -2269,11 +2254,13 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         plt.title("")
         plt.ylabel(y_axis)
         plt.xlabel("t(M)")
-        plt.legend(loc="upper right")
+        # plt.legend(loc="upper right")
+        plt.legend()
         #   plt.ylim(1e-8, 1e-5)
         #   plt.ylim(1e-12, 1e-6)
 
         plt.tight_layout()
+        plt.grid(False)
         save_name = save_folder_path / f"{runs_set_name}_Linf(NormalizedGhCe).pdf"
         plt.savefig(save_name, dpi=300)
         print(f"Saved {save_name}!\n")
@@ -2299,11 +2286,13 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         plt.title("")
         plt.ylabel(y_axis)
         plt.xlabel("t(M)")
-        plt.legend(loc="upper right")
+        # plt.legend(loc="upper right")
+        plt.legend()
         #   plt.ylim(1e-8, 1e-5)
         #   plt.ylim(1e-12, 1e-6)
 
         plt.tight_layout()
+        plt.grid(False)
         save_name = save_folder_path / f"{runs_set_name}_VolLp(NormalizedGhCe).pdf"
         plt.savefig(save_name, dpi=300)
         print(f"Saved {save_name}!\n")
@@ -2335,7 +2324,7 @@ if not SKIP_THIS:
     plot_abs_diff = False
 
     minT = 1205
-    maxT = 8000
+    maxT = 4000
 
     def plot_fun(x, y, label):
         return plt.semilogy(x, y, label=label)
@@ -2344,9 +2333,9 @@ if not SKIP_THIS:
     if "@" in data_file_path:
         append_to_title = " HorizonBH=" + data_file_path.split("@")[-1]
 
-    with plt.style.context("seaborn-v0_8-paper"):
+    with plt.style.context(["ggplot"]):
         plt.rcParams["figure.figsize"] = (8, 5)
-        plt.rcParams["figure.autolayout"] = True
+        # plt.rcParams["figure.autolayout"] = True
 
         y_axis = "Linf(NormalizedGhCe) on SphereC28"
         plot_graph_for_runs(
@@ -2368,11 +2357,13 @@ if not SKIP_THIS:
         plt.title("")
         plt.ylabel(y_axis)
         plt.xlabel("t(M)")
-        plt.legend(loc="upper right")
+        # plt.legend(loc="upper right")
+        plt.legend()
         #   plt.ylim(1e-8, 1e-5)
         #   plt.ylim(1e-12, 1e-6)
 
         plt.tight_layout()
+        plt.grid(False)
         save_name = (
             save_folder_path / "joined_ML_5_S1_L5_SphereC28_Linf_NormalizedGhCe.pdf"
         )
@@ -2392,9 +2383,9 @@ if not SKIP_THIS:
     if "@" in data_file_path:
         append_to_title = " HorizonBH=" + data_file_path.split("@")[-1]
 
-    with plt.style.context("seaborn-v0_8-paper"):
-        plt.rcParams["figure.figsize"] = (5, 3.5)
-        plt.rcParams["figure.autolayout"] = True
+    with plt.style.context(["ggplot"]):
+        plt.rcParams["figure.figsize"] = (5, 4)
+        # plt.rcParams["figure.autolayout"] = True
 
         y_axis = "Linf(NormalizedGhCe) on SphereC0"
         plot_graph_for_runs(
@@ -2416,11 +2407,13 @@ if not SKIP_THIS:
         plt.title("")
         plt.ylabel(y_axis)
         plt.xlabel("t(M)")
-        plt.legend(loc="upper right")
+        # plt.legend(loc="upper right")
+        plt.legend()
         #   plt.ylim(1e-8, 1e-5)
         #   plt.ylim(1e-12, 1e-6)
 
         plt.tight_layout()
+        plt.grid(False)
         save_name = (
             save_folder_path / "joined_ML_5_S1_L5_SphereC0_Linf_NormalizedGhCe.pdf"
         )
@@ -2430,9 +2423,9 @@ if not SKIP_THIS:
 
     # ==============================================================================
 
-    with plt.style.context("seaborn-v0_8-paper"):
-        plt.rcParams["figure.figsize"] = (5, 3.5)
-        plt.rcParams["figure.autolayout"] = True
+    with plt.style.context(["ggplot"]):
+        plt.rcParams["figure.figsize"] = (5, 4)
+        # plt.rcParams["figure.autolayout"] = True
 
         y_axis = "Linf(NormalizedGhCe) on SphereC1"
         plot_graph_for_runs(
@@ -2454,11 +2447,13 @@ if not SKIP_THIS:
         plt.title("")
         plt.ylabel(y_axis)
         plt.xlabel("t(M)")
-        plt.legend(loc="upper right")
+        # plt.legend(loc="upper right")
+        plt.legend()
         #   plt.ylim(1e-8, 1e-5)
         #   plt.ylim(1e-12, 1e-6)
 
         plt.tight_layout()
+        plt.grid(False)
         save_name = (
             save_folder_path / "joined_ML_5_S1_L5_SphereC1_Linf_NormalizedGhCe.pdf"
         )
@@ -2467,66 +2462,6 @@ if not SKIP_THIS:
         plt.clf()
 
     # ==============================================================================
-
-    data_file_path = "ConstraintNorms/GhCe_Linf.dat"
-    runs_to_plot = {}
-    runs_to_plot["high_accuracy_L5"] = joined_runs["high_accuracy_L5"]
-    runs_to_plot["6_set1_L6s5"] = joined_runs["6_set1_L6s5"]
-    column_names, runs_data_dict = load_data_from_levs(runs_to_plot, data_file_path)
-
-    moving_avg_len = 0
-    save_path = None
-    diff_base = None
-    constant_shift_val_time = None
-    plot_abs_diff = True
-    y_axis_list = None
-    x_axis = "t(M)"
-
-    plot_abs_diff = False
-
-    minT = 1205
-    maxT = 8000
-
-    def plot_fun(x, y, label):
-        return plt.semilogy(x, y, label=label)
-
-    append_to_title = ""
-    if "@" in data_file_path:
-        append_to_title = " HorizonBH=" + data_file_path.split("@")[-1]
-
-    with plt.style.context("seaborn-v0_8-paper"):
-        plt.rcParams["figure.figsize"] = (8, 5)
-        plt.rcParams["figure.autolayout"] = True
-
-        y_axis = "Linf(GhCe) on SphereC28"
-        plot_graph_for_runs(
-            runs_data_dict,
-            x_axis,
-            y_axis,
-            minT,
-            maxT,
-            legend_dict=joined_legend,
-            save_path=save_path,
-            moving_avg_len=moving_avg_len,
-            plot_fun=plot_fun,
-            diff_base=diff_base,
-            plot_abs_diff=plot_abs_diff,
-            constant_shift_val_time=constant_shift_val_time,
-            append_to_title=append_to_title,
-        )
-
-        plt.title("")
-        plt.ylabel(y_axis)
-        plt.xlabel("t(M)")
-        plt.legend(loc="upper right")
-        #   plt.ylim(1e-8, 1e-5)
-        #   plt.ylim(1e-12, 1e-6)
-
-        plt.tight_layout()
-        save_name = save_folder_path / "joined_ML_5_S1_L5_SphereC28_Linf_GhCe.pdf"
-        plt.savefig(save_name, dpi=300)
-        print(f"Saved {save_name}!\n")
-        plt.clf()
 
 #%%
 
@@ -2639,9 +2574,9 @@ for runs_to_plot, runs_legend, runs_set_name in zip(
     if SKIP_THIS:
         continue
 
-    with plt.style.context("seaborn-v0_8-paper"):
-        plt.rcParams["figure.figsize"] = (5, 3.5)
-        plt.rcParams["figure.autolayout"] = True
+    with plt.style.context(["ggplot"]):
+        plt.rcParams["figure.figsize"] = (5, 4)
+        # plt.rcParams["figure.autolayout"] = True
 
         for h5_path_key, domain, top_num, var in itertools.product(
             runs_to_plot,
@@ -2737,6 +2672,7 @@ for runs_to_plot, runs_legend, runs_set_name in zip(
             plt.ylim(5e-17, 5)
             plt.grid(False)
             plt.tight_layout()
+            plt.grid(False)
 
             save_name = (
                 save_folder_path
@@ -2837,9 +2773,9 @@ for runs_to_plot, runs_legend, runs_set_name in zip(
         abd_data[key] = load_bondi_constraints(runs_to_plot[key])
     print(abd_data.keys())
 
-    with plt.style.context("seaborn-v0_8-paper"):
-        plt.rcParams["figure.figsize"] = (5, 3.5)
-        plt.rcParams["figure.autolayout"] = True
+    with plt.style.context(["ggplot"]):
+        plt.rcParams["figure.figsize"] = (5, 4)
+        # plt.rcParams["figure.autolayout"] = True
 
         for bondi_norm in bondi_norms_to_plot:
             t_min = 1210 - 260
@@ -2858,11 +2794,13 @@ for runs_to_plot, runs_legend, runs_set_name in zip(
                     label=f"{runs_legend[key]}",
                 )
 
-            plt.legend(loc="upper right")
+            # plt.legend(loc="upper right")
+            plt.legend()
             plt.xlabel("t(M)")
             plt.ylabel(f"Bondi violations {bondi_norm}")
             # plt.grid(False)
             plt.tight_layout()
+            plt.grid(False)
 
             save_name = (
                 save_folder_path / f"{runs_set_name}_cce_boncon_{bondi_norm}.pdf"
@@ -2927,9 +2865,9 @@ for runs_to_plot, runs_legend, runs_set_name in zip(
         abd_data[key] = load_bondi_constraints(runs_to_plot[key])
     print(abd_data.keys())
 
-    with plt.style.context("seaborn-v0_8-paper"):
-        plt.rcParams["figure.figsize"] = (5, 3.5)
-        plt.rcParams["figure.autolayout"] = True
+    with plt.style.context(["ggplot"]):
+        plt.rcParams["figure.figsize"] = (5, 4)
+        # plt.rcParams["figure.autolayout"] = True
 
         for bondi_norm in bondi_norms_to_plot:
             t_min = 1210 - 260
@@ -2948,11 +2886,13 @@ for runs_to_plot, runs_legend, runs_set_name in zip(
                     label=f"{runs_legend[key]}",
                 )
 
-            plt.legend(loc="upper right")
+            # plt.legend(loc="upper right")
+            plt.legend()
             plt.xlabel("t(M)")
             plt.ylabel(f"Bondi violations {bondi_norm}")
             # plt.grid(False)
             plt.tight_layout()
+            plt.grid(False)
 
             save_name = (
                 save_folder_path / f"{runs_set_name}_cce_boncon_{bondi_norm}.pdf"
