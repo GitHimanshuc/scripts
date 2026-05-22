@@ -1,0 +1,27 @@
+| Key 1 | Key 2 | Squared Error -298.6:16157.9|
+|-------|-------|----------------|
+|HighAccuracy09_2_0300 | HighAccuracy09_3_0300 | 2.902e-03 |
+|HighAccuracy09_3_0300 | HighAccuracy09_4_0300 | 4.147e-05 |
+|HighAccuracy09_4_0300 | HighAccuracy09_5_0300 | 1.637e-05 |
+|HighAccuracy09_5_0300 | HighAccuracy09_6_0300 | 3.278e-08 |
+
+| Key 1 | Key 2 | Squared Error -298.6:16157.9|
+|-------|-------|----------------|
+|HighAccuracy09_2_0300 | HighAccuracy09_6_0300 | 4.095e-03 |
+|HighAccuracy09_3_0300 | HighAccuracy09_6_0300 | 1.081e-04 |
+|HighAccuracy09_4_0300 | HighAccuracy09_6_0300 | 1.571e-05 |
+|HighAccuracy09_5_0300 | HighAccuracy09_6_0300 | 3.278e-08 |
+
+
+| Key 1 | Key 2 | Squared Error -298.6:16157.9|
+|-------|-------|----------------|
+|HighAccuracy09_2_0300 | HighAccuracy09_3_0300 | 2.902e-03 |
+|HighAccuracy09_2_0300 | HighAccuracy09_4_0300 | 3.617e-03 |
+|HighAccuracy09_2_0300 | HighAccuracy09_5_0300 | 4.104e-03 |
+|HighAccuracy09_2_0300 | HighAccuracy09_6_0300 | 4.095e-03 |
+|HighAccuracy09_3_0300 | HighAccuracy09_4_0300 | 4.147e-05 |
+|HighAccuracy09_3_0300 | HighAccuracy09_5_0300 | 1.098e-04 |
+|HighAccuracy09_3_0300 | HighAccuracy09_6_0300 | 1.081e-04 |
+|HighAccuracy09_4_0300 | HighAccuracy09_5_0300 | 1.637e-05 |
+|HighAccuracy09_4_0300 | HighAccuracy09_6_0300 | 1.571e-05 |
+|HighAccuracy09_5_0300 | HighAccuracy09_6_0300 | 3.278e-08 |
