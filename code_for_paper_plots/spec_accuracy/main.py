@@ -20,7 +20,6 @@ import scipy as sp
 import scri
 from scipy.interpolate import CubicSpline, interp1d
 from spherical_functions import LM_index as lm
-import scienceplots
 
 spec_home = "/home/himanshu/spec/my_spec"
 matplotlib.matplotlib_fname()
@@ -1803,11 +1802,11 @@ L15_main_legend = {
 }
 
 L15_main_runs = {
-    "high_accuracy_main_L1": "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35_master/Ev/Lev1_A?/Run/",
-    "high_accuracy_main_L2": "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35_master/Ev/Lev2_A?/Run/",
-    "high_accuracy_main_L3": "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35_master/Ev/Lev3_A?/Run/",
-    "high_accuracy_main_L4": "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35_master/Ev/Lev4_A?/Run/",
-    "high_accuracy_main_L5": "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35_master/Ev/Lev5_A?/Run/",
+    "high_accuracy_main_L1": "/resnick/groups/sxs/hchaudha/from_central/spec_runs/high_accuracy_L35_master/Ev/Lev1_A?/Run/",
+    "high_accuracy_main_L2": "/resnick/groups/sxs/hchaudha/from_central/spec_runs/high_accuracy_L35_master/Ev/Lev2_A?/Run/",
+    "high_accuracy_main_L3": "/resnick/groups/sxs/hchaudha/from_central/spec_runs/high_accuracy_L35_master/Ev/Lev3_A?/Run/",
+    "high_accuracy_main_L4": "/resnick/groups/sxs/hchaudha/from_central/spec_runs/high_accuracy_L35_master/Ev/Lev4_A?/Run/",
+    "high_accuracy_main_L5": "/resnick/groups/sxs/hchaudha/from_central/spec_runs/high_accuracy_L35_master/Ev/Lev5_A?/Run/",
 }
 
 L15_ode_fix_legend = {
@@ -1818,29 +1817,29 @@ L15_ode_fix_legend = {
     "high_accuracy_L5": "Ode Fix Level 5",
 }
 L15_ode_fix_runs = {
-    "high_accuracy_L1": "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35/Ev/Lev1_A?/Run/",
-    "high_accuracy_L2": "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35/Ev/Lev2_A?/Run/",
-    "high_accuracy_L3": "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35/Ev/Lev3_A?/Run/",
-    "high_accuracy_L4": "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35/Ev/Lev4_A?/Run/",
-    "high_accuracy_L5": "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35/Ev/Lev5_A?/Run/",
+    "high_accuracy_L1": "/resnick/groups/sxs/hchaudha/from_central/spec_runs/high_accuracy_L35/Ev/Lev1_A?/Run/",
+    "high_accuracy_L2": "/resnick/groups/sxs/hchaudha/from_central/spec_runs/high_accuracy_L35/Ev/Lev2_A?/Run/",
+    "high_accuracy_L3": "/resnick/groups/sxs/hchaudha/from_central/spec_runs/high_accuracy_L35/Ev/Lev3_A?/Run/",
+    "high_accuracy_L4": "/resnick/groups/sxs/hchaudha/from_central/spec_runs/high_accuracy_L35/Ev/Lev4_A?/Run/",
+    "high_accuracy_L5": "/resnick/groups/sxs/hchaudha/from_central/spec_runs/high_accuracy_L35/Ev/Lev5_A?/Run/",
 }
 
 
 L16_set1_legend = {
-    "6_set1_L6s1": "Set1 Level 1",
-    "6_set1_L6s2": "Set1 Level 2",
-    "6_set1_L6s3": "Set1 Level 3",
-    "6_set1_L6s4": "Set1 Level 4",
-    "6_set1_L6s5": "Set1 Level 5",
-    "6_set1_L6s6": "Set1 Level 6",
+    "6_set1_L6s1": "New Level 1",
+    "6_set1_L6s2": "New Level 2",
+    "6_set1_L6s3": "New Level 3",
+    "6_set1_L6s4": "New Level 4",
+    "6_set1_L6s5": "New Level 5",
+    "6_set1_L6s6": "New Level 6",
 }
 L16_set1_runs = {
-    "6_set1_L6s1": "/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/Ev/Lev1_A?/Run/",
-    "6_set1_L6s2": "/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/Ev/Lev2_A?/Run/",
-    "6_set1_L6s3": "/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/Ev/Lev3_A?/Run/",
-    "6_set1_L6s4": "/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/Ev/Lev4_A?/Run/",
-    "6_set1_L6s5": "/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/Ev/Lev5_A?/Run/",
-    "6_set1_L6s6": "/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/Ev/Lev6_A?/Run/",
+    "6_set1_L6s1": "/resnick/groups/sxs/hchaudha/from_central/spec_runs/6_segs/6_set1_L6/Ev/Lev1_A?/Run/",
+    "6_set1_L6s2": "/resnick/groups/sxs/hchaudha/from_central/spec_runs/6_segs/6_set1_L6/Ev/Lev2_A?/Run/",
+    "6_set1_L6s3": "/resnick/groups/sxs/hchaudha/from_central/spec_runs/6_segs/6_set1_L6/Ev/Lev3_A?/Run/",
+    "6_set1_L6s4": "/resnick/groups/sxs/hchaudha/from_central/spec_runs/6_segs/6_set1_L6/Ev/Lev4_A?/Run/",
+    "6_set1_L6s5": "/resnick/groups/sxs/hchaudha/from_central/spec_runs/6_segs/6_set1_L6/Ev/Lev5_A?/Run/",
+    "6_set1_L6s6": "/resnick/groups/sxs/hchaudha/from_central/spec_runs/6_segs/6_set1_L6/Ev/Lev6_A?/Run/",
 }
 
 joined_runs = {**L15_main_runs, **L15_ode_fix_runs, **L16_set1_runs}
@@ -1888,6 +1887,7 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         # plt.rcParams["figure.autolayout"] = True
 
         y_axis = "Linf(GhCe) on SphereA0"
+        y_label = r"$L_\infty(\mathcal{E}_{\mathrm{GH}})$ on SphereA0"
         plot_graph_for_runs(
             runs_data_dict,
             x_axis,
@@ -1905,7 +1905,7 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         )
 
         plt.title("")
-        plt.ylabel(y_axis)
+        plt.ylabel(y_label)
         plt.xlabel("t(M)")
         # plt.legend(loc="upper right")
         plt.legend()
@@ -1920,6 +1920,7 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         print(f"Saved {save_name}!\n")
 
         y_axis = "Linf(GhCe) on SphereC6"
+        y_label = r"$L_\infty(\mathcal{E}_{\mathrm{GH}})$ on SphereC6"
         plot_graph_for_runs(
             runs_data_dict,
             x_axis,
@@ -1937,7 +1938,7 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         )
 
         plt.title("")
-        plt.ylabel(y_axis)
+        plt.ylabel(y_label)
         plt.xlabel("t(M)")
         # plt.legend(loc="upper right")
         plt.legend()
@@ -1981,6 +1982,7 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         # plt.rcParams["figure.autolayout"] = True
 
         y_axis = "Linf(NormalizedGhCe) on SphereA0"
+        y_label = r"$L_\infty(\widehat{\mathcal{E}}_{\mathrm{GH}})$ on SphereA0"
         plot_graph_for_runs(
             runs_data_dict,
             x_axis,
@@ -1998,7 +2000,7 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         )
 
         plt.title("")
-        plt.ylabel(y_axis)
+        plt.ylabel(y_label)
         plt.xlabel("t(M)")
         # plt.legend(loc="upper right")
         plt.legend()
@@ -2015,6 +2017,7 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         print(f"Saved {save_name}!\n")
 
         y_axis = "Linf(NormalizedGhCe) on SphereC6"
+        y_label = r"$L_\infty(\widehat{\mathcal{E}}_{\mathrm{GH}})$ on SphereC6"
         plot_graph_for_runs(
             runs_data_dict,
             x_axis,
@@ -2032,7 +2035,7 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         )
 
         plt.title("")
-        plt.ylabel(y_axis)
+        plt.ylabel(y_label)
         plt.xlabel("t(M)")
         # plt.legend(loc="upper right")
         plt.legend()
@@ -2078,6 +2081,7 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         # plt.rcParams["figure.autolayout"] = True
 
         y_axis = "L2(GhCe)"
+        y_label = r"$L_2(\mathcal{E}_{\mathrm{GH}})$"
         plot_graph_for_runs(
             runs_data_dict,
             x_axis,
@@ -2095,7 +2099,7 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         )
 
         plt.title("")
-        plt.ylabel(y_axis)
+        plt.ylabel(y_label)
         plt.xlabel("t(M)")
         # plt.legend(loc="upper right")
         plt.legend()
@@ -2110,6 +2114,7 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         print(f"Saved {save_name}!\n")
 
         y_axis = "Linf(GhCe)"
+        y_label = r"$L_\infty(\mathcal{E}_{\mathrm{GH}})$"
         plot_graph_for_runs(
             runs_data_dict,
             x_axis,
@@ -2127,7 +2132,7 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         )
 
         plt.title("")
-        plt.ylabel(y_axis)
+        plt.ylabel(y_label)
         plt.xlabel("t(M)")
         # plt.legend(loc="upper right")
         plt.legend()
@@ -2142,6 +2147,7 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         plt.clf()
 
         y_axis = "VolLp(GhCe)"
+        y_label = r"$V_{\ell^p}(\mathcal{E}_{\mathrm{GH}})$"
         plot_graph_for_runs(
             runs_data_dict,
             x_axis,
@@ -2159,7 +2165,7 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         )
 
         plt.title("")
-        plt.ylabel(y_axis)
+        plt.ylabel(y_label)
         plt.xlabel("t(M)")
         # plt.legend(loc="upper right")
         plt.legend()
@@ -2203,6 +2209,7 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         # plt.rcParams["figure.autolayout"] = True
 
         y_axis = "L2(NormalizedGhCe)"
+        y_label = r"$L_2(\widehat{\mathcal{E}}_{\mathrm{GH}})$"
         plot_graph_for_runs(
             runs_data_dict,
             x_axis,
@@ -2220,7 +2227,7 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         )
 
         plt.title("")
-        plt.ylabel(y_axis)
+        plt.ylabel(y_label)
         plt.xlabel("t(M)")
         # plt.legend(loc="upper right")
         plt.legend()
@@ -2235,6 +2242,7 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         print(f"Saved {save_name}!\n")
 
         y_axis = "Linf(NormalizedGhCe)"
+        y_label = r"$L_\infty(\widehat{\mathcal{E}}_{\mathrm{GH}})$"
         plot_graph_for_runs(
             runs_data_dict,
             x_axis,
@@ -2252,7 +2260,7 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         )
 
         plt.title("")
-        plt.ylabel(y_axis)
+        plt.ylabel(y_label)
         plt.xlabel("t(M)")
         # plt.legend(loc="upper right")
         plt.legend()
@@ -2267,6 +2275,7 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         plt.clf()
 
         y_axis = "VolLp(NormalizedGhCe)"
+        y_label = r"$V_{\ell^p}(\widehat{\mathcal{E}}_{\mathrm{GH}})$"
         plot_graph_for_runs(
             runs_data_dict,
             x_axis,
@@ -2284,7 +2293,7 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         )
 
         plt.title("")
-        plt.ylabel(y_axis)
+        plt.ylabel(y_label)
         plt.xlabel("t(M)")
         # plt.legend(loc="upper right")
         plt.legend()
@@ -2338,6 +2347,7 @@ if not SKIP_THIS:
         # plt.rcParams["figure.autolayout"] = True
 
         y_axis = "Linf(NormalizedGhCe) on SphereC28"
+        y_label = r"$L_\infty(\widehat{\mathcal{E}}_{\mathrm{GH}})$ on SphereC28"
         plot_graph_for_runs(
             runs_data_dict,
             x_axis,
@@ -2355,7 +2365,7 @@ if not SKIP_THIS:
         )
 
         plt.title("")
-        plt.ylabel(y_axis)
+        plt.ylabel(y_label)
         plt.xlabel("t(M)")
         # plt.legend(loc="upper right")
         plt.legend()
@@ -2388,6 +2398,7 @@ if not SKIP_THIS:
         # plt.rcParams["figure.autolayout"] = True
 
         y_axis = "Linf(NormalizedGhCe) on SphereC0"
+        y_label = r"$L_\infty(\widehat{\mathcal{E}}_{\mathrm{GH}})$ on SphereC0"
         plot_graph_for_runs(
             runs_data_dict,
             x_axis,
@@ -2405,7 +2416,7 @@ if not SKIP_THIS:
         )
 
         plt.title("")
-        plt.ylabel(y_axis)
+        plt.ylabel(y_label)
         plt.xlabel("t(M)")
         # plt.legend(loc="upper right")
         plt.legend()
@@ -2428,6 +2439,7 @@ if not SKIP_THIS:
         # plt.rcParams["figure.autolayout"] = True
 
         y_axis = "Linf(NormalizedGhCe) on SphereC1"
+        y_label = r"$L_\infty(\widehat{\mathcal{E}}_{\mathrm{GH}})$ on SphereC1"
         plot_graph_for_runs(
             runs_data_dict,
             x_axis,
@@ -2445,7 +2457,7 @@ if not SKIP_THIS:
         )
 
         plt.title("")
-        plt.ylabel(y_axis)
+        plt.ylabel(y_label)
         plt.xlabel("t(M)")
         # plt.legend(loc="upper right")
         plt.legend()
@@ -2479,19 +2491,19 @@ L15_main_legend = {
 
 L15_main_h5_files = {
     "high_accuracy_main_L1": Path(
-        "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35_master/h5_files_Lev1"
+        "/resnick/groups/sxs/hchaudha/from_central/spec_runs/high_accuracy_L35_master/h5_files_Lev1"
     ),
     "high_accuracy_main_L2": Path(
-        "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35_master/h5_files_Lev2"
+        "/resnick/groups/sxs/hchaudha/from_central/spec_runs/high_accuracy_L35_master/h5_files_Lev2"
     ),
     "high_accuracy_main_L3": Path(
-        "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35_master/h5_files_Lev3"
+        "/resnick/groups/sxs/hchaudha/from_central/spec_runs/high_accuracy_L35_master/h5_files_Lev3"
     ),
     "high_accuracy_main_L4": Path(
-        "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35_master/h5_files_Lev4"
+        "/resnick/groups/sxs/hchaudha/from_central/spec_runs/high_accuracy_L35_master/h5_files_Lev4"
     ),
     "high_accuracy_main_L5": Path(
-        "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35_master/h5_files_Lev5"
+        "/resnick/groups/sxs/hchaudha/from_central/spec_runs/high_accuracy_L35_master/h5_files_Lev5"
     ),
 }
 
@@ -2505,49 +2517,49 @@ L15_ode_fix_legend = {
 
 L15_ode_fix_h5_files = {
     "high_accuracy_L1": Path(
-        "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35/h5_files_Lev1"
+        "/resnick/groups/sxs/hchaudha/from_central/spec_runs/high_accuracy_L35/h5_files_Lev1"
     ),
     "high_accuracy_L2": Path(
-        "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35/h5_files_Lev2"
+        "/resnick/groups/sxs/hchaudha/from_central/spec_runs/high_accuracy_L35/h5_files_Lev2"
     ),
     "high_accuracy_L3": Path(
-        "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35/h5_files_Lev3"
+        "/resnick/groups/sxs/hchaudha/from_central/spec_runs/high_accuracy_L35/h5_files_Lev3"
     ),
     "high_accuracy_L4": Path(
-        "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35/h5_files_Lev4"
+        "/resnick/groups/sxs/hchaudha/from_central/spec_runs/high_accuracy_L35/h5_files_Lev4"
     ),
     "high_accuracy_L5": Path(
-        "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35/h5_files_Lev5"
+        "/resnick/groups/sxs/hchaudha/from_central/spec_runs/high_accuracy_L35/h5_files_Lev5"
     ),
 }
 
 L16_set1_legend = {
-    "6_set1_L6s1": "Set1 Level 1",
-    "6_set1_L6s2": "Set1 Level 2",
-    "6_set1_L6s3": "Set1 Level 3",
-    "6_set1_L6s4": "Set1 Level 4",
-    "6_set1_L6s5": "Set1 Level 5",
-    "6_set1_L6s6": "Set1 Level 6",
+    "6_set1_L6s1": "New Level 1",
+    "6_set1_L6s2": "New Level 2",
+    "6_set1_L6s3": "New Level 3",
+    "6_set1_L6s4": "New Level 4",
+    "6_set1_L6s5": "New Level 5",
+    "6_set1_L6s6": "New Level 6",
 }
 
 L16_set1_h5_files = {
     "6_set1_L6s1": Path(
-        "/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/h5_files_Lev1"
+        "/resnick/groups/sxs/hchaudha/from_central/spec_runs/6_segs/6_set1_L6/h5_files_Lev1"
     ),
     "6_set1_L6s2": Path(
-        "/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/h5_files_Lev2"
+        "/resnick/groups/sxs/hchaudha/from_central/spec_runs/6_segs/6_set1_L6/h5_files_Lev2"
     ),
     "6_set1_L6s3": Path(
-        "/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/h5_files_Lev3"
+        "/resnick/groups/sxs/hchaudha/from_central/spec_runs/6_segs/6_set1_L6/h5_files_Lev3"
     ),
     "6_set1_L6s4": Path(
-        "/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/h5_files_Lev4"
+        "/resnick/groups/sxs/hchaudha/from_central/spec_runs/6_segs/6_set1_L6/h5_files_Lev4"
     ),
     "6_set1_L6s5": Path(
-        "/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/h5_files_Lev5"
+        "/resnick/groups/sxs/hchaudha/from_central/spec_runs/6_segs/6_set1_L6/h5_files_Lev5"
     ),
     "6_set1_L6s6": Path(
-        "/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/h5_files_Lev6"
+        "/resnick/groups/sxs/hchaudha/from_central/spec_runs/6_segs/6_set1_L6/h5_files_Lev6"
     ),
 }
 
@@ -2664,7 +2676,7 @@ for runs_to_plot, runs_legend, runs_set_name in zip(
             else:
                 plt.legend(loc="upper right")
 
-            plt.title(title[:-1])
+            plt.title(f"{domain} of {runs_legend[h5_path_key]}")
             plt.xlabel("t(M)")
             plt.ylabel(f"Power {var}")
             # plt.ylim(-16.5, 0.5)
@@ -2705,50 +2717,50 @@ L15_ode_fix_cce_files = {
         "/groups/sxs/hchaudha/spec_runs/Lev01_test/new_ode_tol/high_accuracy_L35/Ev/GW_data_lev2/BondiCceR0257/red_cce.h5"
     ),
     "high_accuracy_L3": Path(
-        "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35/Ev/GW_data_lev3/BondiCceR0258/red_cce.h5"
+        "/resnick/groups/sxs/hchaudha/from_central/spec_runs/high_accuracy_L35/Ev/GW_data_lev3/BondiCceR0258/red_cce.h5"
     ),
     "high_accuracy_L4": Path(
-        "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35/Ev/GW_data_lev4/BondiCceR0258/red_cce.h5"
+        "/resnick/groups/sxs/hchaudha/from_central/spec_runs/high_accuracy_L35/Ev/GW_data_lev4/BondiCceR0258/red_cce.h5"
     ),
     "high_accuracy_L5": Path(
-        "/groups/sxs/hchaudha/spec_runs/high_accuracy_L35/Ev/GW_data_lev5/BondiCceR0258/red_cce.h5"
+        "/resnick/groups/sxs/hchaudha/from_central/spec_runs/high_accuracy_L35/Ev/GW_data_lev5/BondiCceR0258/red_cce.h5"
     ),
 }
 
 L16_set1_legend = {
-    "6_set1_L6s1": "Set1 Level 1",
-    "6_set1_L6s2": "Set1 Level 2",
-    "6_set1_L6s3": "Set1 Level 3",
-    "6_set1_L6s4": "Set1 Level 4",
-    "6_set1_L6s5": "Set1 Level 5",
-    "6_set1_L6s6": "Set1 Level 6",
+    "6_set1_L6s1": "New Level 1",
+    "6_set1_L6s2": "New Level 2",
+    "6_set1_L6s3": "New Level 3",
+    "6_set1_L6s4": "New Level 4",
+    "6_set1_L6s5": "New Level 5",
+    "6_set1_L6s6": "New Level 6",
 }
 
 L16_set1_cce_files = {
     "6_set1_L6s1": Path(
-        "/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/GW_data_lev1/BondiCceR0250/red_cce.h5"
+        "/resnick/groups/sxs/hchaudha/from_central/spec_runs/6_segs/6_set1_L6/GW_data_lev1/BondiCceR0250/red_cce.h5"
     ),
     "6_set1_L6s2": Path(
-        "/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/GW_data_lev2/BondiCceR0250/red_cce.h5"
+        "/resnick/groups/sxs/hchaudha/from_central/spec_runs/6_segs/6_set1_L6/GW_data_lev2/BondiCceR0250/red_cce.h5"
     ),
     "6_set1_L6s3": Path(
-        "/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/GW_data_lev3/BondiCceR0250/red_cce.h5"
+        "/resnick/groups/sxs/hchaudha/from_central/spec_runs/6_segs/6_set1_L6/GW_data_lev3/BondiCceR0250/red_cce.h5"
     ),
     "6_set1_L6s4": Path(
-        "/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/GW_data_lev4/BondiCceR0250/red_cce.h5"
+        "/resnick/groups/sxs/hchaudha/from_central/spec_runs/6_segs/6_set1_L6/GW_data_lev4/BondiCceR0250/red_cce.h5"
     ),
     "6_set1_L6s5": Path(
-        "/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/GW_data_lev5/BondiCceR0250/red_cce.h5"
+        "/resnick/groups/sxs/hchaudha/from_central/spec_runs/6_segs/6_set1_L6/GW_data_lev5/BondiCceR0250/red_cce.h5"
     ),
     "6_set1_L6s6": Path(
-        "/groups/sxs/hchaudha/spec_runs/6_segs/6_set1_L6/GW_data_lev6/BondiCceR0250/red_cce.h5"
+        "/resnick/groups/sxs/hchaudha/from_central/spec_runs/6_segs/6_set1_L6/GW_data_lev6/BondiCceR0250/red_cce.h5"
     ),
 }
 
 
 # ==============================================================================
 
-SKIP_THIS = False
+SKIP_THIS = True
 
 bondi_norms_to_plot = [2, 4, 5]
 runs_set_name_list = ["L15_ode_fix", "L16_set1"]
@@ -2830,17 +2842,17 @@ for l, s, r in itertools.product(levs, run_sets, radius):
     if l <= 3:
         if s == 1:
             cce_data[f"6_set{s}_L6s{l}_{r}"] = Path(
-                f"/groups/sxs/hchaudha/spec_runs/6_segs/6_set{s}_L6/GW_data_lev{l}/BondiCceR0{r}/red_cce.h5"
+                f"/resnick/groups/sxs/hchaudha/from_central/spec_runs/6_segs/6_set{s}_L6/GW_data_lev{l}/BondiCceR0{r}/red_cce.h5"
             )
-        # cce_data[f"6_set{s}_L3s{l}_{r}"] = Path(f"/groups/sxs/hchaudha/spec_runs/6_segs/6_set{s}_L3/GW_data_lev{l}/BondiCceR0{r}/red_cce.h5")
+        # cce_data[f"6_set{s}_L3s{l}_{r}"] = Path(f"/resnick/groups/sxs/hchaudha/from_central/spec_runs/6_segs/6_set{s}_L3/GW_data_lev{l}/BondiCceR0{r}/red_cce.h5")
     else:
         cce_data[f"6_set{s}_L6s{l}_{r}"] = Path(
-            f"/groups/sxs/hchaudha/spec_runs/6_segs/6_set{s}_L6/GW_data_lev{l}/BondiCceR0{r}/red_cce.h5"
+            f"/resnick/groups/sxs/hchaudha/from_central/spec_runs/6_segs/6_set{s}_L6/GW_data_lev{l}/BondiCceR0{r}/red_cce.h5"
         )
         pass
 # ==============================================================================
 
-SKIP_THIS = False
+SKIP_THIS = True
 
 bondi_norms_to_plot = [2, 4, 5]
 runs_set_name_list = ["L15_ode_fix", "L16_set1"]
