@@ -9,9 +9,6 @@ import subprocess
 import sys
 
 
-spec_home = "/home/hchaudha/spec"
-
-
 def check_regex_in_file(file_path, regex_pattern):
     # Read the content of the file
     with open(file_path, "r") as file:
@@ -263,7 +260,7 @@ def verify_data_dict(data_dict: dict):
 
 
 def MakeNextSegment(EV_folder_path: Path, previous_segment_path: Path):
-    command = f"cd {EV_folder_path} && {spec_home}/Support/bin/MakeNextSegment -d {previous_segment_path} -t . -S"
+    command = f"cd {EV_folder_path} && {previous_segment_path}/bin/MakeNextSegment -d {previous_segment_path} -t . -S"
     status = subprocess.run(command, capture_output=True, shell=True, text=True)
     if status.returncode == 0:
         print(
@@ -443,6 +440,7 @@ def create_new_folder(folder_name: str, data_dict: dict):
     new_run_path = new_run_parent / folder_name
     old_Ev_path: Path = folder_dict["old_Ev_path"]
     link_or_copy_folders = folder_dict["link_or_copy_folders"]
+    add_DisablePreArchiveBbhChecks = folder_dict["add_DisablePreArchiveBbhChecks"]
     copy_ID = folder_dict["copy_ID"]
     old_ID_path = old_Ev_path / "ID"
     copy_bin = folder_dict["copy_bin"]
@@ -459,6 +457,10 @@ def create_new_folder(folder_name: str, data_dict: dict):
         link_or_copy(old_ID_path, new_ID_path, link_or_copy_folders)
     if copy_bin:
         link_or_copy(old_bin_path, new_bin_path, link_or_copy_folders)
+    if add_DisablePreArchiveBbhChecks:
+        # Sometimes the restarts fail when using checkpoints etc, this disables the checks
+        DisablePreArchiveBbhChecks_path = new_Ev_path / "DisablePreArchiveBbhChecks.input"
+        DisablePreArchiveBbhChecks_path.touch()
 
     levs_to_copy = folder_dict["levs_to_copy"]
     for lev_dict in levs_to_copy:
@@ -561,15 +563,12 @@ def create_new_folder(folder_name: str, data_dict: dict):
             for original_str, replaced_str in zip(original_str_list, replaced_str_list):
                 replace_current_file(file_path, original_str, replaced_str)
 
-
-
 data_dict = {
-    "2000M_AHtol_10": {
-        "spec_home": Path("/home/hchaudha/spec"),
-        "Comment": "Test higher AH tol to see if the noise goes down.",
-        "new_run_parent": Path("/resnick/groups/sxs/hchaudha/spec_runs/56_segs"),
+    "base": {
+        "Comment": "Change ode tol to see how it affects the errors.",
+        "new_run_parent": Path("/resnick/groups/sxs/hchaudha/HighAccuracy1025/AMR_cd_variations/run09_Lev2_vars/ode_tol_test"),
         "old_Ev_path": Path(
-            "/resnick/groups/sxs/hchaudha/spec_runs/56_lsds_large_ext_bdr_long/q1_ns_2000M_lsds_long_inspi/Ecc3/Ev"
+            "/resnick/groups/sxs/hchaudha/HighAccuracy1025/AMR_cd_variations/old_spec/26-06-2025"
         ),
         "link_or_copy_folders": "link",
         "Ev_is_present": False,
@@ -577,31 +576,20 @@ data_dict = {
         "copy_bin": False,
         "levs_to_copy": [
             {
-                "old_Lev_name": "Lev4",
-                "new_Lev_name": "Lev4",
+                "old_Lev_name": "Lev2",
+                "new_Lev_name": "Lev2",
                 "using_constant_AMR_tol": True,
-                "this_lev_is_continuation": False,
-                "new_Lev_for_AMR_tolerance": 4,
-                "new_Lev_for_GrDomain_and_AmrDriver": 4,
-                "AH_factor": 10.0,
+                "this_lev_is_continuation": True,
+                "add_DisablePreArchiveBbhChecks": True,
                 # "segments_to_copy": ['AA', 'AB', 'AC', 'AD', 'AE', 'AF', 'AG', 'AH', 'AI', 'AJ', 'AK', 'AL'],
                 "segments_to_copy": [
-                    "AA",
-                    "AB",
-                    "AC",
-                    "AD",
-                    "AE",
-                    "AF",
-                    "AG",
-                    "AH",
                     "AI",
-                    "AJ",
                 ],
                 "files_to_change_in_the_new_lev": {
                     "AmrTolerances.input": {
                         "original_str": [r"ODETolerance=([^;]*);"],
                         "replaced_str": [
-                            f"ODETolerance = {0.000216536 / 2000 * 4 ** (-4)};"
+                            f"ODETolerance = {0.000216536 / 2000 * 4 ** (-2)};"
                         ],
                     },
                     "Evolution.input": {
@@ -609,7 +597,17 @@ data_dict = {
                             r"FinalTime = \d*;",
                         ],
                         "replaced_str": [
-                            "FinalTime = 35000;",
+                            "FinalTime = 7500;",
+                        ],
+                    },
+                    "bin/this_machine.env": {
+                        "original_str": [
+                            r"module use /central/groups/sxs/knelli/modules/",
+                            r"module use /central/home/mascheel/modulefiles",
+                        ],
+                        "replaced_str": [
+                            "module use /resnick/groups/sxs/spec-modules/modules/",
+                            "module use /resnick/home/mascheel/modulefiles",
                         ],
                     },
                 },
