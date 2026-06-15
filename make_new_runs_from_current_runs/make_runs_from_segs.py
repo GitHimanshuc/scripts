@@ -440,7 +440,7 @@ def create_new_folder(folder_name: str, data_dict: dict):
     new_run_path = new_run_parent / folder_name
     old_Ev_path: Path = folder_dict["old_Ev_path"]
     link_or_copy_folders = folder_dict["link_or_copy_folders"]
-    add_DisablePreArchiveBbhChecks = folder_dict["add_DisablePreArchiveBbhChecks"]
+    add_DisablePreArchiveBbhChecks = folder_dict.get("add_DisablePreArchiveBbhChecks", False)
     copy_ID = folder_dict["copy_ID"]
     old_ID_path = old_Ev_path / "ID"
     copy_bin = folder_dict["copy_bin"]
@@ -564,9 +564,9 @@ def create_new_folder(folder_name: str, data_dict: dict):
                 replace_current_file(file_path, original_str, replaced_str)
 
 data_dict = {
-    "base": {
-        "Comment": "Change ode tol to see how it affects the errors.",
-        "new_run_parent": Path("/resnick/groups/sxs/hchaudha/HighAccuracy1025/AMR_cd_variations/run09_Lev2_vars/ode_tol_test"),
+    "cd_05_001": {
+        "Comment": "Change the constraint damping values and see which ones are more important.",
+        "new_run_parent": Path("/resnick/groups/sxs/hchaudha/HighAccuracy1025/AMR_cd_variations/run09_Lev2_vars/cd_test"),
         "old_Ev_path": Path(
             "/resnick/groups/sxs/hchaudha/HighAccuracy1025/AMR_cd_variations/old_spec/26-06-2025"
         ),
@@ -574,22 +574,34 @@ data_dict = {
         "Ev_is_present": False,
         "copy_ID": False,
         "copy_bin": False,
+        "add_DisablePreArchiveBbhChecks": True,
         "levs_to_copy": [
             {
                 "old_Lev_name": "Lev2",
                 "new_Lev_name": "Lev2",
                 "using_constant_AMR_tol": True,
                 "this_lev_is_continuation": True,
-                "add_DisablePreArchiveBbhChecks": True,
                 # "segments_to_copy": ['AA', 'AB', 'AC', 'AD', 'AE', 'AF', 'AG', 'AH', 'AI', 'AJ', 'AK', 'AL'],
                 "segments_to_copy": [
                     "AI",
                 ],
                 "files_to_change_in_the_new_lev": {
-                    "AmrTolerances.input": {
-                        "original_str": [r"ODETolerance=([^;]*);"],
+                    "ConstraintDamping.input": {
+                        "original_str": [
+                            re.escape(r"""      +0.0749999996218059
+      *exp(-O/sqr(50*S))
+      +0.00999999994957412;"""),
+                            re.escape(r"""      +0.0749999996218059
+                              *exp(-O/sqr(50*S))
+      +0.00999999994957412;"""),
+                        ],
                         "replaced_str": [
-                            f"ODETolerance = {0.000216536 / 2000 * 4 ** (-2)};"
+                            r"""      +0.0749999996218059
+      *exp(-O/sqr(50*S))
+      +0.5;""",
+                            r"""      +0.0749999996218059
+                              *exp(-O/sqr(50*S))
+      +0.01;"""
                         ],
                     },
                     "Evolution.input": {
