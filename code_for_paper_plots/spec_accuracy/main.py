@@ -1952,6 +1952,39 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         print(f"Saved {save_name}!\n")
         plt.clf()
 
+        y_axis = "Linf(GhCe) on SphereC22"
+        y_label = r"$L_\infty(\mathcal{E}_{\mathrm{GH}})$ on SphereC22"
+        plot_graph_for_runs(
+            runs_data_dict,
+            x_axis,
+            y_axis,
+            minT,
+            maxT,
+            legend_dict=legend_dict,
+            save_path=save_path,
+            moving_avg_len=moving_avg_len,
+            plot_fun=plot_fun,
+            diff_base=diff_base,
+            plot_abs_diff=plot_abs_diff,
+            constant_shift_val_time=constant_shift_val_time,
+            append_to_title=append_to_title,
+        )
+
+        plt.title("")
+        plt.ylabel(y_label)
+        plt.xlabel("t(M)")
+        # plt.legend(loc="upper right")
+        plt.legend()
+        #   plt.ylim(1e-8, 1e-5)
+        #   plt.ylim(1e-12, 1e-6)
+
+        plt.tight_layout()
+        plt.grid(False)
+        save_name = save_folder_path / f"{runs_set_name}_SphereC22_Linf_GhCe.pdf"
+        plt.savefig(save_name, dpi=300)
+        print(f"Saved {save_name}!\n")
+        plt.clf()
+
     # ==============================================================================
 
     data_file_path = "ConstraintNorms/NormalizedGhCe_Linf.dat"
@@ -2046,6 +2079,42 @@ for runs_to_plot, legend_dict, runs_set_name in zip(
         plt.grid(False)
         save_name = (
             save_folder_path / f"{runs_set_name}_SphereC6_Linf_NormalizedGhCe.pdf"
+        )
+        plt.savefig(save_name, dpi=300)
+        print(f"Saved {save_name}!\n")
+        plt.clf()
+
+
+        y_axis = "Linf(NormalizedGhCe) on SphereC22"
+        y_label = r"$L_\infty(\widehat{\mathcal{E}}_{\mathrm{GH}})$ on SphereC22"
+        plot_graph_for_runs(
+            runs_data_dict,
+            x_axis,
+            y_axis,
+            minT,
+            maxT,
+            legend_dict=legend_dict,
+            save_path=save_path,
+            moving_avg_len=moving_avg_len,
+            plot_fun=plot_fun,
+            diff_base=diff_base,
+            plot_abs_diff=plot_abs_diff,
+            constant_shift_val_time=constant_shift_val_time,
+            append_to_title=append_to_title,
+        )
+
+        plt.title("")
+        plt.ylabel(y_label)
+        plt.xlabel("t(M)")
+        # plt.legend(loc="upper right")
+        plt.legend()
+        #   plt.ylim(1e-8, 1e-5)
+        #   plt.ylim(1e-12, 1e-6)
+
+        plt.tight_layout()
+        plt.grid(False)
+        save_name = (
+            save_folder_path / f"{runs_set_name}_SphereC22_Linf_NormalizedGhCe.pdf"
         )
         plt.savefig(save_name, dpi=300)
         print(f"Saved {save_name}!\n")
