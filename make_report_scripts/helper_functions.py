@@ -165,7 +165,7 @@ def add_max_and_min_val(runs_data_dict):
         min_val = np.zeros_like(t)
         for i in range(len(t)):
             max_val[i] = data_frame.iloc[i, 1:].max()
-            min_val[i] = data_frame.iloc[i, 1:].max()
+            min_val[i] = data_frame.iloc[i, 1:].min()
 
         # Add the values to the dataframe
         data_frame["max_val"] = max_val
@@ -287,13 +287,49 @@ def get_num_points_subdomains(
         L_pts = df[f"{sd}_L"].fillna(0)
         M_pts = df[f"{sd}_M"].fillna(0)
         points_in_current_sd = R_pts * L_pts * M_pts
-        if "Sphere" in sd:
-            points_in_current_sd = points_in_current_sd // 2
         if print_sd_names:
             print(f"{sd}: {points_in_current_sd} points")
         num_points += points_in_current_sd
 
     return x, num_points, f"NumPoints in {regex_for_sd}"
+
+
+def get_max_points_in_all_subdomains(
+    x,
+    y,
+    df,
+    y_axis,
+    regex_for_sd=r".*",
+    print_sd_names=False,
+):
+    """Return the largest collocation-point count among matching subdomains."""
+
+    filtered_cols = [column for column in df.columns if "_" in column]
+    if not filtered_cols:
+        raise ValueError("No subdomains with '_' columns found in the dataframe")
+    subdomains = {
+        column.split("_")[0]
+        for column in filtered_cols
+        if re.match(regex_for_sd, column)
+    } - {"t(M)", "TOfLastChange", "StartTime", "Version"}
+    if not subdomains:
+        raise ValueError(f"No subdomains found matching {regex_for_sd}")
+    if print_sd_names:
+        print(f"Subdomains matching {regex_for_sd}: {subdomains}")
+
+    maximum = None
+    for subdomain in subdomains:
+        points = (
+            df[f"{subdomain}_R"].fillna(0)
+            * df[f"{subdomain}_L"].fillna(0)
+            * df[f"{subdomain}_M"].fillna(0)
+        )
+        if "Sphere" in subdomain:
+            points = points // 2
+        if print_sd_names:
+            print(f"{subdomain}: {points} points")
+        maximum = points if maximum is None else np.maximum(maximum, points)
+    return x, maximum, f"MaxPoints in {regex_for_sd}"
 
 
 def compute_power_in_modes(x, y, df, y_axis, L_list=None):

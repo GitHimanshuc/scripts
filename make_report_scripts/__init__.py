@@ -1,33 +1,77 @@
-from .helper_functions import add_norm_constraints, num_points_per_subdomain
-from .main_plot_functions import plot_graph_for_runs, plot_graph_for_runs_wrapper
-from .heatmap_related_functions import return_sorted_domain_names, BBH_domain_sym_ploy, scalar_to_color
+"""Reusable loading, analysis, and plotting for SpEC report diagnostics."""
+
+from .helper_functions import (
+    add_norm_constraints,
+    get_max_points_in_all_subdomains,
+    num_points_per_subdomain,
+)
+from .io import (
+    ExtractedPowerDiagnosticsLoader,
+    LoadPowerDiagnostics,
+    PowerDiagnosticsLoader,
+    PowerSpectrumCube,
+    RunDataLoader,
+    RunSource,
+    SphereCPowerData,
+    all_words_upto,
+    load_data_from_levs,
+    read_dat_file_across_AA,
+)
+from .main_plot_functions import (
+    plot_graph_for_runs,
+    plot_graph_for_runs_wrapper,
+)
+from .plotting import (
+    BBHDomainPatchBuilder,
+    BBH_domain_sym_ploy,
+    plot_all_tops,
+    plot_all_tops_both,
+    plot_column_grid,
+    plot_damping_times,
+    plot_frame_columns,
+    plot_min_grid_spacing,
+    plot_power_field_comparison,
+    plot_power_heatmap,
+    plot_power_spectrum,
+    plot_power_topologies,
+    plot_runs,
+    prepare_run_series,
+    return_sorted_domain_names,
+    save_column_plots,
+    scalar_to_color,
+)
 
 __all__ = [
-    'add_norm_constraints',
-    'num_points_per_subdomain',
-    'plot_graph_for_runs',
-    'plot_graph_for_runs_wrapper',
-    'return_sorted_domain_names',
-    'BBH_domain_sym_ploy',
-    'scalar_to_color',
+    "BBHDomainPatchBuilder",
+    "BBH_domain_sym_ploy",
+    "ExtractedPowerDiagnosticsLoader",
+    "LoadPowerDiagnostics",
+    "PowerDiagnosticsLoader",
+    "PowerSpectrumCube",
+    "RunDataLoader",
+    "RunSource",
+    "SphereCPowerData",
+    "add_norm_constraints",
+    "all_words_upto",
+    "get_max_points_in_all_subdomains",
+    "load_data_from_levs",
+    "num_points_per_subdomain",
+    "plot_all_tops",
+    "plot_all_tops_both",
+    "plot_column_grid",
+    "plot_damping_times",
+    "plot_frame_columns",
+    "plot_graph_for_runs",
+    "plot_graph_for_runs_wrapper",
+    "plot_min_grid_spacing",
+    "plot_power_field_comparison",
+    "plot_power_heatmap",
+    "plot_power_spectrum",
+    "plot_power_topologies",
+    "plot_runs",
+    "prepare_run_series",
+    "read_dat_file_across_AA",
+    "return_sorted_domain_names",
+    "save_column_plots",
+    "scalar_to_color",
 ]
-
-# ===== Sys.path Instructions for Importing from Outside This Package =====
-#
-# To import functions from this package in external Python files, you have several options:
-#
-# Option 1: Add parent directory to sys.path (recommended)
-# -------------------------------------------------------
-# import sys
-# sys.path.append('/workspaces/spec/InputFiles')  # Add parent directory to Python path
-#
-# from make_report import load_data_from_levs, plot_graph_for_runs
-# from make_report.helper_functions import add_norm_constraints, num_points_per_subdomain
-# from make_report.main_plot_functions import plot_graph_for_runs_wrapper
-#
-# Alternative: Modify PYTHONPATH environment variable
-# -------------------------------------------------
-# Before running your Python script, set:
-# export PYTHONPATH="/workspaces/spec/InputFiles:$PYTHONPATH"
-#
-# Then import without modifying sys.path in your code.

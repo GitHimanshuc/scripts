@@ -212,7 +212,9 @@ def return_sorted_domain_names(
 class BBH_domain_sym_ploy:
     def __init__(self, center_xA, rA, RA, rC, RC, nA, nC, color_dict: dict = None):
         self.center_xA = center_xA
-        self.color_dict = color_dict
+        # Matching removes entries as patches are built. Work on a copy so a
+        # plotting call never mutates the caller's color mapping.
+        self.color_dict = None if color_dict is None else dict(color_dict)
         self.rA = rA  # Largest SphereA radius
         self.RA = RA  # Radius of FilledCylinderE
         self.rC = rC  # Smallest SphereC radius
@@ -250,8 +252,7 @@ class BBH_domain_sym_ploy:
         self.add_inner_shperes(which_bh="A")
         self.add_inner_shperes(which_bh="B")
 
-        # print the unmatched domains
-        print(self.color_dict)
+        # Any keys left in self.color_dict did not match a generated patch.
 
     def get_matching_color(self, domain_name: str):
         if self.color_dict is None:
@@ -474,32 +475,28 @@ class BBH_domain_sym_ploy:
 
 
 def scalar_to_color(scalar_dict, min_max_tuple=None, color_map="viridis"):
-    arr_keys, arr_vals = [], []
-    for key, val in scalar_dict.items():
-        if np.isnan(val):
-            continue
-        else:
-            arr_keys.append(key)
-            arr_vals.append(val)
-
-    scalar_array = np.array(arr_vals, dtype=np.float64)
-    scalar_array = np.log10(scalar_array)
-    min_val = np.min(scalar_array)
-    max_val = np.max(scalar_array)
-    print(min_val, max_val)
-    if min_max_tuple is not None:
-        min_val, max_val = min_max_tuple
-    scalar_normalized = (scalar_array - min_val) / (max_val - min_val)
-
+    items = [
+        (key, float(value))
+        for key, value in scalar_dict.items()
+        if np.isfinite(value) and value > 0
+    ]
+    if not items:
+        raise ValueError("No positive finite values can be mapped to colors")
+    arr_keys, arr_vals = zip(*items)
+    scalar_array = np.log10(np.asarray(arr_vals, dtype=np.float64))
+    min_val, max_val = (
+        min_max_tuple
+        if min_max_tuple is not None
+        else (float(np.min(scalar_array)), float(np.max(scalar_array)))
+    )
+    if min_val == max_val:
+        max_val = min_val + np.finfo(float).eps
     colormap = plt.get_cmap(color_map)
-    colors = {}
-    for key, value in zip(arr_keys, scalar_normalized):
-        colors[key] = colormap(value)
-
-    # Get colorbar
     norm = Normalize(vmin=min_val, vmax=max_val)
-
+    colors = {
+        key: colormap(norm(value))
+        for key, value in zip(arr_keys, scalar_array)
+    }
     sm = plt.cm.ScalarMappable(cmap=colormap, norm=norm)
     sm.set_array([])
-
     return colors, sm

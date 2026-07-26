@@ -5,18 +5,18 @@ import pandas as pd
 from matplotlib import cycler
 from pathlib import Path
 
-from helper_functions import (
+from .helper_functions import (
     add_norm_constraints,
     num_points_per_subdomain,
     limit_by_col_val,
     filter_by_regex,
 )
-from main_plot_functions import (
+from .main_plot_functions import (
     load_data_from_levs,
     plot_graph_for_runs,
     plot_graph_for_runs_wrapper,
 )
-from make_report_scripts.heatmap_related_functions import return_sorted_domain_names
+from .plotting import return_sorted_domain_names
 
 # =========================================================================================================================================================
 # ==================================================== GENERAL CONFIG ==========================================================

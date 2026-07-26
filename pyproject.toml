@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "spec-report-tools"
+version = "0.1.0"
+description = "Reusable data loading and plotting for SpEC simulation reports"
+readme = "make_report_scripts/README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "h5py",
+    "matplotlib",
+    "numpy",
+    "pandas",
+    "scipy",
+]
+
+[project.optional-dependencies]
+xarray = ["xarray"]
+
+[tool.setuptools.packages.find]
+include = ["make_report_scripts*"]
+
