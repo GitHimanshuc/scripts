@@ -11,7 +11,18 @@ import pandas as pd
 from ._util import TIME_COLUMN
 
 _COLUMN_DECLARATION = re.compile(
-    r"\[\s*\d+\s*\]\s*=\s*(?:\"([^\"]+)\"|'([^']+)'|([^#\s]+))"
+    r"""
+    \[\s*\d+\s*\]\s*=\s*
+    (?:
+        "([^"]+)"
+        |
+        '([^']+)'
+        |
+        ([^#\r\n]*?\S)
+    )
+    \s*(?:\#.*)?$
+    """,
+    re.VERBOSE,
 )
 
 
@@ -198,4 +209,3 @@ def get_last_time_from_tstepper_diag(path: str | Path) -> float:
     """Read the time value from the final ``TStepperDiag.dat`` row."""
 
     return float(read_last_line(path).split()[0])
-
