@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import glob
+import warnings
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from itertools import product
@@ -12,6 +13,13 @@ from typing import Literal
 
 import pandas as pd
 
+from ._cache import (
+    CacheFormatError,
+    cache_path,
+    make_cache_request,
+    read_cache,
+    write_cache,
+)
 from ._util import OverlapPolicy, combine_frames, natural_sort_key
 from .dat import (
     get_last_time_from_tstepper_diag,
@@ -500,17 +508,73 @@ def read_dat_file_across_AA(
 def load_data_from_levs(
     runs_path: Mapping[str, str | Path | Sequence[str | Path]],
     data_file_path: str | Path,
+    *,
+    cache_folder: str | Path | None = None,
+    reload_cache: bool = False,
 ) -> tuple[pd.Index, dict[str, pd.DataFrame]]:
-    """Compatibility bulk loader supporting one or several roots per run."""
+    """Load one diagnostic for several runs, with optional JSON caching.
 
-    data: dict[str, pd.DataFrame] = {}
-    columns = pd.Index([])
+    A configured cache is reused until ``reload_cache=True``. Cache identity
+    includes the ordered run mapping and diagnostic path. Missing, malformed,
+    or incompatible cache files are warned about and rebuilt from the source
+    data.
+    """
+
+    normalized_runs: list[tuple[str, tuple[str, ...]]] = []
     for run_name, run_roots in runs_path.items():
         if isinstance(run_roots, (str, Path)):
             run_roots = (run_roots,)
+        normalized_runs.append(
+            (str(run_name), tuple(str(run_root) for run_root in run_roots))
+        )
+
+    request = make_cache_request(normalized_runs, str(data_file_path))
+    target_cache: Path | None = None
+    if cache_folder is not None:
+        cache_directory = Path(cache_folder)
+        cache_directory.mkdir(parents=True, exist_ok=True)
+        target_cache = cache_path(cache_directory, request)
+        if target_cache.is_file() and not reload_cache:
+            try:
+                cached_data = read_cache(target_cache, request)
+            except (
+                CacheFormatError,
+                IndexError,
+                KeyError,
+                OSError,
+                TypeError,
+                ValueError,
+            ) as error:
+                warnings.warn(
+                    f"Could not use cache {target_cache}; loading source data "
+                    f"and rebuilding it ({error})",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
+            else:
+                last_run = next(reversed(cached_data)) if cached_data else None
+                columns = (
+                    cached_data[last_run].columns
+                    if last_run is not None
+                    else pd.Index([])
+                )
+                return columns, cached_data
+        elif not reload_cache:
+            warnings.warn(
+                f"Cache {target_cache} is missing; loading source data and "
+                "creating it",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+
+    data: dict[str, pd.DataFrame] = {}
+    columns = pd.Index([])
+    for run_name, run_roots in normalized_runs:
         patterns = [_join_pattern(root, data_file_path) for root in run_roots]
         data[run_name] = read_dat_file_across_AA(patterns)
         columns = data[run_name].columns
+    if target_cache is not None:
+        write_cache(target_cache, request, data)
     return columns, data
 
 

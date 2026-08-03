@@ -58,6 +58,31 @@ The old `read_dat_file_across_AA`, `load_data_from_levs`,
 `LoadPowerDiagnostics`, and `SphereCPowerData` APIs remain available while
 notebooks migrate to the explicit loaders.
 
+### Caching bulk run data
+
+`load_data_from_levs` can save and reuse its complete `runs_data_dict` as a
+versioned JSON file. Caching is opt-in, and cache files are only written to the
+folder supplied by the caller:
+
+```python
+from pathlib import Path
+
+from make_report_scripts import load_data_from_levs
+
+columns, runs_data = load_data_from_levs(
+    runs_to_plot,
+    "ConstraintNorms/GhCe_Linf.dat",
+    cache_folder=Path.cwd(),
+)
+```
+
+The ordered run mapping and diagnostic path determine the cache filename. A
+matching cache is used without checking or requiring the original source
+files. Pass `reload_cache=True` to load the sources again and atomically
+replace the cache. If a cache is missing, malformed, or from an incompatible
+format version, the loader warns, reloads the source data, and recreates it.
+Deleting a cache is therefore also a supported way to force reconstruction.
+
 ## Plotting
 
 Plotting functions accept explicit Matplotlib axes where useful, return the
@@ -122,4 +147,3 @@ particular:
 - flat power data is aligned on `t(M)` rather than a randomly chosen row index
 - format options stay attached to each legacy path pattern
 - cache files are not silently written into simulation directories
-
